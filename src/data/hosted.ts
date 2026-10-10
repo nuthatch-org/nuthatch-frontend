@@ -26,8 +26,8 @@ export interface Hosted {
   record: string;
 }
 
-// TODO: the public URL of the address-history mirror, once the bucket has a public hostname.
-export const ADDRESS_HISTORY_URL = '';
+// R2's development URL is rate-limited; move to a custom domain before real traffic.
+export const ADDRESS_HISTORY_URL = 'https://pub-bc282d5016f242a783a6c28cbcd4401a.r2.dev';
 
 export const hosted: Hosted[] = [
   {
