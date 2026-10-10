@@ -26,8 +26,8 @@ export interface Hosted {
   record: string;
 }
 
-// R2's development URL is rate-limited; move to a custom domain before real traffic.
-export const ADDRESS_HISTORY_URL = 'https://pub-bc282d5016f242a783a6c28cbcd4401a.r2.dev';
+// A Worker in front of the bucket: R2's development URL is rate-limited.
+export const ADDRESS_HISTORY_URL = 'https://nestsss.nestsss-worker.workers.dev';
 
 export const hosted: Hosted[] = [
   {
@@ -43,7 +43,7 @@ export const hosted: Hosted[] = [
     coverage: 'Ethereum mainnet from the Shanghai upgrade (block 17,034,870) onward',
     partition: '10,000 blocks per file, listed in manifest.json',
     config: `[address_history.mirror]
-url = "https://pub-bc282d5016f242a783a6c28cbcd4401a.r2.dev"   # the mirror root; the nest adds address-history/v1/<chain>/
+url = "https://nestsss.nestsss-worker.workers.dev"   # the mirror root; the nest adds address-history/v1/<chain>/
 chain_id = 1
 from_block = 17030000   # the range to read from the mirror, in whole partitions
 to_block = 26159999
