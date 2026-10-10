@@ -44,7 +44,7 @@ export const hosted: Hosted[] = [
     partition: '10,000 blocks per file, listed in manifest.json',
     // Keys match MirrorConfig on nuthatch pete/rfc-0063-slice2 (deny_unknown_fields); recheck when it merges.
     config: `[address_history.mirror]
-url = "<mirror url>"     # the mirror's root; the nest adds address-history/v1/<chain>/
+url = "https://pub-bc282d5016f242a783a6c28cbcd4401a.r2.dev"   # the mirror root; the nest adds address-history/v1/<chain>/
 chain_id = 1
 from_block = 17030000   # the range to read from the mirror, in whole partitions
 to_block = 26159999
