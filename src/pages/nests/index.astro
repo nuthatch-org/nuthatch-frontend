@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import CopyBlock from '../../components/CopyBlock.astro';
 import { getCollection } from 'astro:content';
+import { hosted } from '../../data/hosted';
 
 const all = await getCollection('nests');
 
@@ -75,6 +76,45 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
           in the repo.
         </p>
       </div>
+
+      {hosted.length > 0 && (
+        <section class="group" id="hosted">
+          <div class="group-head">
+            <h2>Hosted</h2>
+            <span class="count">{hosted.length}</span>
+          </div>
+          <p class="group-blurb">
+            Address-free data we publish so your nest can skip building it. Your nest checks every piece against
+            your own RPC before using it, and nothing about the accounts you watch reaches us.
+          </p>
+
+          <ul class="grid">
+            {hosted.map((h) => (
+              <li class="nest hosted" id={`hosted-${h.id}`}>
+                <div class="nest-top">
+                  <h3><a href={`/nests/hosted/${h.id}`}>{h.name}</a></h3>
+                  <span class={`badge status--${h.status}`}>{statusLabel[h.status]}</span>
+                </div>
+
+                <div class="meta">
+                  <span class="tag">{h.kind}</span>
+                  <span class="tag factory">verified by your nest</span>
+                </div>
+
+                <p class="summary">{h.summary}</p>
+
+                <p class="events"><span class="events-cap">at</span> {h.location}</p>
+
+                <div class="chains">
+                  {h.chains.map((c) => <span class="chain">{c}</span>)}
+                </div>
+
+                <span class="open">config, verification and limits →</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {groups.filter((g) => g.items.length > 0).map((g) => (
         <section class="group">
@@ -238,6 +278,15 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     color: var(--text-muted);
   }
   .repolink:hover { color: var(--accent); }
+  /* A hosted card opens its own page: the title link stretches over the whole card. */
+  .hosted { position: relative; }
+  .nest-top h3 a { color: inherit; text-decoration: none; }
+  .nest-top h3 a::after { content: ''; position: absolute; inset: 0; }
+  .open {
+    margin-top: auto; padding-top: 1rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted);
+  }
+  .hosted:hover .open, .hosted:hover h3 { color: var(--accent); }
   .note {
     margin: 0.95rem 0 0; padding-top: 0.85rem; border-top: 1px solid var(--border);
     font-size: 0.82rem; line-height: 1.55; color: var(--text-faint);
