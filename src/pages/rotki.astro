@@ -13,13 +13,15 @@ rpc_urls = ["https://your-ethereum-rpc"]
 addresses = ["0xYourAccount"]   # rotki adds the rest of your accounts itself
 start_block = 17030000          # history before this is never fetched; 0 means genesis, which takes hours
 poll_interval = "5m"
+mev_relays = true               # produced blocks and their MEV, from the relays; they see block numbers
+# validators = [123456]         # rotki registers your validators itself; proofs run from block 23,551,570
+# beacon_url = "http://127.0.0.1:5052" # build validator proofs beyond the published catalogue
 
 # optional: verified partitions instead of one RPC call per block
 [address_history.mirror]
 url = "${ADDRESS_HISTORY_URL}"
 chain_id = 1
 from_block = 17030000
-to_block = 26159999
 cache_mb = 2048`;
 
 const run = `curl -fsSL https://nuthatch-indexer.com/install.sh | sh
@@ -46,6 +48,8 @@ const parity: [string, string][] = [
       <p class="section-label">rotki</p>
       <h1>Your accounts' history, from your own machine</h1>
       <p class="lede">
+        The <a href="https://github.com/rotki/rotki/pull/13342" rel="noopener">rotki integration is a draft PR</a> for Ethereum mainnet and requires Nuthatch 5.3.0 or later.
+        To try it before the PR is merged, run rotki from that PR’s branch; these settings are not in a released rotki version.
         rotki asks a block explorer for every transaction, transfer and withdrawal of every account you track,
         which means a third party learns all of your addresses. A rotki-mode nest answers the same questions locally.
         It watches only the accounts you give it, reads the chain over your own RPC, and serves the answers at
@@ -65,7 +69,7 @@ const parity: [string, string][] = [
           </div>
           <div>
             <span class="cap">3 · rotki</span>
-            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address. Put Nuthatch first in Ethereum's indexer order, and rotki registers your Ethereum accounts with the nest itself.</p>
+            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address. Put Nuthatch first in Ethereum's indexer order, and rotki registers your Ethereum accounts with the nest itself. Select Nuthatch alone if you want history requests to stay with your nest; otherwise the next configured explorer can receive your address when coverage is incomplete.</p>
           </div>
         </div>
       </div>
@@ -106,6 +110,16 @@ const parity: [string, string][] = [
             Your RPC sees the queries it always would. The partition mirror, if you name one, sees your IP and the block ranges
             it serves, never an address. The MEV-Boost relays are asked only if you set <code>mev_relays = true</code>,
             because the block numbers they are asked about identify a validator.
+          </p>
+        </section>
+        <section>
+          <h2>Validator coverage</h2>
+          <p>
+            Proven validator blocks begin at execution block 23,551,570. Earlier proposals remain outside the catalogue.
+            The published catalogue advances in complete 10,000-block spans. Set <code>beacon_url</code> to your beacon node
+            to prove the tail beyond it; without a beacon endpoint, the nest reports that tail as incomplete until publication.
+            Account history before <code>start_block</code> remains uncovered, and rotki shows the gap.
+            rotki's existing free-account validator ownership limits still apply.
           </p>
         </section>
         <section>

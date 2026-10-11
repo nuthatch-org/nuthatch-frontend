@@ -40,13 +40,12 @@ export const hosted: Hosted[] = [
       'Verified block partitions for Ethereum mainnet: full headers and withdrawals, 10,000 blocks to a file. A nest that tracks an account’s history reads them instead of fetching every header from its own RPC.',
     location: 'nestsss / address-history/v1/1/',
     url: ADDRESS_HISTORY_URL,
-    coverage: 'Ethereum mainnet from the Shanghai upgrade (block 17,034,870) to block 26,159,999',
+    coverage: 'Ethereum mainnet from the Shanghai upgrade (block 17,034,870) to the newest finalized 10,000-block span, extended hourly',
     partition: '10,000 blocks per file, listed in manifest.json',
     config: `[address_history.mirror]
 url = "https://nestsss.nestsss-worker.workers.dev"   # the mirror root; the nest adds address-history/v1/<chain>/
 chain_id = 1
-from_block = 17030000   # the range to read from the mirror, in whole partitions
-to_block = 26159999
+from_block = 17030000   # read from here, as far as the mirror has published
 cache_mb = 2048         # local disk the fetched partitions may use`,
     verified: [
       'Every header in a partition is hashed locally and must equal the hash the next header names as its parent, so a partition is one unbroken chain.',
