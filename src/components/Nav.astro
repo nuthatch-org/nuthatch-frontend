@@ -52,10 +52,9 @@ const groups = [
             {group.links.map((link) => <a href={link.href}>{link.text}</a>)}
           </div>
         </div>
-        {/* Nests, Mirror, Subgraphs and Blog sit between the two groups, so the flat links alternate with the folded ones. */}
+        {/* Nests, Mirror and Blog sit between the two groups, so the flat links alternate with the folded ones. */}
         {i === 0 && <a href="/nests">Nests</a>}
         {i === 0 && <a href="/mirror">Mirror</a>}
-        {i === 0 && <a href="/subgraphs">Subgraphs</a>}
         {i === 0 && <a href="/blog">Blog</a>}
         </>
       ))}
