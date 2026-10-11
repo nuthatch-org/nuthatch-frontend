@@ -13,6 +13,8 @@ rpc_urls = ["https://your-ethereum-rpc"]
 addresses = ["0xYourAccount"]   # rotki adds the rest of your accounts itself
 start_block = 17030000          # history before this is never fetched; 0 means genesis, which takes hours
 poll_interval = "5m"
+mev_relays = true               # produced blocks and their MEV, from the relays; they see block numbers
+# validators = [123456]         # rotki registers your validators itself; proofs run from block 23,551,570
 
 # optional: verified partitions instead of one RPC call per block
 [address_history.mirror]
