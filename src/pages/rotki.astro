@@ -1,0 +1,161 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CodeCard from '../components/CodeCard.astro';
+import { ADDRESS_HISTORY_URL } from '../data/hosted';
+
+const config = `[nest]
+name = "rotki"
+chain = "mainnet"
+chain_id = 1
+rpc_urls = ["https://your-ethereum-rpc"]
+
+[address_history]
+addresses = ["0xYourAccount"]   # rotki adds the rest of your accounts itself
+start_block = 17030000          # history before this is never fetched; 0 means genesis, which takes hours
+poll_interval = "5m"
+
+# optional: verified partitions instead of one RPC call per block
+[address_history.mirror]
+url = "${ADDRESS_HISTORY_URL}"
+chain_id = 1
+from_block = 17030000
+to_block = 26159999
+cache_mb = 2048`;
+
+const run = `curl -fsSL https://nuthatch-indexer.com/install.sh | sh
+export NUTHATCH_TRACE_RPC=https://your-trace-rpc   # kept out of the process list
+nuthatch dev --dir rotki`;
+
+const check = `curl 'http://127.0.0.1:8288/api?module=account&action=txlist&address=0xYourAccount&startblock=17030000&endblock=17100000'`;
+
+const parity: [string, string][] = [
+  ['txlist', '2,318 transactions'],
+  ['tokentx', '3,334 transactions with token transfers'],
+  ['tokennfttx', '106 transactions with NFT transfers'],
+  ['token1155tx', '53 transactions with ERC-1155 transfers'],
+  ['getblocknobytime', '20 of 20 timestamps'],
+];
+---
+<Layout
+  path="/rotki"
+  title="Nuthatch for rotki - Nuthatch"
+  description="Run your own indexer for rotki: your accounts' transactions, transfers, withdrawals and MEV, served from your machine in the shapes rotki already reads."
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">rotki</p>
+      <h1>Your accounts' history, from your own machine</h1>
+      <p class="lede">
+        rotki asks a block explorer for every transaction, transfer and withdrawal of every account you track,
+        which means a third party learns all of your addresses. A rotki-mode nest answers the same questions locally.
+        It watches only the accounts you give it, reads the chain over your own RPC, and serves the answers at
+        <code>/api</code> in the shapes rotki already understands. rotki falls back to its next indexer for anything
+        the nest has not fetched, so it never reads a gap as an empty history.
+      </p>
+
+      <div class="how">
+        <div class="steps">
+          <div>
+            <span class="cap">1 · the nest</span>
+            <p>One <code>nuthatch.toml</code> naming Ethereum, your RPC, an account and where history starts. No contracts, no SQL, no Docker.</p>
+          </div>
+          <div>
+            <span class="cap">2 · the run</span>
+            <p><code>nuthatch dev</code> backfills the accounts, then checks the chain every five minutes. A trace RPC is needed for internal transactions.</p>
+          </div>
+          <div>
+            <span class="cap">3 · rotki</span>
+            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address. Put Nuthatch first in Ethereum's indexer order, and rotki registers your Ethereum accounts with the nest itself.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <CodeCard code={config} lang="toml" label="rotki/nuthatch.toml" />
+        <CodeCard code={run} lang="bash" label="shell" />
+        <CodeCard code={check} lang="bash" label="check it" />
+      </div>
+
+      <section class="block">
+        <h2>Checked against Etherscan</h2>
+        <p>
+          vitalik.eth on Ethereum, blocks 18,000,000 to 20,000,000: every row compared field by field with Etherscan's answer,
+          and the set of transactions below matched exactly. Internal transactions, withdrawals, block rewards and relay
+          deliveries were checked the same way on pinned cases. Run end to end over blocks 17,040,000 to 17,300,000, rotki
+          with Etherscan removed from its indexer order produced the same 557 transactions and 579 decoded events as rotki
+          with Etherscan alone, and made no request to Etherscan.
+        </p>
+        <dl class="figures">
+          {parity.map(([action, what]) => (
+            <div><dt>{action}</dt><dd>{what}</dd></div>
+          ))}
+        </dl>
+      </section>
+
+      <div class="notes">
+        <section>
+          <h2>Light to run</h2>
+          <p>
+            The nest runs on its own small path, beside the indexer's event pipeline rather than inside it. On an M-series Mac
+            it starts serving in well under a second.
+          </p>
+        </section>
+        <section>
+          <h2>What leaves your machine</h2>
+          <p>
+            Your RPC sees the queries it always would. The partition mirror, if you name one, sees your IP and the block ranges
+            it serves, never an address. The MEV-Boost relays are asked only if you set <code>mev_relays = true</code>,
+            because the block numbers they are asked about identify a validator.
+          </p>
+        </section>
+        <section>
+          <h2>Partitions you can check</h2>
+          <p>
+            The hosted <a href="/nests/hosted/ethereum-address-history">Ethereum partitions</a> carry every header and
+            withdrawal since Shanghai. Your nest hashes each header, links it to its parent, anchors the run to a finalized
+            block from your own RPC and recomputes each withdrawals root, so a bad file is refused, never served.
+          </p>
+        </section>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.8rem; }
+  .lede {
+    color: var(--text-muted); font-size: 1.08rem; line-height: 1.7;
+    margin-bottom: 2rem; max-width: 62ch;
+  }
+  code {
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em;
+  }
+  .how {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-elev); padding: 1.4rem 1.5rem; margin-bottom: 2.5rem;
+  }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.2rem; }
+  .steps p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
+  .cap {
+    display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-faint); margin-bottom: 0.5rem;
+  }
+  .cards { display: grid; gap: 1rem; min-width: 0; }
+  .block { margin-top: 3rem; }
+  .block h2, .notes h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
+  .block p, .notes p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0 0 1rem; max-width: 72ch; }
+  .figures { margin: 1rem 0 0; display: grid; gap: 0.35rem; max-width: 40rem; }
+  .figures div { display: flex; gap: 0.8rem; font-size: 0.86rem; flex-wrap: wrap; }
+  .figures dt {
+    width: 13rem; flex-shrink: 0; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem; color: var(--text-faint); padding-top: 0.1rem;
+  }
+  .figures dd { margin: 0; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+  .notes {
+    margin-top: 3.5rem; display: grid; gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  }
+</style>

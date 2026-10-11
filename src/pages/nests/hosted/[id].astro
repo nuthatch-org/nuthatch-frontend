@@ -1,0 +1,128 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import CodeCard from '../../../components/CodeCard.astro';
+import CopyBlock from '../../../components/CopyBlock.astro';
+import { hosted, type Hosted } from '../../../data/hosted';
+
+export function getStaticPaths() {
+  return hosted.map((h) => ({ params: { id: h.id }, props: { h } }));
+}
+
+const { h } = Astro.props as { h: Hosted };
+const published = h.status === 'available' && h.url !== '';
+const statusText = { available: 'available', building: 'building, not yet published' } as const;
+
+const agentPrompt = `${h.name} is a hosted, address-free dataset from nuthatch:
+${h.coverage}, ${h.partition}.
+${published ? `It is published at ${h.url}` : 'It is not published yet, so leave the url as a placeholder.'}
+
+To use it, add this table to the address-history nest's nuthatch.toml:
+
+${h.config}
+
+The nest verifies every partition against its own RPC before using it: header hashes and parent
+links, each block's withdrawalsRoot, and a link to a finalized block. The mirror never sees an address.
+It feeds these Etherscan-shaped actions on the nest's GET /api: ${h.answers.map((a) => a.action).join(', ')}.`;
+---
+
+<Layout
+  path={`/nests/hosted/${h.id}`}
+  title={`${h.name} - hosted - Nuthatch`}
+  description={`${h.summary} Every partition is verified by your own nest against your own RPC.`}
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label"><a href="/nests#hosted">Nests</a> · hosted</p>
+      <h1>{h.name}</h1>
+      <p class="mono dep">{h.location} · {h.chains.join(', ')}</p>
+      <p class="lede">
+        A nest that serves an account's history to portfolio apps such as rotki needs every block header and every
+        withdrawal on the chain, whichever accounts it watches. That part is the same for everyone and says nothing
+        about anyone, so we build it once and publish it. Your nest reads it, checks it against your own RPC, and
+        keeps the accounts to itself.
+      </p>
+
+      <div class="status">
+        <div><span class="cap">status</span><span class={`val ${published ? 'ok' : 'warn'}`}>{statusText[h.status]}</span></div>
+        <div><span class="cap">coverage</span><span class="val">{h.coverage}</span></div>
+        <div><span class="cap">partitions</span><span class="val">{h.partition}</span></div>
+        <div><span class="cap">public url</span><span class="val">{published ? h.url : 'not published yet'}</span></div>
+      </div>
+
+      <h2>What it is</h2>
+      <p class="muted">
+        {h.summary} Each partition holds the full headers and the withdrawals of its blocks, and
+        <code>manifest.json</code> beside them lists every partition the mirror holds. It is published under
+        <code>{h.location}</code>.
+      </p>
+      {published && <CopyBlock command={h.url} prompt={false} label="Copy URL" />}
+
+      <h2>How a nest uses it</h2>
+      <p class="muted">
+        Add the mirror to the nest's <code>nuthatch.toml</code>, beside its <code>[address_history]</code> table. The
+        nest derives each partition's name from its block range and fetches only those, never the manifest, and keeps what it has
+        fetched within the cache budget.
+      </p>
+      <CodeCard code={h.config} lang="bash" label="nuthatch.toml" />
+
+      <h2>How it is verified</h2>
+      <p class="muted">
+        You do not have to trust us. Your nest checks every partition against your own RPC before it answers a
+        single query from it:
+      </p>
+      <ul class="list">
+        {h.verified.map((v) => <li>{v}</li>)}
+      </ul>
+      <p class="muted">{h.privacy}</p>
+
+      <h2>What it answers</h2>
+      <p class="muted">
+        These are the Etherscan-shaped actions a nest serves at <code>GET /api</code> from the partitions:
+      </p>
+      <ul class="list">
+        {h.answers.map((a) => <li><code>{a.action}</code>: {a.what}.</li>)}
+      </ul>
+
+      <h2>Tell your agent this</h2>
+      <p class="muted">Paste it into Claude Code, Cursor or any coding agent setting up the nest.</p>
+      <CodeCard code={agentPrompt} lang="bash" label="prompt" />
+
+      <h2>Limits</h2>
+      <ul class="list">
+        {h.limits.map((l) => <li>{l}</li>)}
+      </ul>
+      <p class="muted">
+        The design and the record are in <a href={h.record} rel="noopener">{h.record.replace('https://github.com/', '')}</a>.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.3rem; overflow-wrap: anywhere; }
+  h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin: 2.6rem 0 0.8rem; }
+  .dep { color: var(--text-faint); font-size: 0.8rem; overflow-wrap: anywhere; margin-bottom: 1.2rem; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .lede { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; max-width: 66ch; margin-bottom: 1.8rem; }
+  .muted { color: var(--text-muted); font-size: 0.94rem; line-height: 1.65; max-width: 72ch; }
+  .muted + .muted { margin-top: 0.8rem; }
+  code {
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em; overflow-wrap: anywhere;
+  }
+  .status {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); padding: 1.1rem 1.25rem;
+  }
+  .cap {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-faint); margin-bottom: 0.35rem;
+  }
+  .val { font-family: 'JetBrains Mono', monospace; font-size: 0.86rem; color: var(--text); overflow-wrap: anywhere; }
+  .val.ok { color: var(--ok); }
+  .val.warn { color: var(--warn); }
+  .list { color: var(--text-muted); font-size: 0.94rem; line-height: 1.65; max-width: 72ch; margin-bottom: 1rem; }
+  .list li + li { margin-top: 0.4rem; }
+  :global(.copyblock-text) { overflow-wrap: anywhere; word-break: break-all; white-space: normal; }
+</style>

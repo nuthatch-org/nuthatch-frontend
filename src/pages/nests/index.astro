@@ -2,6 +2,26 @@
 import Layout from '../../layouts/Layout.astro';
 import CopyBlock from '../../components/CopyBlock.astro';
 import { getCollection } from 'astro:content';
+import { stopgaps } from '../../data/stopgaps';
+
+const hostedAreas = [
+  {
+    id: 'subgraphs',
+    name: 'Subgraphs',
+    href: '/subgraphs',
+    summary: 'Subgraphs no indexer on The Graph network serves, answered from a nest so the apps that query them keep working.',
+    chains: [...new Set(stopgaps.map((s) => s.chain))],
+    open: stopgaps.length > 0 ? `${stopgaps.length} subgraphs, how to query each` : 'how it works, and how to ask for one',
+  },
+  {
+    id: 'rotki',
+    name: 'rotki',
+    href: '/rotki',
+    summary: 'Your accounts’ history for rotki from your own machine, with verified Ethereum block partitions we publish so your nest can skip building them.',
+    chains: ['ethereum'],
+    open: 'setup, checks and the partitions',
+  },
+];
 
 const all = await getCollection('nests');
 
@@ -75,6 +95,33 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
           in the repo.
         </p>
       </div>
+
+      <section class="group" id="hosted">
+        <div class="group-head">
+          <h2>Hosted</h2>
+          <span class="count">{hostedAreas.length}</span>
+        </div>
+        <p class="group-blurb">
+          What we run so you do not have to: subgraphs no indexer on the network serves, and the verified data a
+          rotki nest builds on. Each is the stock binary, run as any operator would.
+        </p>
+
+        <ul class="grid">
+          {hostedAreas.map((h) => (
+            <li class="nest hosted" id={`hosted-${h.id}`}>
+              <div class="nest-top">
+                <h3><a href={h.href}>{h.name}</a></h3>
+                <span class="badge status--available">available</span>
+              </div>
+              <p class="summary">{h.summary}</p>
+              <div class="chains">
+                {h.chains.map((c) => <span class="chain">{c}</span>)}
+              </div>
+              <span class="open">{h.open} →</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {groups.filter((g) => g.items.length > 0).map((g) => (
         <section class="group">
@@ -238,6 +285,15 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     color: var(--text-muted);
   }
   .repolink:hover { color: var(--accent); }
+  /* A hosted card opens its own page: the title link stretches over the whole card. */
+  .hosted { position: relative; }
+  .nest-top h3 a { color: inherit; text-decoration: none; }
+  .nest-top h3 a::after { content: ''; position: absolute; inset: 0; }
+  .open {
+    margin-top: auto; padding-top: 1rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted);
+  }
+  .hosted:hover .open, .hosted:hover h3 { color: var(--accent); }
   .note {
     margin: 0.95rem 0 0; padding-top: 0.85rem; border-top: 1px solid var(--border);
     font-size: 0.82rem; line-height: 1.55; color: var(--text-faint);

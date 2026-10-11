@@ -1,4 +1,5 @@
 import { getCollection, render } from 'astro:content';
+import { hosted } from '../data/hosted';
 
 export type PaletteKind = 'page' | 'doc' | 'section' | 'post' | 'nest';
 
@@ -65,11 +66,21 @@ export async function paletteIndex(): Promise<PaletteItem[]> {
     also: `${n.id} ${n.data.category} ${n.data.chains.join(' ')}`,
   }));
 
+  const hostedItems: PaletteItem[] = hosted.map((h) => ({
+    kind: 'nest',
+    title: h.name,
+    url: `/nests/hosted/${h.id}`,
+    note: h.summary,
+    tag: h.status,
+    also: `hosted ${h.kind} ${h.chains.join(' ')}`,
+  }));
+
   return [
     ...PAGES.map((p) => ({ kind: 'page' as const, ...p })),
     ...docItems,
     ...sections,
     ...posts,
+    ...hostedItems,
     ...nests,
   ];
 }
