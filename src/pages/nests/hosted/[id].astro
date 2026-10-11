@@ -60,7 +60,7 @@ It feeds these Etherscan-shaped actions on the nest's GET /api: ${h.answers.map(
       <h2>How a nest uses it</h2>
       <p class="muted">
         Add the mirror to the nest's <code>nuthatch.toml</code>, beside its <code>[address_history]</code> table. The
-        nest reads the manifest, fetches only the partitions that cover its block range, and keeps what it has
+        nest derives each partition's name from its block range and fetches only those, never the manifest, and keeps what it has
         fetched within the cache budget.
       </p>
       <CodeCard code={h.config} lang="bash" label="nuthatch.toml" />
