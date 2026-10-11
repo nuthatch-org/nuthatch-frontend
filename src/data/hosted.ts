@@ -34,7 +34,7 @@ export const hosted: Hosted[] = [
     id: 'ethereum-address-history',
     name: 'Ethereum address history partitions',
     kind: 'Block partitions',
-    status: 'building',
+    status: 'available',
     chains: ['ethereum'],
     summary:
       'Verified block partitions for Ethereum mainnet: full headers and withdrawals, 10,000 blocks to a file. A nest that tracks an account’s history reads them instead of fetching every header from its own RPC.',
@@ -61,7 +61,7 @@ cache_mb = 2048         # local disk the fetched partitions may use`,
       { action: 'account/getminedblocks', what: 'the blocks an address produced as fee recipient, from the headers' },
     ],
     limits: [
-      'Ethereum mainnet only, and only from the Shanghai upgrade: blocks before it carry no withdrawals. The L2s follow, one chain at a time.',
+      'Ethereum mainnet only, and only from the Shanghai upgrade: blocks before it carry no withdrawals.',
       'No uptime promise, no account and no key. A partition is only ever an input your nest checks; nothing in it is served unverified.',
       'It holds headers and withdrawals only. An account’s transactions, transfers and traces are found by your nest, against your RPC, and are never hosted.',
     ],

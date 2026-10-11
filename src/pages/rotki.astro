@@ -11,6 +11,7 @@ rpc_urls = ["https://your-ethereum-rpc"]
 
 [address_history]
 addresses = ["0xYourAccount"]   # rotki adds the rest of your accounts itself
+start_block = 17030000          # history before this is never fetched; 0 means genesis, which takes hours
 poll_interval = "5m"
 
 # optional: verified partitions instead of one RPC call per block
@@ -24,17 +25,14 @@ cache_mb = 2048`;
 const run = `curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 nuthatch dev --dir rotki --trace-rpc https://your-trace-rpc`;
 
-const check = `curl 'http://127.0.0.1:8288/api?module=account&action=txlist&address=0xYourAccount&startblock=0&endblock=99999999'`;
+const check = `curl 'http://127.0.0.1:8288/api?module=account&action=txlist&address=0xYourAccount&startblock=17030000&endblock=17100000'`;
 
 const parity: [string, string][] = [
   ['txlist', '2,318 transactions'],
-  ['tokentx', '3,334 transfers'],
-  ['tokennfttx', '106 transfers'],
-  ['token1155tx', '53 transfers'],
-  ['txlistinternal', '15 internal transactions'],
-  ['txsBeaconWithdrawal', '3,131 withdrawals'],
+  ['tokentx', '3,334 transactions with token transfers'],
+  ['tokennfttx', '106 transactions with NFT transfers'],
+  ['token1155tx', '53 transactions with ERC-1155 transfers'],
   ['getblocknobytime', '20 of 20 timestamps'],
-  ['nuthatchProducedBlocks', '8 blocks, rewards and MEV to the wei'],
 ];
 ---
 <Layout
@@ -58,7 +56,7 @@ const parity: [string, string][] = [
         <div class="steps">
           <div>
             <span class="cap">1 · the nest</span>
-            <p>One <code>nuthatch.toml</code> naming your chain, your RPC and an account. No contracts, no SQL, no Docker.</p>
+            <p>One <code>nuthatch.toml</code> naming Ethereum, your RPC, an account and where history starts. No contracts, no SQL, no Docker.</p>
           </div>
           <div>
             <span class="cap">2 · the run</span>
@@ -66,7 +64,7 @@ const parity: [string, string][] = [
           </div>
           <div>
             <span class="cap">3 · rotki</span>
-            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address and puts it first in the indexer order. rotki registers your other accounts with the nest itself.</p>
+            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address. Put Nuthatch first in Ethereum's indexer order, and rotki registers your Ethereum accounts with the nest itself.</p>
           </div>
         </div>
       </div>
@@ -80,9 +78,11 @@ const parity: [string, string][] = [
       <section class="block">
         <h2>Checked against Etherscan</h2>
         <p>
-          vitalik.eth on Ethereum, blocks 18,000,000 to 20,000,000, every row compared field by field with Etherscan's answer.
-          Every count below matched exactly. Run end to end, rotki with Etherscan removed from its indexer order produced the
-          same 557 transactions and 579 decoded events as rotki with Etherscan alone, and made no request to Etherscan.
+          vitalik.eth on Ethereum, blocks 18,000,000 to 20,000,000: every row compared field by field with Etherscan's answer,
+          and the set of transactions below matched exactly. Internal transactions, withdrawals, block rewards and relay
+          deliveries were checked the same way on pinned cases. Run end to end over blocks 17,040,000 to 17,300,000, rotki
+          with Etherscan removed from its indexer order produced the same 557 transactions and 579 decoded events as rotki
+          with Etherscan alone, and made no request to Etherscan.
         </p>
         <dl class="figures">
           {parity.map(([action, what]) => (
@@ -96,7 +96,7 @@ const parity: [string, string][] = [
           <h2>Light to run</h2>
           <p>
             The nest runs on its own small path, beside the indexer's event pipeline rather than inside it. On an M-series Mac
-            it idled at 31.6 MB of memory, started in 179 ms and peaked at 45 MB during a backfill.
+            it starts serving in well under a second.
           </p>
         </section>
         <section>
