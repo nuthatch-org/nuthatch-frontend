@@ -40,7 +40,7 @@ export const hosted: Hosted[] = [
       'Verified block partitions for Ethereum mainnet: full headers and withdrawals, 10,000 blocks to a file. A nest that tracks an account’s history reads them instead of fetching every header from its own RPC.',
     location: 'nestsss / address-history/v1/1/',
     url: ADDRESS_HISTORY_URL,
-    coverage: 'Ethereum mainnet from the Shanghai upgrade (block 17,034,870) onward',
+    coverage: 'Ethereum mainnet from the Shanghai upgrade (block 17,034,870) to block 26,159,999',
     partition: '10,000 blocks per file, listed in manifest.json',
     config: `[address_history.mirror]
 url = "https://nestsss.nestsss-worker.workers.dev"   # the mirror root; the nest adds address-history/v1/<chain>/
