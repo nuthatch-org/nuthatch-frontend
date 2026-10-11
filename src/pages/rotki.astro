@@ -23,7 +23,8 @@ to_block = 26159999
 cache_mb = 2048`;
 
 const run = `curl -fsSL https://nuthatch-indexer.com/install.sh | sh
-nuthatch dev --dir rotki --trace-rpc https://your-trace-rpc`;
+export NUTHATCH_TRACE_RPC=https://your-trace-rpc   # kept out of the process list
+nuthatch dev --dir rotki`;
 
 const check = `curl 'http://127.0.0.1:8288/api?module=account&action=txlist&address=0xYourAccount&startblock=17030000&endblock=17100000'`;
 
