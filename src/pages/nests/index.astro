@@ -11,7 +11,7 @@ const hostedAreas = [
     href: '/subgraphs',
     summary: 'Subgraphs no indexer on The Graph network serves, answered from a nest so the apps that query them keep working.',
     chains: [...new Set(stopgaps.map((s) => s.chain))],
-    open: `${stopgaps.length} subgraphs, how to query each`,
+    open: stopgaps.length > 0 ? `${stopgaps.length} subgraphs, how to query each` : 'how it works, and how to ask for one',
   },
   {
     id: 'rotki',
