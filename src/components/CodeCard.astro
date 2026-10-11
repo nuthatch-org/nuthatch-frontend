@@ -5,7 +5,7 @@ import { Code } from 'astro:components';
 // Dual-theme via CSS variables so the site's :has() toggle drives it.
 interface Props {
   code: string;
-  lang?: 'bash' | 'json' | 'sql' | 'graphql' | 'js';
+  lang?: 'bash' | 'json' | 'sql' | 'graphql' | 'js' | 'toml';
   label?: string;
 }
 const { code, lang = 'sql', label } = Astro.props;

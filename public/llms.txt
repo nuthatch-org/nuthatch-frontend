@@ -7,7 +7,7 @@
 Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
 process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
 licensed
-MIT OR Apache-2.0. Status: v5.0.1, released 2026-10-09, on the stable 5.x line.
+MIT OR Apache-2.0. Status: v5.3.0, released 2026-10-11, on the stable 5.x line.
 
 The 5.x line is a promise about upgrades, not a claim of completeness: from 5.0.0 to the last 5.x
 release a config keeps working with the same meaning, a data directory opens in place on a later

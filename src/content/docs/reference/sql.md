@@ -2,7 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 5.0.1
+checked: 5.3.0
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,

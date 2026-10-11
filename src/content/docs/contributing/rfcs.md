@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.0.1
+checked: 5.3.0
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
