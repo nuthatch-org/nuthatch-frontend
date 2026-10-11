@@ -2,7 +2,26 @@
 import Layout from '../../layouts/Layout.astro';
 import CopyBlock from '../../components/CopyBlock.astro';
 import { getCollection } from 'astro:content';
-import { hosted } from '../../data/hosted';
+import { stopgaps } from '../../data/stopgaps';
+
+const hostedAreas = [
+  {
+    id: 'subgraphs',
+    name: 'Subgraphs',
+    href: '/subgraphs',
+    summary: 'Subgraphs no indexer on The Graph network serves, answered from a nest so the apps that query them keep working.',
+    chains: [...new Set(stopgaps.map((s) => s.chain))],
+    open: `${stopgaps.length} subgraphs, how to query each`,
+  },
+  {
+    id: 'rotki',
+    name: 'rotki',
+    href: '/rotki',
+    summary: 'Your accounts’ history for rotki from your own machine, with verified Ethereum block partitions we publish so your nest can skip building them.',
+    chains: ['ethereum'],
+    open: 'setup, checks and the partitions',
+  },
+];
 
 const all = await getCollection('nests');
 
@@ -77,44 +96,32 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
         </p>
       </div>
 
-      {hosted.length > 0 && (
-        <section class="group" id="hosted">
-          <div class="group-head">
-            <h2>Hosted</h2>
-            <span class="count">{hosted.length}</span>
-          </div>
-          <p class="group-blurb">
-            Address-free data we publish so your nest can skip building it. Your nest checks every piece against
-            your own RPC before using it, and nothing about the accounts you watch reaches us.
-          </p>
+      <section class="group" id="hosted">
+        <div class="group-head">
+          <h2>Hosted</h2>
+          <span class="count">{hostedAreas.length}</span>
+        </div>
+        <p class="group-blurb">
+          What we run so you do not have to: subgraphs no indexer on the network serves, and the verified data a
+          rotki nest builds on. Each is the stock binary, run as any operator would.
+        </p>
 
-          <ul class="grid">
-            {hosted.map((h) => (
-              <li class="nest hosted" id={`hosted-${h.id}`}>
-                <div class="nest-top">
-                  <h3><a href={`/nests/hosted/${h.id}`}>{h.name}</a></h3>
-                  <span class={`badge status--${h.status}`}>{statusLabel[h.status]}</span>
-                </div>
-
-                <div class="meta">
-                  <span class="tag">{h.kind}</span>
-                  <span class="tag factory">verified by your nest</span>
-                </div>
-
-                <p class="summary">{h.summary}</p>
-
-                <p class="events"><span class="events-cap">at</span> {h.location}</p>
-
-                <div class="chains">
-                  {h.chains.map((c) => <span class="chain">{c}</span>)}
-                </div>
-
-                <span class="open">config, verification and limits →</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+        <ul class="grid">
+          {hostedAreas.map((h) => (
+            <li class="nest hosted" id={`hosted-${h.id}`}>
+              <div class="nest-top">
+                <h3><a href={h.href}>{h.name}</a></h3>
+                <span class="badge status--available">available</span>
+              </div>
+              <p class="summary">{h.summary}</p>
+              <div class="chains">
+                {h.chains.map((c) => <span class="chain">{c}</span>)}
+              </div>
+              <span class="open">{h.open} →</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {groups.filter((g) => g.items.length > 0).map((g) => (
         <section class="group">
