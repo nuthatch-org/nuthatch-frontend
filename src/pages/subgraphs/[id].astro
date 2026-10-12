@@ -14,7 +14,7 @@ const first = s.examples[0];
 
 const curl = `curl -s ${endpoint} \\
   -H 'content-type: application/json' \\
-  -d '{"query": "{ tokens { id name } }"}'`;
+  -d '${JSON.stringify({ query: first.query })}'`;
 
 const fetchSnippet = `const res = await fetch('${endpoint}', {
   method: 'POST',
@@ -23,7 +23,7 @@ const fetchSnippet = `const res = await fetch('${endpoint}', {
 });
 const { data, errors } = await res.json();`;
 
-const clientSnippet = `// Apollo, urql or graphql-request: only the URL changes.
+const clientSnippet = `// Use this endpoint for the supported queries listed below.
 const client = new ApolloClient({
   uri: '${endpoint}',
   cache: new InMemoryCache(),
@@ -34,12 +34,12 @@ ${endpoint}
 
 It speaks The Graph's GraphQL dialect: POST {"query": ..., "variables": ...} as JSON, the same
 queries a graph-node endpoint takes, including where filters, orderBy, first and skip, and _meta.
-Introspection works, so read the schema from it before writing queries.
+Introspection exposes the original schema. Check the coverage below before writing queries.
 
 Entities: ${s.entities.join(', ')}.
 Not served, and refused by name if asked for: ${s.refused.map((r) => r.field).join(', ')}.
 
-Point the app's subgraph URL at the address above. Nothing else about the queries needs to change.`;
+Use this endpoint only for supported event-history queries. It is a partial fallback. The original schema includes fields that this nest refuses; introspection alone does not prove coverage.`;
 ---
 
 <Layout
@@ -53,9 +53,8 @@ Point the app's subgraph URL at the address above. Nothing else about the querie
       <h1>{s.name}</h1>
       <p class="mono dep">{s.deployment} · {s.chain}</p>
       <p class="lede">
-        No indexer on The Graph network serves this deployment, so its queries are answered from a nuthatch nest
-        built from the same contracts. Point your app at the endpoint below and the queries it already sends keep
-        working. When an indexer allocates to the deployment, switch back to the gateway.
+        {s.coverage} The nest reads the same contracts. Use the supported queries below, and switch back to the gateway
+        when an indexer serves current data.
       </p>
 
       <div class="status" id="status" data-endpoint={endpoint}>
@@ -103,19 +102,22 @@ Point the app's subgraph URL at the address above. Nothing else about the querie
 
       <h2>What it answers</h2>
       <p class="muted">
-        Every field of {s.entities.length} entities, derived from the contracts' events by the same rules the subgraph's
-        mappings apply. Two things are not served, and a query that asks for one gets an error naming it rather than a
-        made-up value:
+        The fields of {s.entities.length} immutable event-record entities, derived from the contracts' events.
+        Member.id is available for their relations. The fields listed below are not served; a query requesting
+        one fails with a named error.
       </p>
       <ul class="refused">
         {s.refused.map((r) => <li><code>{r.field}</code>: {r.why}.</li>)}
       </ul>
 
+      <h2>Run it yourself</h2>
+      <p class="muted"><a href={s.repository} rel="noopener">Source nest, coverage report and self-hosting instructions</a>.</p>
+
       <h2>Limits</h2>
       <p class="muted">
         One machine serves this, with no uptime promise, no proof of indexing and no dispute path. It costs you nothing
         and asks for no account. Ask in The Graph's <code>#indexers</code> channel for an allocation on
-        <code>{s.deployment}</code>; when one exists, point your app back at
+        <code>{s.deployment}</code>; once it is at chain head and the gateway answers queries, point your app back at
         <code>https://gateway.thegraph.com/api/&lt;key&gt;/deployments/id/{s.deployment}</code>.
         The investigation and the record are in <a href={s.record} rel="noopener">{s.record.replace('https://github.com/', '')}</a>.
       </p>
