@@ -104,10 +104,13 @@ import { stopgaps, ENDPOINT_BASE } from '../../data/stopgaps';
   .mono { font-family: 'JetBrains Mono', monospace; }
   .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr)); gap: 1rem; }
   .card {
+    position: relative;
     border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
     padding: 1.2rem 1.25rem 1.3rem; display: flex; flex-direction: column; transition: border-color 0.18s var(--ease);
   }
   .card:hover { border-color: var(--border-hi); }
+  .card-top h2 a::after { content: ''; position: absolute; inset: 0; }
+  .card:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
   .card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
   .card h2 { font-size: 1.1rem; margin: 0; }
   .card h2 a { color: var(--text); text-decoration: none; }
