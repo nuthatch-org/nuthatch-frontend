@@ -6,7 +6,7 @@ import { stopgaps, ENDPOINT_BASE } from '../../data/stopgaps';
 <Layout
   path="/subgraphs"
   title="Nest-backed subgraphs - Nuthatch"
-  description="Subgraphs no indexer on The Graph network serves, answered from a nuthatch nest so the apps that query them keep working."
+  description="Limited event-history endpoints for subgraphs The Graph network cannot currently serve. Each page lists supported queries and refused fields."
 >
   <section class="page">
     <div class="wrap">
@@ -14,8 +14,8 @@ import { stopgaps, ENDPOINT_BASE } from '../../data/stopgaps';
       <h1>Nest-backed subgraphs</h1>
       <p class="lede">
         When no indexer on The Graph network serves a subgraph, the apps that query it break. These are subgraphs we
-        answer from a nuthatch nest built from the same contracts, as a stopgap: the app changes one URL and its
-        queries keep working, until an indexer allocates and it can switch back.
+        answer from a nuthatch nest built from the same contracts, as a stopgap. Coverage varies: each page lists the
+        queries it supports and fields it refuses. Switch supported queries back once the network serves current data.
       </p>
 
       {stopgaps.length === 0 && <p class="empty">No running stopgap subgraphs at the moment.</p>}
@@ -28,6 +28,7 @@ import { stopgaps, ENDPOINT_BASE } from '../../data/stopgaps';
               <span class="badge" data-state>checking</span>
             </div>
             <p class="mono dep">{s.deployment}</p>
+            <p>{s.coverage}</p>
             <dl class="figures">
               <div><dt>chain</dt><dd>{s.chain}</dd></div>
               <div><dt>served since</dt><dd>{s.since}</dd></div>
