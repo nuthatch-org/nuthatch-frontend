@@ -1,0 +1,609 @@
+---
+// The data path as a live 3D scene: hand-rolled projection on a 2D canvas, no dependencies.
+// The rail under it carries the same five stages as text, so nothing is lost without JS.
+---
+<div class="ps" id="ps">
+  <p class="ps-lede">Drag to look around, or pick a stage. The blocks are simulated. The path they take is the real one.</p>
+
+  <div class="ps-stage">
+    <canvas id="ps-canvas" tabindex="0" role="img"
+      aria-label="Animated 3D diagram of the Nuthatch pipeline. Blocks arrive from chain RPC, logs are decoded by topic0, incremental views update, rows land in the redb hot store, blocks past finality seal into Parquet segments, and Burrmill answers queries over both from one local endpoint."></canvas>
+  </div>
+
+  <div class="ps-bar">
+    <dl class="ps-read">
+      <div><dt>tip</dt><dd id="ps-tip">#21,403,118</dd></div>
+      <div><dt>unsealed</dt><dd id="ps-hot">5 blocks</dd></div>
+      <div><dt>sealed</dt><dd id="ps-cold">9 segments</dd></div>
+    </dl>
+    <div class="ps-ctl">
+      <button class="ps-btn" type="button" id="ps-all" aria-pressed="true">Whole pipeline</button>
+      <button class="ps-btn ps-btn--reorg" type="button" id="ps-reorg">Trigger a reorg</button>
+      <button class="ps-btn" type="button" id="ps-play">Pause</button>
+    </div>
+    <p class="ps-status" id="ps-status" aria-live="polite">following the tip</p>
+  </div>
+
+  <ol class="ps-rail" id="ps-rail">
+    <li><button type="button" data-view="1" aria-pressed="false"><span class="n">1</span><span class="t">chain RPC</span><span class="d">Blocks arrive from your JSON-RPC endpoints, pooled, with failover and retries.</span></button></li>
+    <li><button type="button" data-view="2" aria-pressed="false"><span class="n">2</span><span class="t">deterministic decode</span><span class="d">Logs are decoded by topic0 against versioned ABIs. Same blocks, same rows.</span></button></li>
+    <li><button type="button" data-view="3" aria-pressed="false"><span class="n">3</span><span class="t">incremental views</span><span class="d">Entities update as each block lands. A reorg is a retraction, not rollback code.</span></button></li>
+    <li><button type="button" data-view="4" aria-pressed="false"><span class="n">4</span><span class="t">redb + Parquet</span><span class="d">The live tip sits in redb. Past finality, blocks seal into immutable Parquet segments.</span></button></li>
+    <li><button type="button" data-view="5" aria-pressed="false"><span class="n">5</span><span class="t">one local endpoint</span><span class="d">Burrmill reads hot and sealed data together. Entities, SQL, balances and MCP, one port.</span></button></li>
+  </ol>
+  <p class="ps-note">Simulation. Block numbers, row counts and segment ids are made up.</p>
+</div>
+
+<style>
+  /* The scene reads these as hex, so they stay opaque literals rather than the site's rgba borders. */
+  .ps {
+    --s-bg: #171614; --s-surface: #211f1c; --s-ink: #ece9e3; --s-muted: #9c978c; --s-line: #36332e;
+    --s-shade: #0b0a09; --s-buff: #e2c08e; --s-slate: #8bb8dc; --s-rust: #cd8560;
+  }
+  :root[data-theme='light'] .ps {
+    --s-bg: #fbfbfa; --s-surface: #eeece6; --s-ink: #2f3437; --s-muted: #6e6b64; --s-line: #dcd9d1;
+    --s-shade: #2b2721; --s-buff: #b98a45; --s-slate: #1f6c9f; --s-rust: #a85a38;
+  }
+
+  .ps-lede { color: var(--text-muted); margin: -1rem 0 0; max-width: 38rem; }
+  .ps-stage { position: relative; margin-top: 12px; aspect-ratio: 2.5 / 1; max-width: 100%; }
+  .ps-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; outline: none; }
+  .ps-stage canvas:active { cursor: grabbing; }
+  .ps-stage canvas:focus-visible { outline: 1px solid var(--text-muted); outline-offset: -1px; }
+
+  .ps-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 14px; font: 12px/1.4 'JetBrains Mono', ui-monospace, monospace; }
+  .ps-read { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0; min-width: 0; }
+  .ps-read div { display: flex; gap: 8px; }
+  .ps-read dt { color: var(--text-muted); }
+  .ps-read dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .ps-status { flex-basis: 100%; order: 3; margin: 0; color: var(--text-muted); min-height: 1.4em; }
+  .ps-status[data-kind="reorg"] { color: var(--s-rust); }
+  .ps-status[data-kind="seal"] { color: var(--s-slate); }
+  .ps-status[data-kind="query"] { color: var(--s-buff); }
+  .ps-ctl { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ps-btn { font: inherit; color: var(--text); background: transparent; border: 1px solid var(--border-hi); border-radius: var(--radius-sm); padding: 7px 12px; cursor: pointer; }
+  .ps-btn:hover { border-color: var(--text-muted); }
+  .ps-btn:focus-visible, .ps-rail button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  .ps-btn[disabled] { opacity: .45; cursor: default; }
+  .ps-btn--reorg { color: var(--s-rust); }
+  .ps-btn[aria-pressed="true"] { border-color: var(--text); }
+
+  .ps-rail { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ps-rail li { min-width: 0; }
+  .ps-rail button { all: unset; box-sizing: border-box; display: grid; gap: 6px; align-content: start; width: 100%; height: 100%; padding: 14px 18px 6px 0; border-top: 1px solid var(--border-hi); cursor: pointer; color: var(--text-muted); }
+  .ps-rail button:hover { border-top-color: var(--text-muted); }
+  .ps-rail button[aria-pressed="true"] { border-top-color: var(--text); color: var(--text); }
+  .ps-rail .n { font: 12px/1 'JetBrains Mono', ui-monospace, monospace; color: var(--text-faint); }
+  .ps-rail .t { font: 500 13px/1.3 'JetBrains Mono', ui-monospace, monospace; color: var(--text); }
+  .ps-rail .d { font-size: 13.5px; line-height: 1.5; }
+  .ps-note { margin: 22px 0 0; font: 12px/1.5 'JetBrains Mono', ui-monospace, monospace; color: var(--text-faint); }
+
+  @media (max-width: 760px) {
+    .ps-stage { aspect-ratio: 1.2 / 1; margin-inline: -8px; }
+    .ps-rail { grid-template-columns: 1fr; }
+    .ps-rail button { grid-template-columns: 1.4em 1fr; padding: 12px 0; column-gap: 8px; }
+    .ps-rail .d { grid-column: 2; }
+  }
+</style>
+
+<script is:inline>
+(() => {
+  const cv = document.getElementById('ps-canvas');
+  if (!cv || !cv.getContext) return;
+  const ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const host = $('ps');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- helpers
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+  const sm = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const css = (c, a = 1) => 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')';
+  let seed = 0x9e3779b9;
+  const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const fmt = n => n.toLocaleString('en-US');
+
+  // ---------- palette (read from the component's tokens so the scene follows the theme)
+  const P = {};
+  function readPalette() {
+    const cs = getComputedStyle(host);
+    for (const k of ['bg', 'surface', 'ink', 'muted', 'line', 'shade', 'buff', 'slate', 'rust']) {
+      let s = cs.getPropertyValue('--s-' + k).trim().replace('#', '');
+      if (s.length === 3) s = [...s].map(c => c + c).join('');
+      const n = parseInt(s, 16);
+      P[k] = [n >> 16 & 255, n >> 8 & 255, n & 255];
+    }
+    P.dark = (P.bg[0] + P.bg[1] + P.bg[2]) / 3 < 128;
+    P.lane = [P.ink, mix(P.ink, P.bg, .3), mix(P.ink, P.bg, .52)];
+  }
+
+  // ---------- world constants
+  const HEAD_X = -10.6, GATE_X = -8.5, LANE_Z = [-1.7, 0, 1.7], OPX = [-5.2, -4, -2.8], BAR_Z = -3.5;
+  const HOT_X = 1.7, HOT_BASE = 0.25, SLAB = 0.32, PLANE_X = 4.4;
+  const SEG_X = [6.7, 8.6], SEG_Z = [-1.7, 0, 1.7], SEG_BASE = 0.46, SEG_P = 0.82;
+  const LENS = [11.5, 2.2, 0], EP = [13.4, 2.45, 0];
+  const LANES = ['Transfer', 'Swap', 'Sync'], BARS = ['balances', 'exposure', 'velocity'];
+  const QUERIES = ['GET /sql', 'nuthatch mcp', 'GET /derived'];
+  const slotPos = i => { const w = i % 6; return [SEG_X[w % 2], SEG_BASE + Math.floor(i / 6) * SEG_P, SEG_Z[Math.floor(w / 2)]]; };
+
+  // ---------- camera
+  let W = 0, H = 0, cssW = 0, dpr = 1, focal = 1;
+  let C = [0, 0, 0], F = [0, 0, -1], R = [1, 0, 0], U = [0, 1, 0];
+  const cam = { tx: 0, ty: 1, tz: 0, yaw: -.34, pitch: .36, dist: 40 };
+  let goal = { ...cam }, view = 0, userYaw = 0, userPitch = 0, dragging = false;
+  const VIEWS = [
+    { box: [-17.2, 14.4, 0, 3.6, -3.3, 2.2], yaw: -.3, pitch: .33, nyaw: -.98, npitch: .4 },
+    { box: [-17.4, -9.7, 0, 2.6, -1.6, 1.6], yaw: -.5, pitch: .3 },
+    { box: [-11.4, -5.6, 0, 3.1, -2.4, 2.4], yaw: -.62, pitch: .3 },
+    { box: [-7.1, -.7, 0, 3.6, -4.3, 2.5], yaw: -.26, pitch: .5 },
+    { box: [-.5, 10, 0, 4.4, -3.1, 3.1], yaw: -.42, pitch: .34 },
+    { box: [5.4, 16.2, 0, 4.5, -3, 3], yaw: .42, pitch: .3 }
+  ];
+  function setBasis(c) {
+    const cp = Math.cos(c.pitch), sp = Math.sin(c.pitch), sy = Math.sin(c.yaw), cy = Math.cos(c.yaw);
+    C = [c.tx + c.dist * cp * sy, c.ty + c.dist * sp, c.tz + c.dist * cp * cy];
+    F = [-cp * sy, -sp, -cp * cy]; R = [cy, 0, -sy]; U = [-sy * sp, cp, -cy * sp];
+  }
+  function proj(x, y, z) {
+    const dx = x - C[0], dy = y - C[1], dz = z - C[2];
+    const d = Math.max(.4, dx * F[0] + dy * F[1] + dz * F[2]), s = focal / d;
+    return [W / 2 + (dx * R[0] + dz * R[2]) * s, H * .56 - (dx * U[0] + dy * U[1] + dz * U[2]) * s, d];
+  }
+  const depth = (x, y, z) => (x - C[0]) * F[0] + (y - C[1]) * F[1] + (z - C[2]) * F[2];
+  function fit(v) {
+    const narrow = W / H < 1.6, b = v.box;
+    const t = { tx: (b[0] + b[1]) / 2, ty: (b[2] + b[3]) / 2, tz: (b[4] + b[5]) / 2, yaw: narrow && v.nyaw != null ? v.nyaw : v.yaw, pitch: narrow && v.npitch != null ? v.npitch : v.pitch, dist: 0 };
+    const mx = W * .03, mt = H * .16, mb = H * .05;
+    let lo = 4, hi = 260;
+    for (let i = 0; i < 24; i++) {
+      t.dist = (lo + hi) / 2; setBasis(t);
+      let ok = true;
+      for (let k = 0; k < 8 && ok; k++) {
+        const p = proj(b[k & 1], b[2 + (k >> 1 & 1)], b[4 + (k >> 2 & 1)]);
+        if (p[2] < 2 || p[0] < mx || p[0] > W - mx || p[1] < mt || p[1] > H - mb) ok = false;
+      }
+      if (ok) hi = t.dist; else lo = t.dist;
+    }
+    t.dist = hi;
+    return t;
+  }
+  function setView(i, snap) {
+    view = i; userYaw = 0; userPitch = 0; goal = fit(VIEWS[i]);
+    if (snap) Object.assign(cam, goal);
+    $('ps-all').setAttribute('aria-pressed', String(i === 0));
+    document.querySelectorAll('#ps-rail button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.view === i)));
+  }
+
+  // ---------- simulation
+  let uid = 0;
+  const S = {
+    t: 0, tip: 21403118, chain: [], chips: [], retr: [], hot: [], segs: [], dying: [], seals: [], sparks: [], pending: [],
+    bars: [8, 6, 9], barShow: [8, 6, 9], barFlash: [0, 0, 0],
+    nextBlock: .6, nextQuery: 2.2, nextReorg: 1e9, reorgCool: 0, reorgMsg: 0, query: null, qi: 0, sealed: 9,
+    gate: 0, plane: 0, planeRust: 0, lens: 0, ep: 0
+  };
+  const segId = () => { const h = () => Math.floor(rnd() * 65536).toString(16).padStart(4, '0'); return 'seg ' + h() + '…' + h().slice(2); };
+  function pickDelta(lane) {
+    const v = S.bars[lane], mag = 1 + (rnd() < .3 ? 1 : 0);
+    return (v > 11 ? -1 : v < 4 ? 1 : rnd() < .58 ? 1 : -1) * mag;
+  }
+  function newBlock(no, alt, settled) {
+    const b = { id: ++uid, no, alt, n: 3 + Math.floor(rnd() * 3), landed: 0, applied: [] };
+    S.tip = no;
+    S.chain.push({ b, x: HEAD_X, a: settled ? 1 : 0, dead: 0, fade: false });
+    S.hot.push({ b, y: HOT_BASE + S.hot.length * SLAB + (settled ? 0 : .5), fill: settled ? 1 : 0, retract: 0 });
+    for (let k = 0; k < b.n; k++) {
+      const lane = Math.floor(rnd() * 3);
+      if (settled) { b.landed++; b.applied.push({ lane, delta: 1 }); continue; }
+      S.chips.push({ b, lane, delta: 0, t0: S.t + .3 + k * .17, crossed: false, gated: false, kill: false, fade: 1, ox: (rnd() - .5) * 1.6, oz: (rnd() - .5) * 1.6, ty: 1, p: null });
+    }
+  }
+  function chipPos(ch, u) {
+    const lz = LANE_Z[ch.lane];
+    if (u < .2) return [lerp(HEAD_X, GATE_X, u / .2), 1, 0];
+    if (u < .36) { const k = sm((u - .2) / .16); return [lerp(GATE_X, -6.4, (u - .2) / .16), lerp(1, .42, k), lz * k]; }
+    if (u < .74) return [lerp(-6.4, -1.4, (u - .36) / .38), .42, lz];
+    const k = (u - .74) / .26;
+    return [lerp(-1.4, HOT_X + ch.ox, k), lerp(.42, ch.ty, k) + Math.sin(k * Math.PI) * 1.1, lerp(lz, ch.oz, k)];
+  }
+  function retrPos(r, k) {
+    const lz = LANE_Z[r.lane];
+    if (k < .42) { const j = k / .42; return [lerp(r.from[0], -1.4, j), lerp(r.from[1], .42, j) + Math.sin(j * Math.PI) * .9, lerp(r.from[2], lz, j)]; }
+    return [lerp(-1.4, OPX[r.lane], (k - .42) / .58), .42, lz];
+  }
+  function reorg() {
+    if (S.reorgCool > 0) return false;
+    const live = S.chain.filter(c => !c.dead && !c.fade);
+    if (live.length < 3 || S.hot.length < 3) return false;
+    const orphans = live.slice(-2), ids = new Set(orphans.map(c => c.b.id));
+    orphans.forEach(c => { c.dead = 1e-3; });
+    S.chips.forEach(ch => { if (ids.has(ch.b.id)) ch.kill = true; });
+    let n = 0;
+    S.hot.forEach((s, i) => {
+      if (!ids.has(s.b.id)) return;
+      s.retract = 1e-3;
+      s.b.applied.forEach(a => S.retr.push({ lane: a.lane, delta: a.delta, t0: S.t + .15 + (n++) * .11, from: [HOT_X, HOT_BASE + i * SLAB, 0] }));
+    });
+    S.pending = [{ at: S.t + 1.5, no: orphans[0].b.no }, { at: S.t + 2.5, no: orphans[1].b.no }];
+    S.tip = orphans[0].b.no - 1;
+    S.nextBlock = S.t + 5; S.nextReorg = S.t + 24 + rnd() * 6;
+    S.plane = 2.2; S.planeRust = 1; S.reorgCool = 6.5; S.reorgMsg = 5;
+    return true;
+  }
+  function startQuery() {
+    const targets = [{ hot: true }], pool = S.segs.slice();
+    for (let k = 0; k < 3 && pool.length; k++) targets.push({ seg: pool.splice(Math.floor(rnd() * pool.length), 1)[0] });
+    S.query = { t: 0, targets, label: QUERIES[S.qi++ % QUERIES.length], rows: 12 + Math.floor(rnd() * 480), hit: false, back: false };
+  }
+  function step(dt) {
+    S.t += dt; const t = S.t, k6 = 1 - Math.exp(-dt * 6), k4 = 1 - Math.exp(-dt * 4);
+    while (S.pending.length && S.pending[0].at <= t) newBlock(S.pending.shift().no, true);
+    if (t >= S.nextBlock && !S.pending.length) { newBlock(S.tip + 1, false); S.nextBlock = t + 2.3 + rnd() * .5; }
+    if (t >= S.nextReorg) { if (!reorg()) S.nextReorg = t + 3; }
+    if (t >= S.nextQuery && !S.query && S.reorgCool < 2.5) startQuery();
+    S.reorgCool = Math.max(0, S.reorgCool - dt); S.reorgMsg = Math.max(0, S.reorgMsg - dt);
+    S.plane = Math.max(0, S.plane - dt); if (!S.plane) S.planeRust = 0;
+    S.gate *= Math.exp(-dt * 5); S.lens *= Math.exp(-dt * 3); S.ep *= Math.exp(-dt * 2.2);
+
+    // chain
+    let live = S.chain.filter(c => !c.dead && !c.fade);
+    if (live.length > 6) { live[0].fade = true; live = live.slice(1); }
+    for (let i = S.chain.length - 1; i >= 0; i--) {
+      const c = S.chain[i];
+      if (c.dead) { c.dead += dt / 1.3; if (c.dead >= 1) S.chain.splice(i, 1); continue; }
+      const j = live.indexOf(c), tx = c.fade ? HEAD_X - live.length * 1.5 : HEAD_X - (live.length - 1 - j) * 1.5;
+      c.x += (tx - c.x) * k4;
+      c.a += ((c.fade ? 0 : 1) - c.a) * k6;
+      if (c.fade && c.a < .03) S.chain.splice(i, 1);
+    }
+    // hot slabs
+    for (let i = S.hot.length - 1; i >= 0; i--) {
+      const s = S.hot[i];
+      s.y += (HOT_BASE + i * SLAB - s.y) * k6;
+      s.fill += (s.b.landed / s.b.n - s.fill) * k6;
+      if (s.retract) { s.retract += dt / 1.1; if (s.retract >= 1) S.hot.splice(i, 1); }
+    }
+    // chips
+    for (let i = S.chips.length - 1; i >= 0; i--) {
+      const ch = S.chips[i];
+      if (ch.kill) { ch.fade -= dt * 2.2; if (ch.fade <= 0 || !ch.p) S.chips.splice(i, 1); continue; }
+      const u = (t - ch.t0) / 3.2; if (u < 0) continue;
+      const idx = S.hot.findIndex(s => s.b === ch.b); if (idx < 0) { ch.kill = true; continue; }
+      ch.ty = HOT_BASE + idx * SLAB + .22;
+      ch.p = chipPos(ch, Math.min(u, 1)); ch.u = u;
+      if (!ch.gated && u >= .2) { ch.gated = true; S.gate = 1; }
+      if (!ch.crossed && ch.p[0] >= OPX[ch.lane]) {
+        ch.crossed = true; ch.delta = pickDelta(ch.lane);
+        S.bars[ch.lane] += ch.delta; S.barFlash[ch.lane] = 1; ch.b.applied.push({ lane: ch.lane, delta: ch.delta });
+        S.sparks.push({ p: [OPX[ch.lane], .45, LANE_Z[ch.lane]], t: 0, rust: false });
+      }
+      if (u >= 1) { ch.b.landed++; S.chips.splice(i, 1); }
+    }
+    // retractions travel back up the lane and undo their delta at the operator
+    for (let i = S.retr.length - 1; i >= 0; i--) {
+      const r = S.retr[i], k = (t - r.t0) / 1.5;
+      if (k < 0) { r.p = null; continue; }
+      r.p = retrPos(r, Math.min(k, 1));
+      if (k >= 1) { S.bars[r.lane] -= r.delta; S.barFlash[r.lane] = -1; S.sparks.push({ p: [OPX[r.lane], .45, LANE_Z[r.lane]], t: 0, rust: true }); S.retr.splice(i, 1); }
+    }
+    for (let l = 0; l < 3; l++) { S.barShow[l] += (Math.max(.6, S.bars[l]) - S.barShow[l]) * k6; S.barFlash[l] *= Math.exp(-dt * 2.6); }
+    // seal: the three oldest complete blocks leave redb and become one segment
+    if (S.hot.length >= 7 && !S.seals.length && S.hot.slice(0, 3).every(s => !s.retract && s.b.landed >= s.b.n)) {
+      S.hot.splice(0, 3);
+      if (S.segs.length >= 24) { S.dying.push(...S.segs.splice(0, 6).map(g => ({ g, t: 0 }))); }
+      S.seals.push({ t: 0, slot: S.segs.length });
+    }
+    for (let i = S.seals.length - 1; i >= 0; i--) {
+      const s = S.seals[i], was = s.t; s.t += dt;
+      if (was < .55 && s.t >= .55) S.plane = Math.max(S.plane, .7);
+      if (s.t >= 1.6) { const p = slotPos(s.slot); S.segs.push({ id: segId(), y: p[1], glow: .9, born: S.t }); S.sealed++; S.seals.splice(i, 1); }
+    }
+    S.segs.forEach((g, i) => { g.y += (slotPos(i)[1] - g.y) * k4; g.glow *= Math.exp(-dt * 1.6); });
+    for (let i = S.dying.length - 1; i >= 0; i--) { S.dying[i].t += dt / .7; if (S.dying[i].t >= 1) S.dying.splice(i, 1); }
+    for (let i = S.sparks.length - 1; i >= 0; i--) { S.sparks[i].t += dt / .5; if (S.sparks[i].t >= 1) S.sparks.splice(i, 1); }
+    // query
+    const q = S.query;
+    if (q) {
+      q.t += dt;
+      if (!q.hit && q.t >= .65) { q.hit = true; S.lens = 1; q.targets.forEach(g => { if (g.seg) g.seg.glow = 1.4; }); }
+      if (!q.back && q.t >= 1.6) { q.back = true; S.ep = 1; }
+      if (q.t >= 3.4) { S.query = null; S.nextQuery = t + 2.6 + rnd() * 2; }
+    }
+  }
+  function initSim() {
+    for (let i = 0; i < 9; i++) { const p = slotPos(i); S.segs.push({ id: segId(), y: p[1], glow: 0, born: -9 }); }
+    const tip = S.tip;
+    for (let n = tip - 5; n <= tip; n++) newBlock(n, false, true);
+    S.hot.shift();                       // the oldest visible block is already sealed
+    for (let i = 0; i < 300; i++) step(1 / 30);
+    S.nextReorg = S.t + 11;
+  }
+
+  // ---------- drawing
+  let items = [], labels = [], overlay = [];
+  const fog = d => clamp((d - cam.dist * .75) / (cam.dist * 1.3), 0, 1) * .5;
+  function box(x, y, z, sx, sy, sz, col, o) {
+    items.push(Object.assign({ k: 0, x, y, z, sx, sy, sz, col, a: 1, d: depth(x, y, z) }, o));
+  }
+  function quad(pts, col, o) {
+    let cx = 0, cy = 0, cz = 0; pts.forEach(p => { cx += p[0]; cy += p[1]; cz += p[2]; });
+    const n = pts.length;
+    items.push(Object.assign({ k: 1, pts, col, a: .1, d: depth(cx / n, cy / n, cz / n) }, o));
+  }
+  function path(ps) { ctx.beginPath(); ctx.moveTo(ps[0][0], ps[0][1]); for (let i = 1; i < ps.length; i++) ctx.lineTo(ps[i][0], ps[i][1]); ctx.closePath(); }
+  function drawBox(b) {
+    const hx = b.sx / 2, hy = b.sy / 2, hz = b.sz / 2, q = [], f = fog(b.d);
+    for (let i = 0; i < 8; i++) q.push(proj(b.x + (i & 1 ? hx : -hx), b.y + (i & 2 ? hy : -hy), b.z + (i & 4 ? hz : -hz)));
+    ctx.globalAlpha = b.a; ctx.lineWidth = dpr; ctx.lineJoin = 'round';
+    const face = (ix, shade, axis) => {
+      const col = mix(mix(b.col, P.shade, shade), P.bg, f);
+      path([q[ix[0]], q[ix[1]], q[ix[2]], q[ix[3]]]);
+      ctx.fillStyle = css(col); ctx.fill();
+      ctx.strokeStyle = css(mix(col, P.ink, P.dark ? .22 : .0), .9); ctx.stroke();
+      if (b.stripes && axis) {
+        ctx.strokeStyle = css(mix(col, P.shade, .3), .8); ctx.beginPath();
+        for (let s = 1; s < 4; s++) {
+          const t = s / 4;
+          const a = axis === 'x' ? proj(b.x + ix.sx * hx, b.y - hy, b.z - hz + t * b.sz) : proj(b.x - hx + t * b.sx, b.y - hy, b.z + ix.sz * hz);
+          const c = axis === 'x' ? proj(b.x + ix.sx * hx, b.y + hy, b.z - hz + t * b.sz) : proj(b.x - hx + t * b.sx, b.y + hy, b.z + ix.sz * hz);
+          ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]);
+        }
+        ctx.stroke();
+      }
+    };
+    const fx = i => Object.assign(i, { sx: 0, sz: 0 });
+    if (C[1] > b.y + hy) face(fx([2, 6, 7, 3]), 0); else if (C[1] < b.y - hy) face(fx([0, 1, 5, 4]), .5);
+    if (C[0] > b.x + hx) face(Object.assign([1, 3, 7, 5], { sx: 1 }), .36, 'x'); else if (C[0] < b.x - hx) face(Object.assign([0, 4, 6, 2], { sx: -1 }), .22, 'x');
+    if (C[2] > b.z + hz) face(Object.assign([4, 5, 7, 6], { sz: 1 }), .12, 'z'); else if (C[2] < b.z - hz) face(Object.assign([0, 2, 3, 1], { sz: -1 }), .44, 'z');
+    ctx.globalAlpha = 1;
+    if (b.glow > .02) glow(b.x, b.y, b.z, Math.max(b.sx, b.sz) * 1.5, b.gcol || b.col, Math.min(1, b.glow) * .4);
+  }
+  function drawQuad(qd) {
+    const ps = qd.pts.map(p => proj(p[0], p[1], p[2]));
+    path(ps);
+    ctx.fillStyle = css(qd.col, qd.a); ctx.fill();
+    if (qd.stroke) { ctx.lineWidth = dpr * (qd.lw || 1); ctx.setLineDash(qd.dash ? [5 * dpr, 5 * dpr] : []); ctx.strokeStyle = css(qd.scol || qd.col, qd.stroke); ctx.stroke(); ctx.setLineDash([]); }
+  }
+  function glow(x, y, z, r, col, a) {
+    const p = proj(x, y, z), rr = r * focal / p[2];
+    if (rr < 1 || a <= 0) return;
+    const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr);
+    g.addColorStop(0, css(col, a)); g.addColorStop(1, css(col, 0));
+    ctx.globalCompositeOperation = P.dark ? 'lighter' : 'source-over';
+    ctx.fillStyle = g; ctx.fillRect(p[0] - rr, p[1] - rr, rr * 2, rr * 2);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  function line3(a, b, col, alpha, lw, fadeEnds) {
+    const p = proj(a[0], a[1], a[2]), q = proj(b[0], b[1], b[2]);
+    if (fadeEnds) { const g = ctx.createLinearGradient(p[0], p[1], q[0], q[1]); g.addColorStop(0, css(col, 0)); g.addColorStop(.5, css(col, alpha)); g.addColorStop(1, css(col, 0)); ctx.strokeStyle = g; }
+    else ctx.strokeStyle = css(col, alpha);
+    ctx.lineWidth = (lw || 1) * dpr; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+  }
+  function flat(x0, x1, z0, z1, col, a, y) {
+    y = y || .01; path([proj(x0, y, z0), proj(x1, y, z0), proj(x1, y, z1), proj(x0, y, z1)]);
+    ctx.fillStyle = css(col, a); ctx.fill();
+  }
+  function lab(x, y, z, text, o) { labels.push(Object.assign({ x, y, z, text }, o)); }
+
+  function ground() {
+    for (let x = -22; x <= 20; x += 2) { const e = sm(Math.min(x + 22, 20 - x) / 8); if (e > 0) line3([x, 0, -9], [x, 0, 9], P.line, .7 * e, 1, true); }
+    for (let z = -8; z <= 8; z += 2) line3([-23, 0, z], [21, 0, z], P.line, .7 * Math.pow(1 - Math.abs(z) / 9.5, 1.4), 1, true);
+    flat(-18.2, -9.9, -.62, .62, P.surface, .9);                         // chain rail
+    flat(-7, -.9, -4.3, 2.5, P.surface, .8);                             // view circuit board
+    for (let l = 0; l < 3; l++) {
+      flat(-6.5, -1.3, LANE_Z[l] - .3, LANE_Z[l] + .3, mix(P.surface, P.ink, .1), 1, .02);
+      line3([OPX[l], .03, LANE_Z[l]], [OPX[l], .03, BAR_Z], S.barFlash[l] < -.05 ? P.rust : P.lane[l], .28 + Math.abs(S.barFlash[l]) * .6, 1);
+      const f = [[OPX[l], .04, LANE_Z[l] - .46], [OPX[l], .86, LANE_Z[l] - .46], [OPX[l], .86, LANE_Z[l] + .46], [OPX[l], .04, LANE_Z[l] + .46]].map(p => proj(p[0], p[1], p[2]));
+      path(f); ctx.lineWidth = dpr * 1.2; ctx.strokeStyle = css(S.barFlash[l] < -.05 ? P.rust : P.ink, .35 + Math.abs(S.barFlash[l]) * .6); ctx.stroke();
+    }
+    flat(.1, 3.3, -1.6, 1.6, mix(P.surface, P.buff, .22), 1);            // redb pad
+    flat(5.55, 9.75, -2.55, 2.55, mix(P.surface, P.slate, .2), 1);       // segment shelf
+    line3([GATE_X, .02, 0], [HEAD_X + .5, .02, 0], P.muted, .4, 1);
+  }
+
+  function build() {
+    const wide = cssW >= 640, v = view;
+    // 1 chain
+    const neutral = mix(P.muted, P.bg, .35);
+    const live = S.chain.filter(c => !c.dead);
+    S.chain.forEach((c, i) => {
+      const head = c === live[live.length - 1] && !c.fade;
+      if (c.dead) { const p = c.dead; box(c.x, .95 - p * .55, p * 2.4, 1, 1, 1, P.rust, { a: 1 - p }); return; }
+      const s = .4 + .6 * sm(c.a);
+      box(c.x, .95 + (1 - sm(c.a)) * .9, 0, s, s, s, head ? P.buff : neutral, { a: c.a, glow: head ? .55 : 0 });
+      const nx = S.chain[i + 1];
+      if (nx && !nx.dead && nx.a > .6 && nx.x - c.x > 1.05) box((c.x + nx.x) / 2, .95, 0, nx.x - c.x - 1, .1, .1, neutral, { a: Math.min(c.a, nx.a) });
+      if (v === 1) lab(c.x, 1.6, 0, (head ? '#' + fmt(c.b.no) : '…' + String(c.b.no).slice(-3)) + (c.b.alt ? '′' : ''), { c: head ? 'buff' : 'muted', a: c.a });
+    });
+    // 2 decode gate
+    const gcol = mix(P.muted, P.ink, .25);
+    box(GATE_X, 1.1, -1.25, .22, 2.2, .22, gcol); box(GATE_X, 1.1, 1.25, .22, 2.2, .22, gcol); box(GATE_X, 2.31, 0, .22, .22, 2.72, gcol);
+    quad([[GATE_X, .02, -1.14], [GATE_X, 2.2, -1.14], [GATE_X, 2.2, 1.14], [GATE_X, .02, 1.14]], P.ink, { a: .05 + S.gate * .22 });
+    // chips
+    S.chips.forEach(ch => {
+      if (!ch.p) return;
+      const k = sm((ch.u - .2) / .07), col = ch.kill ? P.rust : mix(P.muted, P.lane[ch.lane], k);
+      box(ch.p[0], ch.p[1], ch.p[2], .34, .12, .34, col, { a: ch.kill ? Math.max(0, ch.fade) : 1, glow: ch.kill ? 0 : .3 + k * .3 });
+    });
+    S.retr.forEach(r => { if (r.p) box(r.p[0], r.p[1], r.p[2], .34, .12, .34, P.rust, { glow: .9 }); });
+    // 3 entities
+    for (let l = 0; l < 3; l++) {
+      const h = .25 + S.barShow[l] * .2, fl = S.barFlash[l];
+      box(OPX[l], h / 2 + .01, BAR_Z, .8, h, .8, fl < -.05 ? mix(P.lane[l], P.rust, Math.min(1, -fl * 1.4)) : P.lane[l], { glow: Math.abs(fl) * .9, gcol: fl < 0 ? P.rust : P.ink });
+      if (v === 3) { lab(OPX[l], h + .35, BAR_Z, BARS[l], { c: 'ink' }); lab(-6.6, .5, LANE_Z[l], LANES[l], { c: 'muted', al: 'right' }); }
+      if (v === 2) lab(-5.9, .75, LANE_Z[l], LANES[l], { c: 'ink' });
+    }
+    // 4 redb
+    const hotTop = HOT_BASE + S.hot.length * SLAB;
+    S.hot.forEach((s, i) => {
+      const top = i === S.hot.length - 1, p = s.retract;
+      if (p) box(HOT_X, s.y + p * .7, 0, 2.6, .26, 2.6, P.rust, { a: 1 - sm(p), glow: 1 - p });
+      else box(HOT_X, s.y, 0, 2.6, .26, 2.6, P.buff, { a: .22 + .78 * s.fill, glow: top ? .35 : 0 });
+    });
+    // finality plane
+    const pr = S.planeRust, pf = Math.min(1, S.plane);
+    quad([[PLANE_X, 0, -3], [PLANE_X, 3.9, -3], [PLANE_X, 3.9, 3], [PLANE_X, 0, 3]], pr ? P.rust : P.ink, { a: .035 + pf * (pr ? .16 : .08), stroke: .35 + pf * .6, scol: pr ? P.rust : P.muted, dash: true });
+    // seals in flight
+    S.seals.forEach(s => {
+      const a = sm(s.t / .55), b2 = sm((s.t - .5) / 1.1), to = slotPos(s.slot);
+      box(lerp(lerp(HOT_X, 3.3, a), to[0], b2), lerp(HOT_BASE + SLAB, to[1], b2) + Math.sin(b2 * Math.PI) * .9, lerp(0, to[2], b2),
+        lerp(2.6, 1.5, b2), lerp(.9, .72, b2), lerp(2.6, 1.25, b2), mix(P.buff, P.slate, b2), { glow: .6, stripes: b2 > .6 });
+    });
+    // sealed segments
+    let segTop = SEG_BASE;
+    S.segs.forEach((g, i) => { const p = slotPos(i); segTop = Math.max(segTop, g.y); box(p[0], g.y, p[2], 1.5, .72, 1.25, P.slate, { stripes: true, glow: g.glow, gcol: g.glow > 1 ? P.ink : P.slate }); });
+    S.dying.forEach((d, i) => { const p = slotPos(i); box(p[0], SEG_BASE - d.t * .5, p[2], 1.5, .72 * (1 - d.t * .8), 1.25, P.slate, { a: 1 - d.t, stripes: true }); });
+    // 5 burrmill lens + endpoint
+    const hex = r => [0, 1, 2, 3, 4, 5].map(k => { const a = k * Math.PI / 3 + Math.PI / 6; return [LENS[0], LENS[1] + r * Math.sin(a), r * Math.cos(a)]; });
+    box(LENS[0], .52, 0, .12, 1.04, .12, gcol);
+    quad(hex(1.15), P.ink, { a: .04 + S.lens * .12, stroke: .75, scol: P.ink, lw: 1.4 });
+    quad(hex(.72), P.ink, { a: 0, stroke: .3 + S.lens * .5, scol: P.buff });
+    box(EP[0], 1.1, 0, .9, 2.2, .9, mix(P.muted, P.bg, .3));
+    box(EP[0], 2.3, 0, 1.08, .2, 1.08, mix(P.ink, P.buff, S.ep), { glow: .35 + S.ep * .9, gcol: P.buff });
+    ['MCP', 'balances', 'SQL', 'entities'].forEach((name, i) => {
+      box(EP[0], .45 + i * .45, .5, .3, .18, .14, P.ink, { glow: S.ep * .5 });
+      if (v === 5) lab(EP[0] + .75, .38 + i * .45, .5, name, { c: 'ink', al: 'left' });
+    });
+
+    // beams
+    const q = S.query;
+    if (q) overlay.push(() => {
+      const out = clamp(q.t / .65, 0, 1), back = clamp((q.t - .9) / .75, 0, 1), fade = 1 - sm((q.t - 1.8) / 1.2);
+      q.targets.forEach(g => {
+        let tp;
+        if (g.hot) tp = [HOT_X, hotTop, 0];
+        else { const i = S.segs.indexOf(g.seg); if (i < 0) return; const p = slotPos(i); tp = [p[0], g.seg.y + .36, p[2]]; }
+        const pt = s => {
+          if (s < .2) { const k = s / .2; return [lerp(EP[0], LENS[0], k), lerp(EP[1], LENS[1], k), 0]; }
+          const k = (s - .2) / .8, m = 1 - k;
+          return [m * m * LENS[0] + 2 * m * k * ((LENS[0] + tp[0]) / 2) + k * k * tp[0], m * m * LENS[1] + 2 * m * k * (Math.max(LENS[1], tp[1]) + 1.7) + k * k * tp[1], k * k * tp[2] + 2 * m * k * tp[2] * .5];
+        };
+        const seg = (a, b, col, alpha, lw) => {
+          ctx.beginPath();
+          for (let i = 0; i <= 20; i++) { const p3 = pt(lerp(a, b, i / 20)), p = proj(p3[0], p3[1], p3[2]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+          ctx.strokeStyle = css(col, alpha); ctx.lineWidth = lw * dpr; ctx.lineCap = 'round'; ctx.stroke();
+        };
+        seg(0, out, P.ink, .16 * fade, 1);
+        if (q.t < .65) { seg(Math.max(0, out - .22), out, P.ink, .9, 1.6); const h = pt(out); glow(h[0], h[1], h[2], .5, P.ink, .7); }
+        else if (back > 0 && back < 1) { const s = 1 - back; seg(s, Math.min(1, s + .22), P.buff, .95, 1.8); const h = pt(s); glow(h[0], h[1], h[2], .55, P.buff, .8); }
+        if (q.t > .6 && q.t < 1.7) glow(tp[0], tp[1], tp[2], 1.1, P.ink, .35 * (1 - Math.abs(q.t - 1.15) / .55));
+      });
+    });
+    S.sparks.forEach(s => overlay.push(() => glow(s.p[0], s.p[1], s.p[2], .5 + s.t * 1.1, s.rust ? P.rust : P.ink, (1 - s.t) * .8)));
+
+    // labels
+    if (v === 0) {
+      if (wide) {
+        lab(-13.6, 2.15, 0, 'chain RPC'); lab(GATE_X, 2.85, 0, 'decode · topic0'); lab(-4, 3.75, BAR_Z, 'incremental views');
+        lab(HOT_X, hotTop + 1.25, 0, 'redb · live tip', { c: 'buff' }); lab(PLANE_X, 4.3, -3, pr ? 'reorgs stop here' : 'finality', { c: pr ? 'rust' : 'muted' });
+        lab(7.65, segTop + 1.7, -1.7, 'Parquet · sealed', { c: 'slate' }); lab(LENS[0], 4.55, 0, 'burrmill'); lab(EP[0] + .3, 3.1, 0, 'localhost:8288', { al: 'left' });
+      } else {
+        [[-13.6, 2.1, 0], [GATE_X, 2.9, 0], [-4, 3.6, BAR_Z], [3.2, 4.3, 0], [12.5, 3.9, 0]].forEach((p, i) => lab(p[0], p[1], p[2], String(i + 1), { big: true }));
+        if (pr) lab(PLANE_X, 4.2, -3, 'reorgs stop here', { c: 'rust' });
+      }
+    }
+    if (v === 2) { lab(-9.9, 1.75, 0, 'raw logs', { c: 'muted' }); lab(GATE_X, 2.85, 0, 'decode · topic0'); }
+    if (v === 3) lab(-4, .25 + 14 * .2 + .9, BAR_Z, 'entities, kept current', { c: 'muted' });
+    if (v === 4) {
+      lab(HOT_X, hotTop + 1.1, 0, 'redb · live tip', { c: 'buff' }); lab(PLANE_X, 4.25, -3, pr ? 'reorgs stop here' : 'finality', { c: pr ? 'rust' : 'muted' });
+      lab(7.65, segTop + 1.9, -1.7, 'Parquet · sealed', { c: 'slate' });
+      const last = S.segs[S.segs.length - 1];
+      if (last) { const p = slotPos(S.segs.length - 1); lab(p[0], last.y + .75, p[2], last.id, { c: 'ink' }); }
+    }
+    if (v === 5) { lab(LENS[0], 3.75, 0, 'burrmill'); lab(EP[0], 2.95, 0, 'localhost:8288'); lab(7.65, segTop + 1.7, -1.7, 'Parquet · sealed', { c: 'slate' }); }
+    if (q && q.t > 1.6 && (v === 5 || (v === 0 && wide))) lab(EP[0], 0, 2.6, q.label + ' → ' + q.rows + ' rows', { c: 'buff', a: 1 - sm((q.t - 2.7) / .7), below: true });
+  }
+
+  function render() {
+    setBasis(cam);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+    items = []; labels = []; overlay = [];
+    ground(); build();
+    items.sort((a, b) => b.d - a.d);
+    for (const it of items) it.k ? drawQuad(it) : drawBox(it);
+    for (const f of overlay) f();
+    const px = clamp(cssW / 88, 10.5, 13) * dpr;
+    ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+    for (const l of labels) {
+      const p = proj(l.x, l.y, l.z), size = l.big ? px * 1.25 : px;
+      ctx.font = (l.big ? '600 ' : '') + size + 'px "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.textAlign = l.al || 'center'; ctx.globalAlpha = l.a == null ? 1 : clamp(l.a, 0, 1);
+      const y = p[1] + (l.below ? size * 1.5 : 0);
+      ctx.lineWidth = 4 * dpr; ctx.strokeStyle = css(P.bg, .85); ctx.strokeText(l.text, p[0], y);
+      ctx.fillStyle = css(P[l.c || 'ink']); ctx.fillText(l.text, p[0], y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- readouts
+  const ro = { tip: '', hot: '', cold: '', st: '' };
+  function readouts() {
+    const set = (k, id, v) => { if (ro[k] !== v) { ro[k] = v; $(id).textContent = v; } };
+    set('tip', 'ps-tip', '#' + fmt(S.tip));
+    set('hot', 'ps-hot', S.hot.filter(s => !s.retract).length + ' blocks');
+    set('cold', 'ps-cold', S.sealed + ' segments');
+    const q = S.query;
+    const [kind, text] = S.reorgMsg > 0 ? ['reorg', 'reorg, depth 2: two blocks retracted, sealed segments untouched']
+      : S.seals.length ? ['seal', 'sealing 3 blocks past finality into one Parquet segment']
+      : q && q.t > 1.6 ? ['query', q.label + ' → ' + q.rows + ' rows, read from redb and ' + (q.targets.length - 1) + ' segments']
+      : ['', 'following the tip'];
+    if (ro.st !== text) { ro.st = text; const el = $('ps-status'); el.textContent = text; el.dataset.kind = kind; }
+    $('ps-reorg').disabled = S.reorgCool > 0;
+  }
+
+  // ---------- loop + input
+  let playing = !reduce, inView = true, last = 0, dirty = true;
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    if (!r.width) return;
+    dpr = Math.min(2, window.devicePixelRatio || 1); cssW = r.width;
+    W = cv.width = Math.round(r.width * dpr); H = cv.height = Math.round(r.height * dpr);
+    focal = H / 2 / Math.tan(15 * Math.PI / 180);
+    const uy = userYaw, up = userPitch; setView(view, true); userYaw = uy; userPitch = up; dirty = true;
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(.05, (now - last) / 1000 || 0); last = now;
+    if (!inView || document.hidden || !W) return;
+    if (playing) step(dt);
+    const k = reduce ? 1 : 1 - Math.exp(-dt * 3.2);
+    const drift = playing && !dragging ? Math.sin(now / 4200) * .05 : 0;
+    const gy = clamp(goal.yaw + userYaw + drift, -1.4, 1.4), gp = clamp(goal.pitch + userPitch, .12, 1.15);
+    const moving = Math.abs(gy - cam.yaw) + Math.abs(gp - cam.pitch) + Math.abs(goal.dist - cam.dist) / 40 + Math.abs(goal.tx - cam.tx) / 20 > 1e-4;
+    cam.yaw += (gy - cam.yaw) * k; cam.pitch += (gp - cam.pitch) * k; cam.dist += (goal.dist - cam.dist) * k;
+    cam.tx += (goal.tx - cam.tx) * k; cam.ty += (goal.ty - cam.ty) * k; cam.tz += (goal.tz - cam.tz) * k;
+    if (playing || moving || dirty) { render(); readouts(); dirty = false; }
+  }
+  let px0 = 0, py0 = 0;
+  cv.addEventListener('pointerdown', e => { dragging = true; px0 = e.clientX; py0 = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    userYaw = clamp(userYaw - (e.clientX - px0) * .006, -1.4 - goal.yaw, 1.4 - goal.yaw);
+    if (e.pointerType === 'mouse') userPitch = clamp(userPitch + (e.clientY - py0) * .004, .12 - goal.pitch, 1.15 - goal.pitch);
+    px0 = e.clientX; py0 = e.clientY;
+  });
+  const end = () => { dragging = false; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  cv.addEventListener('keydown', e => {
+    const m = { ArrowLeft: [-.12, 0], ArrowRight: [.12, 0], ArrowUp: [0, .08], ArrowDown: [0, -.08] }[e.key];
+    if (!m) return; e.preventDefault();
+    userYaw = clamp(userYaw + m[0], -1.4 - goal.yaw, 1.4 - goal.yaw); userPitch = clamp(userPitch + m[1], .12 - goal.pitch, 1.15 - goal.pitch);
+  });
+  $('ps-rail').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(view === +b.dataset.view ? 0 : +b.dataset.view, reduce); });
+  $('ps-all').addEventListener('click', () => setView(0, reduce));
+  const setPlaying = p => { playing = p; $('ps-play').textContent = p ? 'Pause' : 'Play'; };
+  $('ps-play').addEventListener('click', () => setPlaying(!playing));
+  $('ps-reorg').addEventListener('click', () => { if (reorg()) { if (!playing) setPlaying(true); if (view !== 0 && view !== 3 && view !== 4) setView(0, reduce); } });
+
+  readPalette();
+  new MutationObserver(() => { readPalette(); dirty = true; }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if ('IntersectionObserver' in window) new IntersectionObserver(es => { inView = es[0].isIntersecting; }).observe(cv);
+  new ResizeObserver(resize).observe(cv);
+  // Labels are canvas text, so repaint once the webfont has arrived.
+  if (document.fonts) document.fonts.ready.then(() => { dirty = true; });
+  initSim(); setPlaying(playing); resize();
+  requestAnimationFrame(frame);
+})();
+</script>
