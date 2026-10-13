@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 5.3.0
+checked: 5.3.1
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -67,13 +67,13 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nuthatch-org/nuthatch:5.3.0 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.3.1 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
 binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`5.3.0-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`5.3.1-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source
