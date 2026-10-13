@@ -59,33 +59,7 @@ const rows = [
     </div>
   </section>
 
-  <!-- 3. THREE PROOF POINTS -->
-  <section class="proof">
-    <div class="wrap">
-      <div class="proof-grid">
-        <div class="card proof-card">
-          <div class="proof-stat">&lt; 1.8 GiB peak <span class="tag proof-tag">measured</span></div>
-          <p>The largest nest we run, answering the 74 statements its dashboard and jobs send, two at a time under its production limits on Linux: 1,595 to 1,788 MiB over four runs of 4.4.0, inside the 2 GB budget. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0" rel="noopener">Release notes</a>.</p>
-        </div>
-        <div class="card proof-card">
-          <div class="proof-stat">4.67 s <span class="tag proof-tag">measured</span></div>
-          <p>Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a> case 6, the Uniswap V2 factory over 10,001 blocks with 232 pairs discovered as it ran: 35,271 events in 14 RPC requests and 229 MB, median of five runs of the published 4.7.0 binary against a keyless public gateway. Someone else's benchmark, not a ranking. <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The run's record</a>.</p>
-        </div>
-        <div class="card proof-card">
-          <div class="proof-stat">10 to 11 s <span class="tag proof-tag">measured</span></div>
-          <p>Contract address to a live indexed API: the README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes</a>.</p>
-        </div>
-        <div class="card proof-card">
-          <div class="proof-stat">Opt-in only</div>
-          <p>No gateway, no tokens, no account. The one thing it can send is a <a href="/count">head count</a>, and only after you say yes. It reads from an RPC endpoint you choose, which can be your own node.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="divider" />
-
-  <!-- 4. HOW IT WORKS -->
+  <!-- 3. HOW IT WORKS -->
   <section class="how" id="how">
     <div class="wrap">
       <p class="section-label">How it works</p>
@@ -122,6 +96,32 @@ const rows = [
       <p class="how-foot">
         Where this is going is public, RFC by RFC - <a href="/roadmap">see the roadmap</a>.
       </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- 4. THREE PROOF POINTS -->
+  <section class="proof">
+    <div class="wrap">
+      <div class="proof-grid">
+        <div class="card proof-card">
+          <div class="proof-stat">&lt; 1.8 GiB peak <span class="tag proof-tag">measured</span></div>
+          <p>The largest nest we run, answering the 74 statements its dashboard and jobs send, two at a time under its production limits on Linux: 1,595 to 1,788 MiB over four runs of 4.4.0, inside the 2 GB budget. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0" rel="noopener">Release notes</a>.</p>
+        </div>
+        <div class="card proof-card">
+          <div class="proof-stat">4.67 s <span class="tag proof-tag">measured</span></div>
+          <p>Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a> case 6, the Uniswap V2 factory over 10,001 blocks with 232 pairs discovered as it ran: 35,271 events in 14 RPC requests and 229 MB, median of five runs of the published 4.7.0 binary against a keyless public gateway. Someone else's benchmark, not a ranking. <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The run's record</a>.</p>
+        </div>
+        <div class="card proof-card">
+          <div class="proof-stat">10 to 11 s <span class="tag proof-tag">measured</span></div>
+          <p>Contract address to a live indexed API: the README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes</a>.</p>
+        </div>
+        <div class="card proof-card">
+          <div class="proof-stat">Opt-in only</div>
+          <p>No gateway, no tokens, no account. The one thing it can send is a <a href="/count">head count</a>, and only after you say yes. It reads from an RPC endpoint you choose, which can be your own node.</p>
+        </div>
+      </div>
     </div>
   </section>
 
