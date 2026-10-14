@@ -7,7 +7,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v5.3.3: a one-line installer or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
+  description="Install Nuthatch v5.4.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -75,12 +75,12 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.3.3' prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.4.0' prompt={true} />
       <p class="note">
         The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
         <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
-        <code>:5.3.3</code> and <code>:latest</code> are the embedded build; pin the version for anything
-        you care about. <code>:5.3.3-scaled</code> carries the Postgres driver and the <code>worker</code>,
+        <code>:5.4.0</code> and <code>:latest</code> are the embedded build; pin the version for anything
+        you care about. <code>:5.4.0-scaled</code> carries the Postgres driver and the <code>worker</code>,
         <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only, and no
         image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a binary.
         The compose files live in the

@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.3.3
+checked: 5.4.0
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
