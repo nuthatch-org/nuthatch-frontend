@@ -1,97 +1,47 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { stopgaps, ENDPOINT_BASE } from '../../data/stopgaps';
 ---
 
 <Layout
   path="/subgraphs"
   title="Nest-backed subgraphs - Nuthatch"
-  description="Limited event-history endpoints for subgraphs The Graph network cannot currently serve. Each page lists supported queries and refused fields."
+  description="From 6 to 13 October 2026, Nuthatch answered a few subgraphs The Graph network did not serve, as a stopgap until an indexer picked them up. They have been withdrawn."
 >
   <section class="page">
     <div class="wrap">
       <p class="section-label">Subgraphs</p>
       <h1>Nest-backed subgraphs</h1>
       <p class="lede">
-        When no indexer on The Graph network serves a subgraph, the apps that query it break. These are subgraphs we
-        answer from a nuthatch nest built from the same contracts, as a stopgap. Coverage varies: each page lists the
-        queries it supports and fields it refuses. Switch supported queries back once the network serves current data.
+        From 6 to 13 October 2026, Nuthatch answered a handful of subgraphs that no indexer on The Graph network
+        served, from a nest built from the same contracts. They were a fallback, so that the apps querying them did
+        not go dark while the network caught up, and each came with a handback saying how to go back to the
+        network once an indexer allocated.
       </p>
 
-      {stopgaps.length === 0 && <p class="empty">No running stopgap subgraphs at the moment.</p>}
-
-      <ul class="grid">
-        {stopgaps.map((s) => (
-          <li class="card" data-endpoint={ENDPOINT_BASE + s.deployment}>
-            <div class="card-top">
-              <h2><a href={`/subgraphs/${s.deployment}`}>{s.name}</a></h2>
-              <span class="badge" data-state>checking</span>
-            </div>
-            <p class="mono dep">{s.deployment}</p>
-            <p>{s.coverage}</p>
-            <dl class="figures">
-              <div><dt>chain</dt><dd>{s.chain}</dd></div>
-              <div><dt>served since</dt><dd>{s.since}</dd></div>
-              <div><dt>entities</dt><dd>{s.entities.length} served, {s.refused.length} refused by name</dd></div>
-              <div><dt>indexed to</dt><dd data-block>-</dd></div>
-            </dl>
-            <a class="open" href={`/subgraphs/${s.deployment}`}>status, playground and snippets →</a>
-          </li>
-        ))}
-      </ul>
+      <p class="empty">Withdrawn on 13 October 2026, along with Lodestar and the rest of the Graph work. The endpoint now returns 410.</p>
 
       <div class="notes">
         <section>
-          <h2>Is your subgraph unserved?</h2>
+          <h2>What they were not</h2>
           <p>
-            If your app's queries to The Graph started failing, open an issue at
-            <a href="https://github.com/nuthatch-org/graph-support/issues/new" rel="noopener">nuthatch-org/graph-support</a>
-            with the deployment ID. We check whether any indexer serves it and, if none does, stand up a nest for it.
-            There is no account, no key and no charge.
-          </p>
-        </section>
-        <section>
-          <h2>What a nest answers</h2>
-          <p>
-            Everything a subgraph derives from its contracts' events: ids, addresses, amounts, owners, and the
-            running totals that can be rebuilt from those events. Fields that need something a nest does not hold are refused by name, never answered
-            with a guess. Each page lists exactly what its nest refuses. It is not a drop-in replacement for every
-            subgraph, and each page says so where it is not.
+            An attempt to take users off the network. A stopgap only ever covered a deployment no indexer served,
+            answered the fields a subgraph derives from decoded events and refused the rest by name, and charged
+            nothing. The aim in every case was to hand the subgraph back.
           </p>
         </section>
         <section>
           <h2>Run it yourself</h2>
           <p>
-            Every nest here is public, with its views, queries and the commands to run it on your own machine:
-            one binary and an RPC endpoint. <a href="/the-graph">Nuthatch and The Graph</a> explains how it sits
-            beside the network rather than in place of it.
+            A stopgap is the stock <code>nuthatch-graph</code> download run as any operator would run it.
+            <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">The BetSwirl BNB Chain handback</a>
+            shows how, and <a href="/docs/build/subgraph-fallback">the fallback docs</a> cover drawing the boundary.
+            <a href="/the-graph">Nuthatch and The Graph</a> explains how it sits beside the network rather than in place of it.
           </p>
         </section>
       </div>
     </div>
   </section>
 </Layout>
-
-<script is:inline>
-  document.querySelectorAll('.card').forEach(async (card) => {
-    const badge = card.querySelector('[data-state]');
-    try {
-      const r = await fetch(card.dataset.endpoint, {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query: '{ _meta { block { number timestamp } hasIndexingErrors } }' }),
-      });
-      const m = (await r.json()).data._meta;
-      const behind = Math.max(0, Math.round(Date.now() / 1000 - m.block.timestamp));
-      card.querySelector('[data-block]').textContent = m.block.number.toLocaleString('en-GB');
-      const ok = !m.hasIndexingErrors && behind < 300;
-      badge.textContent = ok ? 'live' : 'behind';
-      badge.classList.add(ok ? 'ok' : 'warn');
-    } catch (e) {
-      badge.textContent = 'unreachable';
-      badge.classList.add('warn');
-    }
-  });
-</script>
 
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
@@ -101,34 +51,6 @@ import { stopgaps, ENDPOINT_BASE } from '../../data/stopgaps';
     border: 1px dashed var(--border); border-radius: var(--radius); padding: 1.2rem 1.25rem;
     color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.86rem; margin: 0;
   }
-  .mono { font-family: 'JetBrains Mono', monospace; }
-  .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr)); gap: 1rem; }
-  .card {
-    position: relative;
-    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
-    padding: 1.2rem 1.25rem 1.3rem; display: flex; flex-direction: column; transition: border-color 0.18s var(--ease);
-  }
-  .card:hover { border-color: var(--border-hi); }
-  .card-top h2 a::after { content: ''; position: absolute; inset: 0; }
-  .card:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
-  .card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
-  .card h2 { font-size: 1.1rem; margin: 0; }
-  .card h2 a { color: var(--text); text-decoration: none; }
-  .dep { color: var(--text-faint); font-size: 0.72rem; overflow-wrap: anywhere; margin: 0.4rem 0 0; }
-  .badge {
-    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; letter-spacing: 0.08em;
-    text-transform: uppercase; padding: 0.18rem 0.5rem; border-radius: 9999px; border: 1px solid var(--border); color: var(--text-faint);
-  }
-  .badge.ok { color: var(--ok); background: var(--pale-green-bg); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
-  .badge.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
-  .figures { margin: 1rem 0 0; display: grid; gap: 0.35rem; }
-  .figures div { display: flex; gap: 0.8rem; font-size: 0.86rem; }
-  .figures dt {
-    width: 6.5rem; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); padding-top: 0.15rem;
-  }
-  .figures dd { margin: 0; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
-  .open { margin-top: 1.1rem; font-size: 0.86rem; color: var(--accent); }
   .notes { margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: 2rem; }
   .notes h2 { font-size: 1.05rem; margin-bottom: 0.5rem; }
   .notes p { color: var(--text-muted); font-size: 0.93rem; line-height: 1.65; margin: 0; }
