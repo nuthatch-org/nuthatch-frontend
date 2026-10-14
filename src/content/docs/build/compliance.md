@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional labels, flags, exposure and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 5.3.3
+checked: 5.4.0
 ---
 
 Some nests need more than raw rows: flag transfers that cross a threshold, measure an address's

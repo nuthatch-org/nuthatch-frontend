@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.3.3**, released 2026-10-12, on the stable 5.x line. Licence:
+"Be your own indexer." Status: **v5.4.0**, released 2026-10-12, on the stable 5.x line. Licence:
 MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the released binary does
