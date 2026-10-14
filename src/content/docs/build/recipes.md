@@ -2,7 +2,7 @@
 title: Recipes - the eth_call you usually do not need
 description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node. When a read is not derivable, pinned calls are there.
 order: 6
-checked: 5.3.1
+checked: 5.3.2
 ---
 
 The Foundation reports that **over 70% of subgraphs call `eth_call`**. But most of those reads aren't
