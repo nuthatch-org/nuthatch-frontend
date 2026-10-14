@@ -48,7 +48,7 @@ const parity: [string, string][] = [
       <p class="section-label">rotki</p>
       <h1>Your accounts' history, from your own machine</h1>
       <p class="lede">
-        The <a href="https://github.com/rotki/rotki/pull/13342" rel="noopener">rotki integration is a draft PR</a> for Ethereum mainnet and requires Nuthatch 5.3.0 or later.
+        The <a href="https://github.com/rotki/rotki/pull/13342" rel="noopener">rotki integration is a PR awaiting review</a> for Ethereum mainnet and requires Nuthatch 5.3.2 or later.
         To try it before the PR is merged, run rotki from that PR’s branch; these settings are not in a released rotki version.
         rotki asks a block explorer for every transaction, transfer and withdrawal of every account you track,
         which means a third party learns all of your addresses. A rotki-mode nest answers the same questions locally.
@@ -102,6 +102,11 @@ const parity: [string, string][] = [
           <p>
             The nest runs on its own small path, beside the indexer's event pipeline rather than inside it. On an M-series Mac
             it starts serving in well under a second.
+          </p>
+          <p>
+            An ordinary wallet with 1.19 million blocks of history, measured on 2026-10-14 over a hosted RPC with 5.3.2's
+            defaults: about 20 minutes to backfill, 7,324 RPC calls, and a 2.5 MB index. Block bodies are read only for an
+            account rotki asks withdrawals or produced blocks about, which it does only for a tracked validator's address.
           </p>
         </section>
         <section>
