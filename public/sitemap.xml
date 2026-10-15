@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://nuthatch-indexer.com/</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/a-deposit-watcher-in-a-day</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/closing-the-subgraph-parity-gap</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/content-addressed-nests-and-data-reuse</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/hosted-nests-are-open</loc></url>
@@ -16,6 +17,7 @@
   <url><loc>https://nuthatch-indexer.com/blog/one-engine</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/replacing-duckdb-after-all</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/robinhood-chain-uniswap-v4-without-studio</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/running-rotki-on-my-own-indexer</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/serving-lodestar-from-one-box</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/switching-the-engine-under-a-live-indexer</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/the-graph-put-nuthatch-in-their-hackathon-bounty</loc></url>
