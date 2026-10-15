@@ -1,5 +1,5 @@
 ---
-title: "I had never opened rotki. Now it reads my history from my own indexer"
+title: "I had never opened rotki. Now it reads my history from my own wallet"
 date: "2026-10-14"
 description: "One afternoon from not knowing what rotki was to rotki reading a wallet's full history from a local nuthatch nest, with no block explorer asked. Including the two defects my own wallet found, and what still leaves the machine."
 author: "cargopete"
