@@ -128,6 +128,23 @@ const parity: [string, string][] = [
           </p>
         </section>
         <section>
+          <h2>Six more chains, no explorer key</h2>
+          <p>
+            From 5.5.0 a nest serves account history on Optimism, Base, Arbitrum, Polygon, BNB Chain and Gnosis, the chains
+            rotki users are otherwise asked to buy explorer keys for. It finds outgoing transactions where the account's nonce
+            rises and incoming value where its balance rises past its own spending, and traces only those blocks, so the trace
+            RPC must serve <code>debug_traceBlockByNumber</code>. Every traced block must balance to the wei or it is not served.
+          </p>
+          <p>
+            It proves an ordinary account. A contract, or an account with EIP-7702 delegated code, answers unsupported from the
+            block it gained code, so rotki asks its next indexer. An incoming transaction that moves no value is not listed.
+            Checked against Blockscout on Optimism, Arbitrum and Gnosis, every field identical. For now a nest serves one chain
+            and rotki takes one nest address, so point it at the chain you most need, list your accounts in that nest's
+            <code>addresses</code> (rotki registers accounts with a nest on Ethereum only, so far), and put Nuthatch first in
+            that chain's indexer order. One address serving several chains, with rotki registering accounts on each, is next.
+          </p>
+        </section>
+        <section>
           <h2>Partitions you can check</h2>
           <p>
             The hosted <a href="/nests/hosted/ethereum-address-history">Ethereum partitions</a> carry every header and
