@@ -14,7 +14,7 @@ addresses = ["0xYourAccount"]   # rotki adds the rest of your accounts itself
 start_block = 17030000          # history before this is never fetched; 0 means genesis, which takes hours
 poll_interval = "5m"
 mev_relays = true               # produced blocks and their MEV, from the relays; they see block numbers
-# validators = [123456]         # rotki registers your validators itself; proofs run from block 23,551,570
+# validators = [123456]         # list them here for now; proofs run from block 23,551,570
 # beacon_url = "http://127.0.0.1:5052" # build validator proofs beyond the published catalogue
 
 # optional: verified partitions instead of one RPC call per block
@@ -48,7 +48,8 @@ const parity: [string, string][] = [
       <p class="section-label">rotki</p>
       <h1>Your accounts' history, from your own machine</h1>
       <p class="lede">
-        The <a href="https://github.com/rotki/rotki/pull/13342" rel="noopener">rotki integration is a PR awaiting review</a> for Ethereum mainnet and requires Nuthatch 5.3.2 or later.
+        The <a href="https://github.com/rotki/rotki/pull/13375" rel="noopener">rotki integration is a PR awaiting review</a>, for
+        transactions, internal transactions and token transfers on every EVM chain a nest serves. It needs Nuthatch 5.6.0 or later.
         To try it before the PR is merged, run rotki from that PR’s branch; these settings are not in a released rotki version.
         rotki asks a block explorer for every transaction, transfer and withdrawal of every account you track,
         which means a third party learns all of your addresses. A rotki-mode nest answers the same questions locally.
@@ -69,7 +70,7 @@ const parity: [string, string][] = [
           </div>
           <div>
             <span class="cap">3 · rotki</span>
-            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address. Put Nuthatch first in Ethereum's indexer order, and rotki registers your Ethereum accounts with the nest itself. Select Nuthatch alone if you want history requests to stay with your nest; otherwise the next configured explorer can receive your address when coverage is incomplete.</p>
+            <p>Under RPC Nodes, the Nuthatch nest tab takes the nest's address. Put Nuthatch first in the indexer order of each chain the nest serves, and rotki registers your accounts on those chains with the nest itself. Select Nuthatch alone if you want history requests to stay with your nest; otherwise the next configured explorer can receive your address when coverage is incomplete.</p>
           </div>
         </div>
       </div>
@@ -85,7 +86,7 @@ const parity: [string, string][] = [
         <p>
           vitalik.eth on Ethereum, blocks 18,000,000 to 20,000,000: every row compared field by field with Etherscan's answer,
           and the set of transactions below matched exactly. Internal transactions, withdrawals, block rewards and relay
-          deliveries were checked the same way on pinned cases. Run end to end over blocks 17,040,000 to 17,300,000, rotki
+          deliveries were checked the same way on pinned cases. Run end to end with the earlier integration branch over blocks 17,040,000 to 17,300,000, rotki
           with Etherscan removed from its indexer order produced the same 557 transactions and 579 decoded events as rotki
           with Etherscan alone, and made no request to Etherscan.
         </p>
@@ -124,7 +125,8 @@ const parity: [string, string][] = [
             The published catalogue advances in complete 10,000-block spans. Set <code>beacon_url</code> to your beacon node
             to prove the tail beyond it; without a beacon endpoint, the nest reports that tail as incomplete until publication.
             Account history before <code>start_block</code> remains uncovered, and rotki shows the gap.
-            rotki's existing free-account validator ownership limits still apply.
+            rotki's existing free-account validator ownership limits still apply. The nest serves withdrawals and produced blocks
+            already, but rotki does not ask it for them yet: the PR covers transactions, and validators will follow in a later one.
           </p>
         </section>
         <section>
@@ -138,10 +140,15 @@ const parity: [string, string][] = [
           <p>
             It proves an ordinary account. A contract, or an account with EIP-7702 delegated code, answers unsupported from the
             block it gained code, so rotki asks its next indexer. An incoming transaction that moves no value is not listed.
-            Checked against Blockscout on Optimism, Arbitrum and Gnosis, every field identical. For now a nest serves one chain
-            and rotki takes one nest address, so point it at the chain you most need, list your accounts in that nest's
-            <code>addresses</code> (rotki registers accounts with a nest on Ethereum only, so far), and put Nuthatch first in
-            that chain's indexer order. One address serving several chains, with rotki registering accounts on each, is next.
+            Checked against Blockscout on Optimism, Arbitrum and Gnosis, every field identical.
+          </p>
+          <p>
+            rotki takes one nest address, and from 5.6.0 one address serves several chains. Make a directory with one
+            subdirectory per chain, each holding its own <code>nuthatch.toml</code>, and run <code>nuthatch dev --dir</code> on the
+            directory. Each chain keeps its own cursor and store and answers the calls whose <code>chainid</code> names it. Each
+            reads its RPCs from <code>NUTHATCH_RPC_&lt;chain id&gt;</code> and <code>NUTHATCH_TRACE_RPC_&lt;chain id&gt;</code>, or its
+            own <code>rpc_urls</code>. With Nuthatch first in Gnosis's indexer order, rotki produced the same 82 events from
+            the nest alone as from Blockscout and Etherscan.
           </p>
         </section>
         <section>
