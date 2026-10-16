@@ -2,7 +2,7 @@
 title: "MCP server"
 description: "The built-in MCP surface - schema discovery, SQL, entity lookup, and provenance."
 order: 4
-checked: 5.6.2
+checked: 5.6.3
 ---
 
 The protocol reference for the built-in Model Context Protocol server. For the experience - wiring
