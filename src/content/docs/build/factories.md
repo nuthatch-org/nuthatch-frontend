@@ -2,7 +2,7 @@
 title: Factories
 description: Index children a contract spawns at runtime - Uniswap pools, Safe proxies, any factory.
 order: 5
-checked: 5.6.2
+checked: 5.6.3
 ---
 
 Many protocols deploy contracts at runtime: Uniswap's factory spins up a pool per pair, a Safe factory
