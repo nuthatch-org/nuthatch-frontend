@@ -1,4 +1,5 @@
 [
+  {"version":"5.6.1","date":"2026-10-16","headline":"Nuthatch 5.6.1 gives each watched account its own address-history backfill pace, so one account with slow traces no longer slows the rest.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.6.1"},
   {"version":"5.6.0","date":"2026-10-15","headline":"Nuthatch 5.6.0 serves account history for several chains at one address, so rotki, which takes one indexer endpoint, can ask a single nuthatch dev about Ethereum, Base and Gnosis at once.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.6.0"},
   {"version":"5.5.0","date":"2026-10-15","headline":"Nuthatch 5.5.0 serves account history on six more chains: Optimism, Base, Arbitrum, Polygon, BNB Chain and Gnosis, the chains rotki users are asked to buy explorer keys for.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.5.0"},
   {"version":"5.4.1","date":"2026-10-15","headline":"Nuthatch 5.4.1 corrects what the deposit sweep's feed counts as a deposit.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.4.1"},
