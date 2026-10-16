@@ -3,7 +3,6 @@ import Layout from '../layouts/Layout.astro';
 
 const REPO = 'https://github.com/nuthatch-org/nuthatch';
 const DS_REPO = 'https://github.com/nuthatch-org/nuthatch-ds';
-const HORIZON_NEST = 'https://github.com/nuthatch-org/horizon-nest';
 const DS_CONTRACT = 'https://arbiscan.io/address/0x647D1Fd14AF2DE3947522B74F1de5B99d317c10A';
 
 // The right-hand column: each card is one concrete, checkable touchpoint. Keep the copy to two or
@@ -24,10 +23,9 @@ const meets = [
     k: '02 · Subgraph rebuilt',
     tag: 'shipped',
     h: 'A Graph subgraph, rebuilt as a nest',
-    p: 'The horizon-nest is a real Graph Horizon subgraph reproduced as a nest and checked field by field against the gateway. A public dashboard serves its live panels from Nuthatch nests today and holds no Graph API key.',
+    p: 'The horizon-nest was a real Graph Horizon subgraph reproduced as a nest and checked field by field against the gateway. Lodestar served its live panels from Nuthatch nests, with no Graph API key, until it went offline on 13 October 2026.',
     links: [
       { href: '/stories', text: 'the story' },
-      { href: HORIZON_NEST, text: 'horizon-nest', ext: true },
     ],
   },
   {
@@ -42,11 +40,11 @@ const meets = [
   },
   {
     k: '04 · Stopgap nests',
-    tag: 'october 2026',
-    h: 'Stranded BNB and Polygon subgraphs keep answering',
-    p: 'For a deployment the network does not serve, Nuthatch runs a stopgap nest on the nuthatch-graph download until an indexer picks it up. The first, BetSwirl BNB Chain, answers its client’s own queries exactly and refuses anything else by name.',
+    tag: 'withdrawn',
+    h: 'Stranded BNB and Polygon subgraphs kept answering',
+    p: 'From 6 to 13 October 2026, Nuthatch ran stopgap nests on the nuthatch-graph download for deployments the network did not serve, until an indexer picked them up. The first, BetSwirl BNB Chain, answered its client’s own queries exactly and refused anything else by name.',
     links: [
-      { href: 'https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/', text: 'the dispatch', ext: true },
+      { href: '/subgraphs', text: 'the record' },
       { href: 'https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md', text: 'the handback', ext: true },
     ],
   },
@@ -102,9 +100,9 @@ const meets = [
           </p>
           <p>
             <a href="https://www.lodestar-dashboard.com" rel="noopener">Lodestar</a>, an analytics
-            dashboard for The Graph Protocol on Arbitrum One, runs on nests: it serves live panels
-            from self-hosted Nuthatch nests instead of The Graph gateway.
-            <a href="/stories">How it runs</a>.
+            dashboard for The Graph Protocol on Arbitrum One, ran on nests: it served live panels
+            from self-hosted Nuthatch nests instead of The Graph gateway until it went offline on
+            13 October 2026. <a href="/stories">How it ran</a>.
           </p>
 
           <h2>The self-hosting argument</h2>
@@ -155,17 +153,18 @@ const meets = [
             one field it cannot answer.
           </p>
           <p>
-            One exception, made on 6 October 2026: as BNB Chain and Polygon subgraphs move onto the
-            network, Nuthatch serves stopgap nests for deployments the network does not serve,
-            until an indexer picks each one up. Each is the stock <code>nuthatch-graph</code>
-            download run as any operator would run it: no billing, no accounts, no platform. A
-            stopgap nest answers the fields a subgraph derives from decoded events exactly and
-            refuses the rest by name, so it is not a replacement for the subgraph, and its handback
-            says how to run it yourself and how to go back to the network.
-            <a href="https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/" rel="noopener">The dispatch</a>
-            explains why, and
+            One exception ran from 6 to 13 October 2026: as BNB Chain and Polygon subgraphs moved
+            onto the network, Nuthatch served stopgap nests for deployments no indexer served, so
+            the apps querying them did not go dark in the meantime. Each was the stock
+            <code>nuthatch-graph</code> download run as any operator would run it: no billing, no
+            accounts, no platform. A stopgap answered the fields a subgraph derives from decoded
+            events exactly and refused the rest by name, so it was never a replacement for the
+            subgraph, and its handback said how to go back to the network once an indexer
+            allocated. The point was always to hand the subgraph back, not to keep its users.
+            The stopgaps were withdrawn on 13 October 2026, along with Lodestar and the rest of
+            the Graph work. <a href="/subgraphs">The record</a> and
             <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">the BetSwirl BNB Chain handback</a>
-            is the first.
+            remain.
           </p>
           <p>
             <a href="https://graphops.xyz" rel="noopener">GraphOps</a>, an indexer and core developer on
