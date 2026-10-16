@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.6.0
+checked: 5.6.1
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
