@@ -1,6 +1,6 @@
 ---
 title: Webhooks
-description: POST sealed rows to a URL - an optional delivery stage, past finality, at-least-once.
+description: POST sealed rows to a URL - an optional delivery stage, past finality, at-least-once. The deposit sweep's webhook is separate, and carries retractions.
 order: 8
 checked: 5.6.1
 ---
@@ -40,8 +40,8 @@ consumer side. By firing only past finality, nuthatch delivers rows that will ne
 
 ## At-least-once, host-owned
 
-Delivery is at-least-once with host-managed retries and backoff - the host owns orchestration and state,
-the same contract as every effectful stage. Make your consumer **idempotent**: key on `(tx_hash,
+Delivery is at-least-once with host-managed retries and backoff - the host owns orchestration and state.
+Make your consumer **idempotent**: key on `(tx_hash,
 log_index)` (or `_seq`) and a redelivery is a no-op. On restart, delivery resumes from the last
 acknowledged seal, so a crash mid-batch doesn't drop rows.
 
@@ -50,6 +50,30 @@ acknowledged seal, so a crash mid-batch doesn't drop rows.
 The POST is an effect, so it lives **after** sealing, never inside decode or entity derivation. A slow or
 failing endpoint can't stall or corrupt indexing - it only backs up its own delivery queue. This is the
 same purity rule that governs enrichers and alerts (see [Determinism](/docs/concepts/determinism/)).
+
+## The deposit sweep's webhook is a different one
+
+Everything above is about `[[webhooks]]`, which deliver table rows past finality. An address-history
+nest with a deposit sweep (RFC-0064, since 5.4.0) has its own `webhook` key under
+`[address_history.sweep]`, and that one works differently: it POSTs the **deposits feed**, the same
+numbered entries `GET /api?module=account&action=nuthatchDeposits&after=<seq>` returns, oldest first.
+
+```toml
+[address_history.sweep]
+confirmations = 12                               # optional: sweep this many blocks under the head
+webhook = "https://processor.example/deposits"   # optional: POST the deposits feed here
+```
+
+Without `confirmations` the sweep stops at the finalized head, and nothing it delivers is ever taken
+back. With `confirmations` set it runs above finality, so a reorg can take back a deposit that was
+already sent. The feed then gains a retraction, `{"event": "retraction", "retracts": <seq>, ...}`, and
+the webhook delivers it like any other entry, followed by the replacement as a new deposit. Credit on a
+deposit and reverse on its retraction, or raise `confirmations` until reorgs that deep do not happen
+on your chain.
+
+Delivery is at-least-once: a batch is marked delivered only after a 2xx, so drop repeats by `seq`. The
+feed is the record and the webhook only pushes it, so a consumer can always read from its last `seq`
+instead.
 
 ## Next
 
