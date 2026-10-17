@@ -4,7 +4,7 @@ date: "2026-10-17"
 description: "Burrmill, nuthatch's query engine, now runs as WebAssembly in a browser tab. It answers SQL over a live nest's published segments, checks every byte against its content address, and needs no server for the query. What it does today, what it measured, and what it is not yet."
 author: "cargopete"
 tags: ["nuthatch", "burrmill", "webassembly", "mirror"]
-draft: true
+draft: false
 ---
 
 Open [nuthatch-indexer.com/play](/play/) and a chart of the ETH/USD price since 1 January draws itself. The page holds no copy of the data, and no server ran the query. Your browser fetched 12 Parquet files from the public mirror, checked each one against the SHA-256 it is named by, and ran the SQL itself. On a cold visit that took 558 ms. On the next visit it fetches nothing.
