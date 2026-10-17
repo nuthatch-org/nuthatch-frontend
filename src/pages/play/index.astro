@@ -1,0 +1,132 @@
+---
+import Layout from '../../layouts/Layout.astro';
+// The page is the site's, so the nav and theme are too; play.js, the worker, the nest index and the
+// wasm module come from the nuthatch-play project, which vercel.json proxies under /play/.
+---
+<Layout
+  path="/play/"
+  title="Play - Nuthatch"
+  description="Run SQL over a live nest in your browser tab: Burrmill compiled to WebAssembly, reading content-addressed segments from the public mirror, each checked against its hash."
+>
+  <section class="page playground">
+    <div class="wrap pg-wide">
+      <p class="section-label">Play</p>
+      <h1>A nest in your browser</h1>
+      <p class="lede">SQL over a published nest, answered in this tab. Burrmill, nuthatch's query engine, runs here as WebAssembly and reads the nest's sealed segments from the <a href="/mirror">public mirror</a>, each checked against the content address it is stored under. No server runs your query. <a href="/blog/a-nest-in-your-browser">How it works</a>.</p>
+      <div class="bar">
+        <select id="nest" aria-label="nest"></select>
+        <span id="about"></span>
+      </div>
+      <div class="layout">
+        <aside>
+          <p class="side-label">Authored views</p>
+          <div id="views"></div>
+        </aside>
+        <div class="pg-main">
+          <textarea id="sql" spellcheck="false" aria-label="SQL"></textarea>
+          <div id="examples"></div>
+          <div class="actions">
+            <button id="run">Run</button>
+            <button id="cancel" class="quiet" hidden>Cancel</button>
+            <span class="hint">Cmd/Ctrl + Enter · the address bar keeps the query, so a link reruns it</span>
+            <span class="grow"></span>
+            <button id="csv" class="quiet" hidden>Download CSV</button>
+            <button id="clear" class="quiet" title="Forget the segments kept in this browser">Clear cache</button>
+          </div>
+          <div id="status"></div>
+          <div id="viz" hidden>
+            <div class="viz-bar">
+              <div class="tabs" role="tablist">
+                <button id="tab-chart" class="tab on" role="tab" aria-selected="true">Chart</button>
+                <button id="tab-table" class="tab" role="tab" aria-selected="false">Table</button>
+              </div>
+              <select id="ycol" aria-label="column to chart"></select>
+              <span id="legend"></span>
+              <span class="grow"></span>
+              <span id="viz-note" class="hint"></span>
+            </div>
+            <div id="tip" class="hint"></div>
+            <div id="chart"></div>
+            <div id="stats"></div>
+          </div>
+          <div class="pg-scroll" id="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+          <div id="more"></div>
+          <details id="source-box">
+            <summary>View source: <span id="source-name">hover a view</span></summary>
+            <pre id="source"></pre>
+          </details>
+          <p class="hint pg-note">The data stops at each nest's sealed watermark: the mirror publishes finalized segments only. The first query on a view downloads the segments it reads; later ones, and later visits, use the copies kept in this browser. Source: <a href="https://github.com/nuthatch-org/burrmill-wasm">burrmill-wasm</a>, <a href="https://github.com/nuthatch-org/burrmill">burrmill</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script is:inline type="module" src="/play/play.js"></script>
+</Layout>
+
+<style is:global>
+  /* The playground's own tokens, mapped onto the site's so the theme toggle carries through. Its
+     elements are made by play.js, which scoped styles cannot reach, hence global under .playground. */
+  .playground {
+    --panel: var(--bg-elev); --ink: var(--text); --faint: var(--text-muted); --line: var(--border-hi);
+    --code: var(--bg-inset); --err: #f08a7e; --accent: #c8693a; --accent-ink: #fff;
+  }
+  :root[data-theme='light'] .playground { --err: #a3271b; --accent: #a8481f; }
+  .playground .pg-wide { max-width: 80rem; }
+  .playground.page { padding-block: 2rem 4rem; }
+  .playground h1 { margin: 0.2rem 0 0.4rem; }
+  .playground .lede a { color: var(--accent); }
+  .playground .pg-note { margin-top: 1.25rem; max-width: 80ch; }
+  .playground .pg-note a { color: var(--accent); }
+  .playground .lede { color: var(--faint); margin: 0 0 20px; max-width: 70ch; }
+  .playground .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .playground select, .playground button, .playground textarea { font: inherit; color: inherit; }
+  .playground select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+  .playground #about { color: var(--faint); font-size: 0.85rem; }
+  .playground #about a { color: var(--accent); }
+  .playground code { background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 0.85em; }
+  .playground .layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 760px) { .playground .layout { grid-template-columns: 1fr; } .playground #views { max-height: 160px; } }
+  .playground #views { display: flex; flex-direction: column; gap: 2px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px; background: var(--panel); }
+  .playground .view { text-align: left; background: none; border: 0; padding: 5px 8px; border-radius: 5px; cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
+  .playground .view:hover { background: var(--code); }
+  .playground .side-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); margin: 0 0 6px 2px; }
+  .playground textarea { width: 100%; min-height: 96px; resize: vertical; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88rem; }
+  .playground .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  .playground #run { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 6px; padding: 7px 16px; font-weight: 600; cursor: pointer; }
+  .playground #run:disabled { opacity: 0.5; cursor: progress; }
+  .playground .quiet { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; color: var(--faint); }
+  .playground .grow { flex: 1; }
+  .playground #examples { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .playground .example { background: var(--code); border: 0; border-radius: 999px; padding: 3px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; cursor: pointer; color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .playground #source-box { margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  .playground #source-box summary { cursor: pointer; padding: 8px 12px; color: var(--faint); font-size: 0.85rem; }
+  .playground #source { margin: 0; padding: 0 12px 12px; overflow: auto; max-height: 40vh; font-size: 0.8rem; white-space: pre; }
+  .playground .hint { color: var(--faint); font-size: 0.8rem; }
+  .playground #status { font-size: 0.85rem; color: var(--faint); min-height: 1.5em; margin-bottom: 8px; }
+  .playground #status.err { color: var(--err); }
+  .playground .pg-scroll { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  .playground table { border-collapse: collapse; font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .playground th, .playground td { padding: 4px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: left; }
+  .playground th { position: sticky; top: 0; background: var(--code); font-weight: 600; }
+  .playground td.num { text-align: right; }
+  .playground #more { color: var(--faint); font-size: 0.8rem; margin-top: 6px; }
+  .playground #viz { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 10px 12px 6px; margin-bottom: 10px; }
+  .playground .viz-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .playground .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .playground .tab { background: none; border: 0; padding: 4px 12px; cursor: pointer; color: var(--faint); }
+  .playground .tab.on { background: var(--accent); color: var(--accent-ink); }
+  .playground #legend { display: inline-flex; flex-wrap: wrap; gap: 10px; font-size: 0.8rem; }
+  .playground .key::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; background: var(--k); vertical-align: -1px; }
+  .playground #tip { min-height: 1.4em; margin: 6px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .playground #tip span { margin-right: 12px; }
+  .playground #chart svg { display: block; width: 100%; height: auto; }
+  .playground #chart .grid { stroke: var(--line); stroke-width: 1; }
+  .playground #chart .zero { stroke: var(--faint); stroke-width: 1; }
+  .playground #chart .cross { stroke: var(--faint); stroke-dasharray: 3 3; }
+  .playground #chart .axis { fill: var(--faint); font: 11px ui-sans-serif, system-ui, sans-serif; }
+  .playground #stats { display: flex; flex-wrap: wrap; gap: 12px; }
+  .playground #stats:empty { display: none; }
+  .playground .stat { flex: 1 1 180px; padding: 14px 12px; border-radius: 8px; background: var(--code); }
+  .playground .stat-value { font-size: 1.7rem; font-weight: 650; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+  .playground .stat-label { color: var(--faint); font-size: 0.8rem; margin-top: 2px; }
+</style>

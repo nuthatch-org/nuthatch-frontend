@@ -1,7 +1,4 @@
 {
   "redirects": [{ "source": "/play", "destination": "/play/", "permanent": true }],
-  "rewrites": [
-    { "source": "/play/", "destination": "https://nuthatch-play.vercel.app/index.html" },
-    { "source": "/play/:path+", "destination": "https://nuthatch-play.vercel.app/:path+" }
-  ]
+  "rewrites": [{ "source": "/play/:path+", "destination": "https://nuthatch-play.vercel.app/:path+" }]
 }
