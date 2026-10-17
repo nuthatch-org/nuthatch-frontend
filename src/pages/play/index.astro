@@ -17,6 +17,11 @@ import Layout from '../../layouts/Layout.astro';
         <select id="nest" aria-label="nest"></select>
         <span id="about"></span>
       </div>
+      <div class="tail-bar">
+        <span id="tail-note"></span>
+        <button id="tail-refresh" class="quiet" title="Fetch the blocks past the mirror again">Refresh tail</button>
+        <input id="rpc" type="url" spellcheck="false" placeholder="your own RPC URL (kept in this browser)" aria-label="RPC URL for the live tail">
+      </div>
       <div class="layout">
         <aside>
           <p class="side-label">Authored views</p>
@@ -77,6 +82,9 @@ import Layout from '../../layouts/Layout.astro';
   .playground .lede a { color: var(--accent); }
   .playground .pg-note { margin-top: 1.25rem; max-width: 80ch; }
   .playground .pg-note a { color: var(--accent); }
+  .playground .tail-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--faint); font-size: 0.85rem; margin-bottom: 4px; }
+  .playground #tail-note { flex: 1 1 32rem; }
+  .playground #rpc { flex: 0 1 22rem; min-width: 12rem; font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
   .playground .lede { color: var(--faint); margin: 0 0 20px; max-width: 70ch; }
   .playground .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
   .playground select, .playground button, .playground textarea { font: inherit; color: inherit; }
