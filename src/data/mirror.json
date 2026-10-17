@@ -29,6 +29,12 @@
       "commit": "9696cb4beb1d5220e21c09c05d5875e6ea02c3a3"
     },
     {
+      "nest": "defi-pulse-nest",
+      "repo": "https://github.com/nuthatch-org/defi-pulse-nest",
+      "dataset": "0a6433520755800ecba6b06e4e01d7a1d24bd7a25e594075b6bb7d44a6b2e48f",
+      "commit": "f066c02d21c2a587a676329c5efe9121a05e7157"
+    },
+    {
       "nest": "betswirl-bnb-nest",
       "repo": "https://github.com/nuthatch-org/betswirl-bnb-nest",
       "dataset": "f00657c71f08fbf5c0badbfe236aaa467960d865380be29dff40abae84786c31",
