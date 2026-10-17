@@ -59,6 +59,10 @@ const groups = [
         </>
       ))}
       <a href="https://github.com/nuthatch-org/nuthatch" rel="noopener">GitHub</a>
+      <a href="/play/" class="nav-play" title="Run SQL over a live nest, in this tab">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.8v8.4L10 6z" fill="currentColor" /></svg>
+        Play
+      </a>
       <!-- CSS-only theme toggle: a :has() checkbox hack, zero JavaScript. -->
       <input type="checkbox" id="theme-toggle" class="theme-input" aria-label="Switch to light theme" />
       <label for="theme-toggle" class="theme-toggle" title="Toggle light / dark">
@@ -118,6 +122,26 @@ const groups = [
   }
   .nav-links a { color: var(--text-muted); font-size: 0.92rem; }
   .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+  /* The one filled control in the header. A deeper terracotta than --rust, which white text cannot
+     read on at AA; the glow is the only motion and stops for reduced-motion. */
+  .nav-links a.nav-play {
+    --play: #b4542a;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.65rem; border-radius: 999px;
+    background: var(--play); color: #fff; font-weight: 600; letter-spacing: 0.01em;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--play) 55%, transparent);
+    animation: play-glow 2.8s var(--ease) infinite;
+    transition: transform 0.18s var(--ease), background 0.18s var(--ease);
+  }
+  :root[data-theme=light] .nav-links a.nav-play { --play: #a8481f; }
+  .nav-links a.nav-play:hover { color: #fff; background: color-mix(in srgb, var(--play) 85%, #000); transform: translateY(-1px); }
+  .nav-play svg { width: 11px; height: 11px; }
+  @keyframes play-glow {
+    0%, 55% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--play) 55%, transparent); }
+    100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--play) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) { .nav-links a.nav-play { animation: none; } }
 
   /* Dropdown groups. The trigger is a real button so it takes keyboard focus; the menu opens on
      hover or on focus anywhere inside the group, and closes when both leave. */
