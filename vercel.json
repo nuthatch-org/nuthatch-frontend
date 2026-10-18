@@ -1,4 +1,8 @@
 {
-  "redirects": [{ "source": "/play", "destination": "/play/", "permanent": true }],
+  "redirects": [
+    { "source": "/play", "destination": "/play/", "permanent": true },
+    { "source": "/play/build", "destination": "/play/build/", "permanent": true },
+    { "source": "/play/build.html", "destination": "/play/build/", "permanent": true }
+  ],
   "rewrites": [{ "source": "/play/:path+", "destination": "https://nuthatch-play.vercel.app/:path+" }]
 }
