@@ -7,6 +7,8 @@ tags: ["nuthatch", "burrmill", "webassembly", "mirror"]
 draft: false
 ---
 
+> **Updated 2026-10-18.** All three slices listed under "What this is not, yet" are built, and the tab can now index a contract from scratch. The section [Added 18 October](#added-18-october-an-indexer-you-build-in-the-tab) says what changed. The rest is kept as written.
+
 Open [nuthatch-indexer.com/play](/play/) and a chart of the ETH/USD price since 1 January draws itself. The page holds no copy of the data, and no server ran the query. Your browser fetched 12 Parquet files from the public mirror, checked each one against the SHA-256 it is named by, and ran the SQL itself. On a cold visit that took 558 ms. On the next visit it fetches nothing.
 
 **The query engine is the one nuthatch runs on a server, compiled to WebAssembly.** It is not a JavaScript lookalike written for the demo. Burrmill, the DataFusion engine that replaced DuckDB in 4.1, builds for `wasm32-unknown-unknown`. It binds a nest the way the binary does, one table at a time and only when a statement reaches it. Every view in this post gives the same rows in a tab as it does natively. We checked that to the byte, and later in the post we explain why that check alone was not enough.
@@ -72,8 +74,17 @@ This is a query engine running over data a server indexed. It is not an indexer 
 
 When the third works, a browser tab will follow a chain, decode it, seal it and answer SQL over it, and every claim it makes will be checkable. We will write that post when it is true. A search on 16 October found nothing else doing all of it in WebAssembly. We are not claiming to be first, because one search proves nothing about the rest of the internet.
 
+## Added 18 October: an indexer you build in the tab
+
+The tab now follows the chain past the mirror, seals what two RPCs agree is final, and checks the head with a light client. Then it went one step further. The [nest builder](/play/build/) takes a contract address, scaffolds the nest `nuthatch init` would, with init's own code compiled to WebAssembly, and indexes it in the tab from its deploy block. On Ethereum, Base or Arbitrum.
+
+**Every segment the tab sealed hashed to the one `nuthatch dev` sealed from the same nest.** On a four-day-old Base pair that was 34 of 34, over 93,904 logs. On a token deployed the day before, 13 of 13, in 13.7 seconds. The download is an ordinary nest directory, and `nuthatch dev` reports the same identity for it that the page showed.
+
+What it is not: a light client over the backfill. A block is sealed when two RPCs agree on it, which is agreement and not proof, and the page says so. Public RPCs are also the limit on how far back it can go. Two of the four we tried serve under three days of Ethereum logs without a key, and on Base the best keyless second allows 50 blocks a query.
+
 ## Try it
 
 - [nuthatch-indexer.com/play](/play/). Pick a view in the sidebar, or write your own SQL against any of the nest's ten tables. The address bar keeps the query, so a link reruns it.
+- [The nest builder](/play/build/). Paste a contract address, edit its views, press Index it.
 - The page loads several nests from the mirror. DeFi Pulse is the default. The Graph network nests are there too.
 - The source: [burrmill-wasm](https://github.com/nuthatch-org/burrmill-wasm), [burrmill](https://github.com/nuthatch-org/burrmill), and the nest's own [views](https://github.com/nuthatch-org/defi-pulse-nest/tree/main/views).
