@@ -8,6 +8,8 @@ export interface MirrorEntry {
   repo: string;
   dataset: string;
   commit: string;
+  /** The nest's directory in its repository, when the repository holds more than one. */
+  path?: string;
   devArgs?: string;
   note?: string;
   chainId?: number;

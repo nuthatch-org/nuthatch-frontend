@@ -41,6 +41,26 @@
       "commit": "92d6588a3ad33c3e774f9244e6709b3f8ebc31ce",
       "devArgs": "--state-rpc <BNB archive RPC URL>",
       "note": "Retired 2026-10-07 (no users); the hosted endpoint is off. Still seedable: run it with the nuthatch-graph download from 4.12.0 or later, which serves its GraphQL."
+    },
+    {
+      "nest": "qos-reo-nest",
+      "repo": "https://github.com/nuthatch-org/qos-reo-nest",
+      "dataset": "9e9f47e82d946aa9d3d00a4f8dc1234017f1e4cab5a1bdce04e31e24afd489c3",
+      "commit": "cd83cef4ec5b22f7c6df2b04cf8cf6de6d789203"
+    },
+    {
+      "nest": "grt-supply-arbitrum-one",
+      "repo": "https://github.com/nuthatch-org/grt-supply-nest",
+      "path": "arbitrum-one",
+      "dataset": "f17503984e0051fcf0e9ff20a63b56b8144f8752c2b5277d15454165fc44a2de",
+      "commit": "ce2292e48337803452e9ba1e8c5fd76ce59326f3"
+    },
+    {
+      "nest": "grt-supply-mainnet",
+      "repo": "https://github.com/nuthatch-org/grt-supply-nest",
+      "path": "mainnet",
+      "dataset": "41d7cf9bbb687566e337c8f868d0f31dddbd213813ec5bbc61d3391536b35618",
+      "commit": "ce2292e48337803452e9ba1e8c5fd76ce59326f3"
     }
   ]
 }
