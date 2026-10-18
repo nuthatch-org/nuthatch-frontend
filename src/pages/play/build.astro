@@ -14,7 +14,11 @@ import Layout from '../../layouts/Layout.astro';
       <h1>Build a nest in your tab</h1>
       <p class="lede">Paste a contract address and this tab scaffolds the nest <code>nuthatch init</code> would, with init's own code compiled to WebAssembly: the same ABI, the same tables, the same identity. Edit its views, press <strong>Index it</strong> to backfill and query it here, or download it and run it with <code>nuthatch dev</code>. Nothing is sent anywhere but the RPCs and Sourcify. To query a nest someone has already published, <a href="/play/">open the playground</a>.</p>
     <div class="row">
-      <input id="address" placeholder="0x… a verified Ethereum mainnet contract" spellcheck="false" autocomplete="off">
+      <label class="faint" for="chain">Chain</label>
+      <select id="chain"></select>
+    </div>
+    <div class="row">
+      <input id="address" placeholder="0x… a contract verified on Sourcify" spellcheck="false" autocomplete="off">
       <input id="alias" placeholder="alias (optional)" spellcheck="false">
       <input id="start" placeholder="start block (optional)" inputmode="numeric">
       <button id="add" class="go">Add contract</button>
@@ -45,6 +49,7 @@ import Layout from '../../layouts/Layout.astro';
         <button id="new-view" class="quiet">New view</button>
       </div>
       <textarea id="sql" spellcheck="false"></textarea>
+      <div id="view-check" class="faint mono"></div>
   
       <h2>Index it</h2>
       <p class="faint" style="margin:0 0 8px">This tab backfills the nest from its first block and seals it with nuthatch's own sealer, then keeps the newest blocks on top. A block is sealed only when two RPCs both call it finalized, give it one hash and return the same logs for it. That is agreement, not proof: the light client the playground uses checks headers near the head, and over a backfill it would cost more than the backfill. A young contract takes seconds to a minute. Both default RPCs served logs 60,000 blocks back (about eight days) when this page was built; publicnode keeps about 20,000 and flashbots answers older ranges with nothing, so neither is a default. An older contract needs an RPC with full history in either box.</p>
@@ -98,6 +103,7 @@ import Layout from '../../layouts/Layout.astro';
   .builder .quiet { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; color: var(--faint); }
   .builder #status { font-size: 0.85rem; color: var(--faint); min-height: 1.5em; }
   .builder #status.err { color: var(--err); }
+  .builder #view-check.err { color: var(--err); white-space: pre-wrap; }
   .builder .card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 10px 12px; margin-bottom: 8px; }
   .builder .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
   .builder .faint { color: var(--faint); }
