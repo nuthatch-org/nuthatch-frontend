@@ -11,8 +11,8 @@ import Layout from '../../layouts/Layout.astro';
   <section class="page playground">
     <div class="wrap pg-wide">
       <p class="section-label">Play</p>
-      <h1>A nest in your browser</h1>
-      <p class="lede">SQL over a published nest, answered in this tab. Burrmill, nuthatch's query engine, runs here as WebAssembly and reads the nest's sealed segments from the <a href="/mirror">public mirror</a>, each checked against the content address it is stored under. No server runs your query. <a href="/blog/a-nest-in-your-browser">How it works</a>.</p>
+      <h1>An indexer in your tab</h1>
+      <p class="lede">SQL over a published nest, answered in this tab. Burrmill, nuthatch's query engine, runs here as WebAssembly and reads the nest's sealed segments from the <a href="/mirror">public mirror</a>, each checked against the content address it is stored under. No server runs your query. Past the mirror, the tab fetches the newest blocks from a public RPC, decodes them with nuthatch's own decoder, and seals what a light client verifies is final. <a href="/blog/a-nest-in-your-browser">How it works</a>.</p>
       <div class="bar">
         <select id="nest" aria-label="nest"></select>
         <span id="about"></span>
@@ -20,6 +20,7 @@ import Layout from '../../layouts/Layout.astro';
       <div class="tail-bar">
         <span id="tail-note"></span>
         <button id="tail-refresh" class="quiet" title="Fetch the blocks past the mirror again">Refresh tail</button>
+        <button id="tail-receipts" class="quiet" title="Check the newest finalized tail blocks against their receipts, about 1 MB a block">Check 20 blocks' receipts (~20 MB)</button>
         <input id="rpc" type="url" spellcheck="false" placeholder="your own RPC URL (kept in this browser)" aria-label="RPC URL for the live tail">
       </div>
       <div class="layout">
