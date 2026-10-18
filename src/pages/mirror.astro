@@ -11,9 +11,12 @@ const chains: Record<number, string> = {
 };
 const day = (iso?: string) => (iso ? iso.slice(0, 10) : '-');
 const base = mirrorBase || 'https://mirror.nuthatch-indexer.com';
-const seedCommand = (e: (typeof entries)[number]) =>
-  `git clone ${e.repo}\n${e.commit ? `git -C ${e.nest} checkout ${e.commit.slice(0, 12)}\n` : ''}nuthatch seed --from ${base} --dir ${e.nest}
-nuthatch dev --dir ${e.nest}${e.devArgs ? ` ${e.devArgs}` : ''}`;
+const seedCommand = (e: (typeof entries)[number]) => {
+  const clone = e.repo.split('/').pop();
+  const dir = e.path ? `${clone}/${e.path}` : clone;
+  return `git clone ${e.repo}\n${e.commit ? `git -C ${clone} checkout ${e.commit.slice(0, 12)}\n` : ''}nuthatch seed --from ${base} --dir ${dir}
+nuthatch dev --dir ${dir}${e.devArgs ? ` ${e.devArgs}` : ''}`;
+};
 // One real object, run against the bucket before this page shipped: 5,717 rows.
 const readQuery = `SELECT count(*), min(block_number), max(block_number)
 FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7bf115a9b15c7/gns__subgraph_published/e03958df317ac9e39634669f04c7fc1c6e6caed29e7b5f37630235acd8c9f7f2.parquet');`;
