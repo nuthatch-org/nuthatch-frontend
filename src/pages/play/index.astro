@@ -93,8 +93,8 @@ import Layout from '../../layouts/Layout.astro';
   .playground #about { color: var(--faint); font-size: 0.85rem; }
   .playground #about a { color: var(--accent); }
   .playground code { background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 0.85em; }
-  .playground .layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; margin-top: 12px; }
-  @media (max-width: 760px) { .playground .layout { grid-template-columns: 1fr; } .playground #views { max-height: 160px; } }
+  .playground .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; margin-top: 12px; }
+  @media (max-width: 760px) { .playground .layout { grid-template-columns: minmax(0, 1fr); } .playground #views { max-height: 160px; } }
   .playground #views { display: flex; flex-direction: column; gap: 2px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px; background: var(--panel); }
   .playground .view { text-align: left; background: none; border: 0; padding: 5px 8px; border-radius: 5px; cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
   .playground .view:hover { background: var(--code); }
