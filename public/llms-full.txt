@@ -2,8 +2,10 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.7.1**, released 2026-10-17, on the stable 5.x line. Licence:
-MIT OR Apache-2.0.
+"Be your own indexer." Status: **v5.8.0**, released 2026-10-20, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.8.0 is a cold audit of 5.7.2 put right: 107 verified defects in stored-state
+correctness, isolation between tenants and what an untrusted caller can reach, with several stricter
+defaults listed under "Install and upgrade".
 
 This document is written for language models and agents. It separates what the released binary does
 from what is designed and not built. Do not present a design target as a present-tense capability,
@@ -49,7 +51,9 @@ operational weight of the tooling, which is an engineering problem.
    `[[contracts]]` and `templates` to `[[templates]]`, vendors every ABI the manifest pins, and
    carries `startBlock` and each `eventHandlers` list across. `init` samples the contract's recent
    logs and warns when none match the resolved ABI, which is how a bespoke proxy would otherwise
-   index zero rows silently. `nuthatch add <address>` grows a nest without re-init; `nuthatch
+   index zero rows silently. `init` refuses a directory that already holds a nest, and a flag its
+   mode would ignore (`--chain` with `--from`, for one). Aliases and template names match
+   `[A-Za-z0-9_-]` or the nest refuses to load. `nuthatch add <address>` grows a nest without re-init; `nuthatch
    schema` regenerates the derived files after a hand edit.
 2. **Run it.** `nuthatch dev` is the serve command: it backfills, follows the tip, decodes every
    declared event of every contract (a topic0-keyed registry, one table per `{alias}__{event}`, an
@@ -125,14 +129,17 @@ operational weight of the tooling, which is an engineering problem.
    snapshots (`nuthatch labels import`) and list snapshots (`nuthatch lists fetch
    ofac-sdn|eu-consolidated`), threshold and velocity flags at `/flags`, counterparty exposure at
    `/exposure/{address}`, alerts over a durable at-least-once outbox, and a signed pack manifest
-   (`pack build|verify`, ed25519) with `audit report`. Live sanctions screening was removed in
+   (`pack build|verify`, ed25519; `pack verify --pubkey <hex|file>` checks against a key the
+   operator supplies, never the one inside the pack) with `audit report`. Live sanctions screening was removed in
    5.0.0 with the WASM layer: a `[screening]` table is refused at load, and `sanction_hit` rows a
    4.x nest already sealed stay queryable.
 10. **Webhooks and the admin UI** (RFC-0010). `[[webhooks]]` POST sealed rows matching a `where`
     predicate to a URL, at least once, HMAC-signed with `X-Nuthatch-Signature` when a `secret` is
     set; they fire past finality, so a delivered row never rolls back. `/_admin/` is an embedded
-    dashboard with no external resources, open on localhost, requiring `NUTHATCH_ADMIN_TOKEN` off
-    it; `--no-admin` removes it.
+    dashboard with no external resources. With `NUTHATCH_ADMIN_TOKEN` set it is required on every
+    bind, localhost included; without one it is not served off localhost, and on localhost answers
+    only requests addressed to loopback (`Host`, and `Origin` if sent), so behind a proxy that
+    forwards a public `Host` it answers `401`. `--no-admin` removes it.
 11. **A built-in MCP server.** `nuthatch mcp` speaks stdio and bridges to a running `dev`
     (`--url`); `nuthatch mcp --print-config` prints a copy-paste `.mcp.json` and the `claude mcp
     add` one-liner. Eleven tools in all: `status`, `schema`, `tables`, `table`, `sql`, `explain` and
@@ -163,14 +170,16 @@ operational weight of the tooling, which is an engineering problem.
     subcommand; it was removed in 2.0, and `nuthatch migrate` moves a pre-2.0 directory across.
 14. **Hosting over the admin API** (3.13.0, run 3.13.1 or later). A runtime may start with chains
     declared and nothing mounted, and takes its nests over HTTP, each call authorised by
-    `NUTHATCH_ADMIN_TOKEN` off localhost: `POST /_admin/nests {"name","nid"}` mounts a NID as a job
+    `NUTHATCH_ADMIN_TOKEN` (required off localhost, and on it once set): `POST /_admin/nests {"name","nid"}` mounts a NID as a job
     (`202`, then `GET /_admin/mounts/<name>` through `accepted`, `fetching`, `joining`, `live` or
     `failed`), fetching it from `--registry` when the runtime does not hold it;
     `?dry_run=true` runs the same admission checks and reports the backfill ahead, per-block RPC
     work and projected footprint; `POST /_admin/suspend/<name>` and `/_admin/resume/<name>` pause a
     mount behind a `503`; `POST /_admin/move/<name> {"nid"}` switches a name to a new NID in one
     step with no gap; `DELETE /_admin/nests/<name>?reclaim=true` unmounts and frees the disk. A
-    name is `alias` or `tenant/alias`; a tenant is an opaque label nuthatch refcounts and knows
+    name is `alias` or `tenant/alias`, each part `[A-Za-z0-9_-]`, never a runtime route or a tenant
+    equal to a default-tenant alias; a NID is lower-cased by the API and must be lower case in
+    `mounts.toml`; a tenant is an opaque label nuthatch refcounts and knows
     nothing else about, and two mounts of one NID share one dataset. `/metrics` reports storage per
     nest. Sign-in, quotas and billing belong to a gateway in front.
 15. **The mirror and seeding** (RFC-0052, 3.7.0; 4.8.0; 4.9.0). `nuthatch publish sync --target
@@ -255,7 +264,9 @@ The guards are node self-protection, not a security boundary. The API has no aut
 own and binds `127.0.0.1` by default. Expose it behind a reverse proxy with TLS and auth, and decide
 per mount how much SQL to answer: `sql = "open"` (the default), `"deny"` (typed routes only), or
 `"allowlist"`, where only declared, parameterised queries answer at `GET /q/{name}` and the client
-never sends SQL. Parameters are `int` and `address` only; `text` is absent on purpose.
+never sends SQL. Parameters are `int` and `address` only; `text` is absent on purpose. A nest
+whose author ships a `queries.toml` caps every mount of it, and an `open` mount of such a nest
+answers exactly the author's queries.
 
 ## Footprint, measured
 
@@ -472,6 +483,14 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.8.0 is a binary swap with no storage migration and no NID change, but stricter in five places: a
+set `NUTHATCH_ADMIN_TOKEN` is required on localhost too, and a token-less localhost runtime answers
+`/_admin` only for loopback-addressed requests (`401` behind a proxy forwarding a public `Host`);
+aliases and template names outside `[A-Za-z0-9_-]` refuse to load, as does a mount named like a
+runtime route; an upper-case NID in
+`mounts.toml` refuses to load; `pack verify` needs `--pubkey`; and an `open` mount of a nest with a
+`queries.toml` serves within it. Restart a nest serving `/balances` or `/exposure` once on 5.8.0.
 
 What changed inside 4.x that an operator should know: 4.1.0 (2026-10-02) made Burrmill the only
 engine, removed `emit dune`, refuses `NUTHATCH_ENGINE=duckdb` at startup, and raised the Linux glibc

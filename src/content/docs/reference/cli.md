@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -27,7 +27,9 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   the deploy-block probe, and `--no-timestamps` drops `block_timestamp` for good.
   `--from <git-url|dir>` initialises from a published nest instead of addresses (nothing is
   resolved - ABIs are vendored, so it's cloned, copied, and validated); `--from-subgraph <cid|url>`
-  scaffolds from a subgraph manifest.
+  scaffolds from a subgraph manifest. `init` refuses a directory that already holds a nest (grow it
+  with `add`, or pass a new `--dir`), and refuses a flag its mode would ignore, such as `--chain` with
+  `--from`.
 - **`nuthatch dev`** - run it: backfill, follow the tip, serve the API. `--listen` (default
   `127.0.0.1:8288`), `--rpc` runtime overrides, `--backfill N` (recent-history mode),
   `--seal-direct` (backfill finalized history straight to Parquet, bypassing the hot store),
@@ -90,11 +92,13 @@ entity circuit.
   a staged nest upgrade. Classifies the change and **refuses a breaking one by name**
   (`--allow-breaking` to accept). Moves data and never re-indexes; `--dry-run` prints the plan.
 - **`nuthatch prune --dir <dir>`** - reclaim datasets and shared segments nothing mounts any more.
-  Lists by default; `--yes` deletes.
+  Lists by default; `--yes` deletes, and refuses while a runtime holds the directory
+  (`runtime.lock`).
 
 - **`nuthatch dev`** - run many nests behind one listener; `--fail-fast` exits on the first
   fault instead of quarantining it (RFC-0026); `--registry <store>` lets a live mount fetch a NID the
-  runtime does not hold. See [Run a runtime](/docs/operate/many-nests/) and
+  runtime does not hold. `--ipfs` and `--state-rpc` reach every nest it runs; `--state-rpc` is
+  refused when the runtime declares more than one chain. See [Run a runtime](/docs/operate/many-nests/) and
   [Host nests for others](/docs/operate/hosting-nests/).
 
 ## Offchain data (RFC-0045)
@@ -115,7 +119,9 @@ entity circuit.
 - **`nuthatch labels import|list`** - labeled address sets as content-addressed snapshots.
 - **`nuthatch lists fetch|list`** - sanctions/watch lists as pinned address snapshots (`ofac-sdn`,
   `eu-consolidated` have default URLs; any other name takes `--url` or `--file`).
-- **`nuthatch pack keygen|build|verify`** - the signed compliance-pack manifest (ed25519).
+- **`nuthatch pack keygen|build|verify`** - the signed compliance-pack manifest (ed25519). `keygen`
+  writes its secret owner-only, by default under `~/.nuthatch`; `verify` needs `--pubkey`, the
+  signer's public key as 64 hex characters or a file holding them.
 - **`nuthatch audit report`** - summarise the threshold flags over a range (`--json`).
 - **`nuthatch audit sealed --rpc <url>`** - re-fetch a sample of sealed ranges from a second endpoint
   and compare them row by row; `dev --audit-rpc` does the same in the background.

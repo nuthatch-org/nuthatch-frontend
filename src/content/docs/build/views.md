@@ -2,7 +2,7 @@
 title: Authored SQL views
 description: General SQL authored with a nest and evaluated when a reader asks for it.
 order: 3
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 A nest's **logic layer** is authored SQL: `CREATE VIEW` statements over your decoded tables, kept in the
