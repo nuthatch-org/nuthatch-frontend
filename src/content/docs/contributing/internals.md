@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.8.0
+checked: 5.8.1
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
