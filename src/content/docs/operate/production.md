@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.8.1
+checked: 5.8.2
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
