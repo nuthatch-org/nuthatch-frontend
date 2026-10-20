@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional labels, flags, exposure and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 Some nests need more than raw rows: flag transfers that cross a threshold, measure an address's
@@ -51,8 +51,11 @@ url = "https://your-service/alerts"
   when an [incremental entity](/docs/build/entities/) faults. `format` is `raw` (the default) or
   `discord`, for a Discord webhook URL.
 - **The pack** - `nuthatch pack keygen`, then `pack build --key …`, signs a manifest of the decode
-  registry hash, the flag thresholds and the alert sinks (ed25519); `pack verify` checks one. Since
-  5.0.0 a manifest with `screening` or `components` entries is refused at `pack verify`.
+  registry hash, the flag thresholds and the alert sinks (ed25519). `keygen` writes the keypair
+  owner-only, by default to `~/.nuthatch/nuthatch-key.json`, outside any nest. `pack verify --pubkey
+  <hex|file>` checks one against the signer's public key you were given; the key inside the pack is
+  never trusted, and an unsigned pack fails. Since 5.0.0 a manifest with `screening` or `components`
+  entries is refused at `pack verify`.
 
 ## Determinism holds
 

@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -28,6 +28,31 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.8
+
+Replace the binary and restart. A 5.7.2 store is used as it is: no storage migration, and no NID or
+registry hash changes. Several defaults are stricter, and these need a look first. The names and
+the NID spelling below stop a config that loaded on 5.7.2 from loading: each could reach outside the
+nest's own directory or give one dataset a second one.
+
+- **The admin token applies on localhost.** With `NUTHATCH_ADMIN_TOKEN` set, every admin request
+  must present it, on every bind. Without one, a localhost runtime answers only requests addressed to
+  loopback, so behind a proxy that forwards a public `Host`, `/_admin` answers `401` until a token is
+  set.
+- **Names outside `[A-Za-z0-9_-]` refuse to load.** Check contract aliases and template names in
+  deployed nests. A mount named like a runtime route, or a tenant named like a default-tenant alias,
+  is refused too.
+- **An upper-case NID in `mounts.toml` refuses to load.** Lower-case it. The dataset directory under
+  `data/` is already lower case unless it was mounted that way by hand.
+- **`pack verify` needs `--pubkey`**, the signer's public key; the key inside the pack is no longer
+  trusted.
+- **An `open` mount of a nest that ships a `queries.toml` serves within it**, answering the author's
+  queries rather than free-form SQL.
+
+A nest that serves `/balances` or `/exposure` should be restarted once on 5.8.0: before it, a restart
+rebuilt them from a large batch and kept only its last step, so totals could be wrong. The
+[release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.8.0) have the rest.
 
 ## Upgrading to 5.0
 

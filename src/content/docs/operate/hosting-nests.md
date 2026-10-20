@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -87,7 +87,9 @@ nuthatch dev --dir /srv/runtime --listen 0.0.0.0:8288 --registry /srv/registry
   under `data/` can be mounted.
 - **The admin API needs `NUTHATCH_ADMIN_TOKEN` off localhost.** Bound anywhere but localhost without
   it, the runtime serves no admin routes at all, and an empty runtime then refuses to start, since
-  nothing could ever be mounted into it. `--no-admin` removes the routes everywhere.
+  nothing could ever be mounted into it. Once set, the token is required on localhost too, and a
+  token-less localhost runtime answers only requests addressed to loopback, so behind a proxy that
+  forwards a public `Host` it answers `401`. `--no-admin` removes the routes everywhere.
 
 Every admin call below takes the token as `Authorization: Bearer <token>` (or `?token=<token>`);
 the examples set it once in a shell alias, with the `Content-Type: application/json` every `POST` needs,
@@ -198,8 +200,10 @@ restarting, never moves a route.
 
 A name is `alias` or `tenant/alias`, each part letters, digits, `_` and `-`, at most 64 characters. An
 alias may not end in `__moving`, which a move uses for the nest it stages, and the default tenant is
-never spelled out: mount `usdc`, not `default/usdc`. Any other name is refused with `400` before
-anything is written.
+never spelled out: mount `usdc`, not `default/usdc`. A name may not be a runtime route (`health`,
+`nests`, `metrics`, `ready`, `_admin`), and a tenant may not share its name with a default-tenant
+mount's alias, since their routes would collide. Any other name is refused with `400` before anything is written. A NID given to
+the admin API is lower-cased, so one dataset has one directory.
 
 ## 6. Pause and resume
 
@@ -251,7 +255,8 @@ names it**; a dataset another mount still uses is kept and the answer says by wh
 
 `DELETE /_admin/datasets/<nid>` answers `200` when it reclaimed, `409` when it kept, `404` when there
 was nothing there. Inside a running runtime a reclaim removes the dataset and the segments only it
-references. Segments a live nest may still be reading are left for `nuthatch prune`, run offline.
+references. Segments a live nest may still be reading are left for `nuthatch prune`, run offline:
+`prune --yes` refuses while a runtime holds the directory's `runtime.lock`.
 
 ## 9. Meter it
 

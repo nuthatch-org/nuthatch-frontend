@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -91,10 +91,11 @@ See [Build a subgraph fallback](/docs/build/subgraph-fallback/).
 ## Admin & runtime
 
 - `GET /_admin/` - the built-in dashboard; `GET /_admin/events` streams live activity (SSE).
-  Off-localhost both require the admin token; `--no-admin` removes them. See
-  [Serving & the admin UI](/docs/operate/serving/).
-- The **runtime lifecycle routes** below mutate runtime state: they require the admin token when
-  bound off-localhost and disappear with `--no-admin`.
+  With `NUTHATCH_ADMIN_TOKEN` set both require it on every bind; without one they are not served
+  off localhost and answer only loopback-addressed requests on it (`401` otherwise). `--no-admin`
+  removes them. See [Serving & the admin UI](/docs/operate/serving/).
+- The **runtime lifecycle routes** below mutate runtime state: they follow the same token rule and
+  disappear with `--no-admin`.
 - `GET /nests` *(runtime only)* - the roster of mounted nests: name, chain, registry hash, table
   count, footprint, plus each nest's **live health** (`indexing` or `quarantined`, with the reason
   and the next re-admission attempt). The health half is merged per request, not cached at boot, so

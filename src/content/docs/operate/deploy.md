@@ -2,7 +2,7 @@
 title: "Deploy it"
 description: systemd, Docker, and a reverse proxy - the whole distance from "it works on my laptop" to "it is running on my box".
 order: 2
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one
@@ -30,7 +30,7 @@ WorkingDirectory=/var/lib/nuthatch/mynest        # the nest directory (holds nut
 ExecStart=/usr/local/bin/nuthatch dev --listen 127.0.0.1:8288 --seal-direct --concurrency 8
 Restart=on-failure
 RestartSec=5
-# Off-localhost the admin UI requires this; unset it and bind 127.0.0.1 to disable remote admin.
+# Once set, the admin UI requires it on every bind; behind a proxy it is what lets /_admin answer.
 Environment=NUTHATCH_ADMIN_TOKEN=change-me
 # Keep it inside the footprint budget; the box needs headroom for analytical queries.
 MemoryMax=2G
@@ -53,7 +53,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nuthatch-org/nuthatch:5.7.1
+  ghcr.io/nuthatch-org/nuthatch:5.8.0
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
@@ -98,9 +98,10 @@ Two things worth deciding deliberately:
   guarded (30 s timeout, 50,000-row cap, 64 MiB result ceiling, 2 concurrent queries), and those
   guards are what make exposure survivable - but read [security](/docs/operate/security/) before you
   put it in front of anyone you do not trust.
-- **`/_admin/` mutates state** - mounting and unmounting nests. It is open on localhost and requires
-  `NUTHATCH_ADMIN_TOKEN` on every request off it. If you do not want remote admin at all, bind
-  `127.0.0.1` and do not set the token.
+- **`/_admin/` mutates state** - mounting and unmounting nests. With `NUTHATCH_ADMIN_TOKEN` set,
+  every request must present it, localhost included. Without one, a localhost bind answers only
+  requests addressed to loopback, so through the proxy above `/_admin/` answers `401`. If you do not
+  want remote admin at all, bind `127.0.0.1` and pass `--no-admin`.
 
 `/health` and `/ready` are unauthenticated by design so a load balancer can probe them. `/ready`
 answers *is this nest serving and making progress?*, and reports `stalled` when every endpoint in the
