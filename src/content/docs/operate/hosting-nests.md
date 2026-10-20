@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.8.1
+checked: 5.8.2
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that

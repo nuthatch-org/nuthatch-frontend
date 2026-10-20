@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.8.1
+checked: 5.8.2
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
