@@ -62,13 +62,15 @@ sudo useradd --system --home /opt/nuthatch --shell /usr/sbin/nologin nuthatch
 sudo install -d -o nuthatch -g nuthatch /opt/nuthatch
 ```
 
-Get the nest itself either by scaffolding from an address, or by loading a published one:
+Get the nest itself either by scaffolding from a contract address:
 
 ```sh
-# from a contract address
 nuthatch init 0xA0b8… --chain mainnet --dir /opt/nuthatch/my-nest
+```
 
-# or a published nest, verified by content hash
+or by loading a published nest, verified by content hash:
+
+```sh
 nuthatch nest load https://…/my-nest.bundle --dir /opt/nuthatch/my-nest
 ```
 

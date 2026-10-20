@@ -14,12 +14,12 @@ one config file, and plain SQL.
 
 ## The short version
 
-There's a prebuilt nest for it. Three commands:
+There's a prebuilt nest for it. Three commands: clone the nest, index a recent slice, and ask it anything:
 
 ```sh
-nuthatch init --from https://github.com/nuthatch-org/uniswap-v3   # clone the nest
-nuthatch dev --dir uniswap-v3 --backfill 10000000 --seal-direct       # index a recent slice
-nuthatch sql --dir uniswap-v3                                         # ask it anything
+nuthatch init --from https://github.com/nuthatch-org/uniswap-v3
+nuthatch dev --dir uniswap-v3 --backfill 10000000 --seal-direct
+nuthatch sql --dir uniswap-v3
 ```
 
 You wrote nothing. Point `rpc_urls` at an endpoint you like (more on that below), and a couple of

@@ -46,11 +46,10 @@ WETH is a plain contract with no proxy, so `init` has nothing to warn about and 
 ## 3. Run it
 
 `dev` backfills, follows the tip, decodes every declared event, and serves an HTTP API - all in one
-process.
+process. It ends by printing `API live on http://127.0.0.1:8288`; try `GET /` and `/metrics` there.
 
 ```sh
 nuthatch dev --backfill 300
-# ... API live on http://127.0.0.1:8288  (try GET /  and  /metrics)
 ```
 
 `--backfill 300` starts 300 blocks behind the tip, about an hour of mainnet, so there are rows within
@@ -76,12 +75,12 @@ Most ERC-20s name them `from`, `to` and `value`; `from` is a SQL reserved word, 
 (`SELECT "from", value …`). nuthatch spots a bare `from` and tells you to quote it rather than just
 failing.
 
-…or over HTTP:
+…or over HTTP: a SQL count, the top holders (derived, no `eth_call`), and one address:
 
 ```sh
 curl 'http://127.0.0.1:8288/sql?q=SELECT+count(*)+FROM+weth__transfer'
-curl 'http://127.0.0.1:8288/balances?limit=5'    # top holders - derived, no eth_call
-curl http://127.0.0.1:8288/balance/0xSomeHolder  # one address
+curl 'http://127.0.0.1:8288/balances?limit=5'
+curl http://127.0.0.1:8288/balance/0xSomeHolder
 ```
 
 Balances are derived from the Transfers you have indexed, so an address answers `no balance` until it
@@ -130,11 +129,11 @@ Use your own endpoint for anything you care about - your own node, or a paid pro
 
 ```sh
 nuthatch init 0xADDR --chain arbitrum-one --rpc https://your-endpoint.example/arbitrum
-nuthatch dev --rpc https://your-endpoint.example/arbitrum   # or set rpc_urls in nuthatch.toml
+nuthatch dev --rpc https://your-endpoint.example/arbitrum
 ```
 
-`--rpc` is repeatable and nuthatch round-robins across the pool with per-endpoint health tracking, so
-listing two or three gets you failover as well as throughput. To keep a paid key behind the free
+Instead of `--rpc` on `dev`, you can set `rpc_urls` in `nuthatch.toml`. `--rpc` is repeatable and
+nuthatch round-robins across the pool with per-endpoint health tracking, so listing two or three gets you failover as well as throughput. To keep a paid key behind the free
 endpoints instead, give it to `dev --rpc-fallback`: it is asked only while every other endpoint is
 failing, so it bills only for what they could not answer. Every endpoint in a pool must be on the
 **same chain** - nuthatch verifies this at startup and refuses a mixed pool, since indexing against

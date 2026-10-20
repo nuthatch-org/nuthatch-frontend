@@ -59,8 +59,9 @@ Addresses join over the API, in bulk, and are live from the next block:
 curl -X POST localhost:8288/api/watch \
   -H 'content-type: application/json' \
   -d '{"addresses": ["0x...", "0x..."]}'
-# {"added":2,"watched":100002}
 ```
+
+The answer counts what it added and what is now watched: `{"added":2,"watched":100002}`.
 
 Each address is covered from the block it joined. Nothing before that is claimed, so asking about
 an earlier block gets `NUTHATCH_INCOMPLETE` rather than an empty answer that looks like "no

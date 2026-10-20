@@ -85,10 +85,13 @@ indexed from its own creation block.
 ```bash
 E=https://platform.nuthatch-indexer.com/q/cargopete/arcaidia-sepolia
 
-curl -s "$E/ready"            # last_block, tip, ready
-curl -s "$E/tables"           # every decoded table and its columns
+curl -s "$E/ready"
+curl -s "$E/tables"
 curl -s -G "$E/sql" --data-urlencode "q=select count(*) from intents"
 ```
+
+`/ready` answers with `last_block`, `tip` and `ready`, and `/tables` with every decoded table and its
+columns.
 
 How fast a nest is ready depends on the chain and its RPC far more than on us. The Arcaidia nest on
 Sepolia, backfilling on our keyed RPC, went from block 11,688,303 to the tip in 42 seconds, 161,739

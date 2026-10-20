@@ -41,8 +41,10 @@ WantedBy=multi-user.target
 
 ```sh
 sudo systemctl daemon-reload && sudo systemctl enable --now nuthatch
-journalctl -u nuthatch -f      # a clean progress line during backfill, then quiet tip-following
+journalctl -u nuthatch -f
 ```
+
+The log shows a clean progress line during backfill, then quiet tip-following.
 
 `MemoryMax=2G` matches the per-cursor budget nuthatch enforces on itself. Setting it means an
 unexpected regression is killed and restarted rather than taking the box with it.

@@ -117,9 +117,12 @@ actually changes, which is the moment it matters.
 
 ## Stage the new version and migrate
 
+With `--dry-run`, `migrate` prints the plan and names any breaking change; without it, it applies the
+plan:
+
 ```sh
-nuthatch migrate --dir my-runtime --dry-run   # prints the plan, and names any breaking change
-nuthatch migrate --dir my-runtime             # applies it
+nuthatch migrate --dir my-runtime --dry-run
+nuthatch migrate --dir my-runtime
 ```
 
 The runtime compares the staged version's schema against what the alias currently serves:

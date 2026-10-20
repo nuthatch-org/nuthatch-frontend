@@ -39,9 +39,13 @@ The same crates, run three ways. A role flag, never a fork.
 
 ```sh
 nuthatch init 0xYourContract --chain arbitrum-one --dir nest
-sudo chown -R 10001:10001 nest      # see below - this one is easy to miss
+sudo chown -R 10001:10001 nest
+```
 
-# Both are required. The stack refuses to start without them, by design.
+The `chown` is easy to miss; see below. Both variables are required, and the stack refuses to start
+without them, by design:
+
+```sh
 export POSTGRES_PASSWORD=$(openssl rand -hex 16)
 export NUTHATCH_CONTROL_TOKEN=$(openssl rand -hex 32)
 
