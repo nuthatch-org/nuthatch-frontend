@@ -42,12 +42,13 @@ to run it yourself and how to go back to the network.
 
 ## 1. Publish the nests you will host
 
-On the machine where a nest is built:
+On the machine where a nest is built, bundle it into `usdc-<hash>.bundle`, publish that, and print the
+NID a host mounts it by:
 
 ```sh
-nuthatch nest bundle ./usdc                  # → usdc-<hash>.bundle
+nuthatch nest bundle ./usdc
 nuthatch nest publish usdc-<hash>.bundle --registry /srv/registry --as usdc@1.0.0
-nuthatch nest nid --dir ./usdc               # the NID a host mounts it by
+nuthatch nest nid --dir ./usdc
 ```
 
 `nest publish` prints the NID as well as the hash. The registry indexes every bundle by NID, so a NID
@@ -131,14 +132,15 @@ If the NID had to be fetched, it was fetched and verified, and it stays installe
 
 ```sh
 nh -XPOST localhost:8288/_admin/nests -d '{"name":"usdc","nid":"9f2c…"}'
-# 202 {"name":"usdc","nid":"9f2c…","phase":"accepted","since_unixtime":1790700000}
 ```
 
-A mount is a **job**, because fetching and catching up can take minutes. Poll it:
+It answers `202 {"name":"usdc","nid":"9f2c…","phase":"accepted","since_unixtime":1790700000}`.
+A mount is a **job**, because fetching and catching up can take minutes. Poll the one job, or list
+every mount the runtime knows as `{"mounts": [...]}`:
 
 ```sh
-nh localhost:8288/_admin/mounts/usdc     # one job
-nh localhost:8288/_admin/mounts          # {"mounts": [...]} - every mount the runtime knows
+nh localhost:8288/_admin/mounts/usdc
+nh localhost:8288/_admin/mounts
 ```
 
 | `phase` | Meaning |
@@ -203,9 +205,11 @@ anything is written.
 
 ## 6. Pause and resume
 
+Suspending answers `200 {"suspended":"usdc"}`; resuming answers `202` with a mount job:
+
 ```sh
-nh -XPOST localhost:8288/_admin/suspend/usdc     # 200 {"suspended":"usdc"}
-nh -XPOST localhost:8288/_admin/resume/usdc      # 202, a mount job
+nh -XPOST localhost:8288/_admin/suspend/usdc
+nh -XPOST localhost:8288/_admin/resume/usdc
 ```
 
 A suspended mount leaves its cursor and releases its store, and its routes answer `503` with
@@ -220,10 +224,11 @@ is not mounted is `404`; resuming one that is not suspended is `404`. While paus
 
 ## 7. Move a name to a new version
 
-A new version of a nest is a new NID. To repoint a name without a gap:
+A new version of a nest is a new NID. To repoint a name without a gap, move it; the answer is `202`, a
+job under `"usdc"`:
 
 ```sh
-nh -XPOST localhost:8288/_admin/move/usdc -d '{"nid":"4a71…"}'    # 202, a job under "usdc"
+nh -XPOST localhost:8288/_admin/move/usdc -d '{"nid":"4a71…"}'
 ```
 
 The runtime mounts the new NID beside the old one, catches it up, and then switches the name's routes in
@@ -236,10 +241,13 @@ alone.
 
 ## 8. Unmount and reclaim disk
 
+Unmount a name, which answers `200 {"unmounted":"usdc"}`; unmount it and free the disk with
+`?reclaim=true`; or free a dataset unmounted earlier:
+
 ```sh
-nh -XDELETE localhost:8288/_admin/nests/usdc                    # 200 {"unmounted":"usdc"}
-nh -XDELETE 'localhost:8288/_admin/nests/usdc?reclaim=true'     # and free the disk
-nh -XDELETE localhost:8288/_admin/datasets/9f2c…                # free one unmounted earlier
+nh -XDELETE localhost:8288/_admin/nests/usdc
+nh -XDELETE 'localhost:8288/_admin/nests/usdc?reclaim=true'
+nh -XDELETE localhost:8288/_admin/datasets/9f2c…
 ```
 
 An unmount keeps the dataset, so mounting it again is free. Reclaiming removes it once **no mount
@@ -297,20 +305,27 @@ between the network and a mount.
 
 ## The whole walkthrough
 
+On the build side:
+
 ```sh
-# build side
 nuthatch nest bundle ./usdc
 nuthatch nest publish usdc-<hash>.bundle --registry /srv/registry --as usdc@1.0.0
 NID=$(nuthatch nest nid --dir ./usdc)
+```
 
-# host side
+On the host side, polling the mount until its `"phase"` is `"live"` before the query:
+
+```sh
 nuthatch dev --dir /srv/runtime --listen 0.0.0.0:8288 --registry /srv/registry &
 nh -XPOST 'localhost:8288/_admin/nests?dry_run=true' -d "{\"name\":\"acme/usdc\",\"nid\":\"$NID\"}"
 nh -XPOST localhost:8288/_admin/nests -d "{\"name\":\"acme/usdc\",\"nid\":\"$NID\"}"
-nh localhost:8288/_admin/mounts/acme/usdc          # until "phase": "live"
+nh localhost:8288/_admin/mounts/acme/usdc
 curl -s 'localhost:8288/acme/usdc/sql?q=SELECT%201'
+```
 
-# later
+Later:
+
+```sh
 nh -XPOST localhost:8288/_admin/suspend/acme/usdc
 nh -XPOST localhost:8288/_admin/resume/acme/usdc
 nh -XPOST localhost:8288/_admin/move/acme/usdc -d '{"nid":"<new nid>"}'

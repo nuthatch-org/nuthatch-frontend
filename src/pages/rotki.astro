@@ -25,7 +25,7 @@ from_block = 17030000
 cache_mb = 2048`;
 
 const run = `curl -fsSL https://nuthatch-indexer.com/install.sh | sh
-export NUTHATCH_TRACE_RPC=https://your-trace-rpc   # kept out of the process list
+export NUTHATCH_TRACE_RPC=https://your-trace-rpc
 nuthatch dev --dir rotki`;
 
 const check = `curl 'http://127.0.0.1:8288/api?module=account&action=txlist&address=0xYourAccount&startblock=17030000&endblock=17100000'`;
@@ -66,7 +66,7 @@ const parity: [string, string][] = [
           </div>
           <div>
             <span class="cap">2 · the run</span>
-            <p><code>nuthatch dev</code> backfills the accounts, then checks the chain every five minutes. A trace RPC is needed for internal transactions.</p>
+            <p><code>nuthatch dev</code> backfills the accounts, then checks the chain every five minutes. A trace RPC is needed for internal transactions; it is read from <code>NUTHATCH_TRACE_RPC</code>, which keeps it out of the process list.</p>
           </div>
           <div>
             <span class="cap">3 · rotki</span>

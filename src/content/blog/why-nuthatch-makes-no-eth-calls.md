@@ -56,11 +56,11 @@ it. Deterministic, free, no archive node. Four ship today, and each one replaces
 | `holder_count` | - | count of non-zero holders |
 | `reserves` | Uniswap-V2 `getReserves()` | the latest `Sync` per pair |
 
-Two commands and you're using one:
+Two commands and you're using one; the second writes `views/total_supply.sql`:
 
 ```sh
 nuthatch recipe list
-nuthatch recipe add total_supply     # writes views/total_supply.sql
+nuthatch recipe add total_supply
 ```
 
 `recipe add` drops a `CREATE VIEW` into the nest's `views/`. It's yours: plain SQL over your own tables,
@@ -103,10 +103,11 @@ a strict win over fetching, not parity with it.
 
 Some values genuinely aren't in the events. A token's `decimals`, `symbol`, and `name` never appear in a
 `Transfer`, and you can't derive them from anything. But they're also **write-once constants**: they never
-change. So nuthatch fetches them exactly once and caches forever:
+change. So nuthatch fetches them exactly once and caches forever, in `metadata.json`, keyed by address,
+and never re-fetches them:
 
 ```sh
-nuthatch metadata fetch      # lands in metadata.json, keyed by address; never re-fetched
+nuthatch metadata fetch
 ```
 
 Yes, that fetch uses `eth_call` under the hood, this is the one place a plain call is fine. It reads

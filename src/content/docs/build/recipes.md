@@ -23,9 +23,11 @@ whose inputs were never emitted.
 
 ## Use one
 
+`recipe add total_supply` writes `views/total_supply.sql`:
+
 ```sh
 nuthatch recipe list
-nuthatch recipe add total_supply     # writes views/total_supply.sql
+nuthatch recipe add total_supply
 nuthatch sql "SELECT total_supply FROM usdc_total_supply"
 ```
 

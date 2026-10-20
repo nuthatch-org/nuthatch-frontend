@@ -51,12 +51,13 @@ The default binary has no GraphQL route: `POST /graphql` answers 404. From 4.11.
 carries `nuthatch-graph-<target>.tar.gz`, built with `--features graph` and attested like the others,
 for `aarch64-apple-darwin` and `x86_64-unknown-linux-gnu`, and for `aarch64-unknown-linux-gnu` from
 4.12.0. It serves a nest's Graph-dialect GraphQL at `/graphql` and `/subgraphs/id/<deployment>`, and has
-every command the default binary has. The installer does not fetch it:
+every command the default binary has. The installer does not fetch it. The archive holds one binary,
+named `nuthatch`:
 
 ```sh
 gh release download --repo nuthatch-org/nuthatch -p 'nuthatch-graph-aarch64-apple-darwin.tar.gz*'
 shasum -a 256 -c nuthatch-graph-aarch64-apple-darwin.tar.gz.sha256
-tar -xzf nuthatch-graph-aarch64-apple-darwin.tar.gz    # one binary, named nuthatch
+tar -xzf nuthatch-graph-aarch64-apple-darwin.tar.gz
 ```
 
 A nest answers GraphQL only once it carries a `graph/schema.graphql`, which `nuthatch port-emit`
@@ -102,10 +103,10 @@ nuthatch --version
 ```
 
 Then take the two-minute path: [Quickstart](/docs/start/quickstart/) - from a contract address to a
-live, queryable API.
+live, queryable API. The contract here is WETH, and `init` detects its chain:
 
 ```sh
-nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth   # WETH - chain auto-detected
+nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth
 nuthatch dev --backfill 300
 ```
 

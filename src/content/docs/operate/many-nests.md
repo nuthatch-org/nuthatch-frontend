@@ -84,9 +84,12 @@ whole lifecycle: a runtime may start with chains declared and **nothing mounted*
 arrive, pause, change version and leave over the admin API. Before 0.7.0, adding or removing a nest
 meant editing config and restarting, which stops every *co-tenant* nest too.
 
+Mount a nest, which answers `202` with a job; poll the mount until its `"phase"` is `"live"`; and
+unmount it:
+
 ```sh
-curl -XPOST   localhost:8288/_admin/nests -H 'Content-Type: application/json' -d '{"name":"usdc","nid":"9f2c…"}'   # 202, a job
-curl          localhost:8288/_admin/mounts/usdc                            # until "phase": "live"
+curl -XPOST   localhost:8288/_admin/nests -H 'Content-Type: application/json' -d '{"name":"usdc","nid":"9f2c…"}'
+curl          localhost:8288/_admin/mounts/usdc
 curl -XDELETE localhost:8288/_admin/nests/usdc
 ```
 

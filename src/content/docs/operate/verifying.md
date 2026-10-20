@@ -83,18 +83,26 @@ asserts it pulls one from a registry anyway.
 ## Running the fleet lab yourself
 
 The distributed levels need more than one machine. `scripts/fleet-lab.sh` stands up a throwaway lab on
-Hetzner Cloud, runs the runbook against the **published release artifacts**, and destroys it:
+Hetzner Cloud, runs the runbook against the **published release artifacts**, and destroys it. It needs
+a Hetzner Cloud project API token and the name of a key already in that project:
 
 ```sh
-export HCLOUD_TOKEN=...            # a Hetzner Cloud project API token
-export HCLOUD_SSH_KEY="my-key"     # the name of a key already in that project
+export HCLOUD_TOKEN=...
+export HCLOUD_SSH_KEY="my-key"
+```
 
-./scripts/fleet-lab.sh up multi    # three boxes and a private network
+`up multi` stands up three boxes and a private network. `partition` cuts a writer off the control
+plane and asserts it keeps indexing, `skew` pushes a writer's clock forward and asserts the lease does
+not move, `pull` deletes a writer's nest and asserts it pulls one from the registry, and `down`
+destroys everything it created:
+
+```sh
+./scripts/fleet-lab.sh up multi
 ./scripts/fleet-lab.sh verify
-./scripts/fleet-lab.sh partition   # cut a writer off the control plane, assert it keeps indexing
-./scripts/fleet-lab.sh skew        # push a writer's clock forward, assert the lease does not move
-./scripts/fleet-lab.sh pull        # delete a writer's nest, assert it pulls one from the registry
-./scripts/fleet-lab.sh down        # destroy everything it created
+./scripts/fleet-lab.sh partition
+./scripts/fleet-lab.sh skew
+./scripts/fleet-lab.sh pull
+./scripts/fleet-lab.sh down
 ```
 
 Hetzner bills hourly - three boxes are roughly €0.03/hr - which is only cheap if you destroy them, so

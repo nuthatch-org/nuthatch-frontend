@@ -120,7 +120,12 @@ array (#1610). That is an added field, which is the only kind of change the prom
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc
 nuthatch dev --backfill 300
-nuthatch sql "SELECT count(*) FROM usdc__transfer"    # in a second terminal
+```
+
+Then, in a second terminal:
+
+```sh
+nuthatch sql "SELECT count(*) FROM usdc__transfer"
 ```
 
 Upgrading from 3.13.x is a binary swap. Coming from an earlier 3.x, read the compatibility section of

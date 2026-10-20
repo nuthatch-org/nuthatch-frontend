@@ -16,10 +16,10 @@ any S3-compatible bucket.
 
 ## Publish and pull
 
-**1. Bundle a nest** into one portable, content-addressed file.
+**1. Bundle a nest** into one portable, content-addressed file, `my-nest-<hash>.bundle`.
 
 ```sh
-nuthatch nest bundle ./my-nest        # → my-nest-<hash>.bundle
+nuthatch nest bundle ./my-nest
 ```
 
 **2. Publish it** to a registry under a name and version.
