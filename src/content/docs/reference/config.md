@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml and mounts.toml, field by field."
 order: 2
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 Four files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `entities.toml` declares
@@ -34,6 +34,9 @@ start_block = 6082465          # optional; deployment block (init detects it)
 abi = "abis/usdc.json"        # vendored ABI path, relative to the nest dir
 events = ["Transfer"]         # optional allowlist; omit to decode every ABI event
 ```
+
+An alias becomes part of table and segment file names, so it must match `[A-Za-z0-9_-]`; since 5.8.0
+any other alias, or template `name`, refuses to load.
 
 ### `block_timestamps`
 
@@ -234,7 +237,8 @@ starts empty and takes its nests over the admin API (3.13.0; without the admin A
 refused). `[[mounts]]` and `suspended` are runtime state: `nuthatch migrate` writes them from a pre-2.0
 directory and a live runtime keeps them current after an admin mount, unmount, suspend or move. A
 suspended mount keeps its record and data but is neither indexed nor served (it answers `503`) until
-resumed. See [Run a runtime](/docs/operate/many-nests/)
+resumed. A `nid` is written in lower case: since 5.8.0 an upper-case one refuses to load, because on
+Linux it names a different directory under `data/`. See [Run a runtime](/docs/operate/many-nests/)
 for the full multichain shape and the named-query allowlist.
 
 ## A note on `nest.star`

@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -165,7 +165,7 @@ Then make three decisions explicitly rather than by default:
 | Surface | Decision |
 |---|---|
 | `/sql` | A real analytical surface. Guarded, but a caller can still ask expensive questions. Read [security](/docs/operate/security/) before exposing it to anyone you do not trust. |
-| `/_admin/` | **Mutates state** - it mounts and unmounts nests. Off localhost it requires `NUTHATCH_ADMIN_TOKEN` set *and* presented per request. Want no remote admin at all? Bind localhost and pass `--no-admin`. |
+| `/_admin/` | **Mutates state** - it mounts and unmounts nests. With `NUTHATCH_ADMIN_TOKEN` set, every request must present it, localhost included; without one, off localhost it is not served and on localhost it answers only requests addressed to loopback, so `401` through a proxy. Want no remote admin at all? Bind localhost and pass `--no-admin`. |
 | `/health`, `/ready` | Unauthenticated by design so a load balancer can probe them. Leave them reachable. |
 
 ## 6. Watch the two numbers that matter

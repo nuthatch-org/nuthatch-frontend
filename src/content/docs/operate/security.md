@@ -2,7 +2,7 @@
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
 order: 4
-checked: 5.7.1
+checked: 5.8.0
 ---
 
 ## Upgrade first
@@ -89,6 +89,10 @@ sql = "allowlist"          # "open" (default) | "deny" | "allowlist"
   `/entity/{id}`, `/balances`, …) still serve.
 - **`allowlist`** - only the declared queries answer, by name.
 
+A nest whose author ships a `queries.toml` caps every mount of it: a mount may name fewer of those
+queries or deny SQL, an allowlist wider than the author's is refused, and since 5.8.0 a mount left on
+`open` answers exactly the author's queries, never free-form SQL.
+
 **The client sends a name, never SQL.** `GET /usdc/q/transfers_to?addr=0x…&n=3` supplies typed
 arguments; it never supplies a statement. Matching caller-supplied SQL against a regex or a
 "is it a SELECT" check is the shape of every SQL-filter bypass ever written - this is deliberately not
@@ -117,9 +121,12 @@ re-indexes nothing - and two tenants can share one dataset while exposing differ
 nuthatch binds `127.0.0.1` by default and is built to be **fronted**. TLS, authentication and metering
 are the operator's layer.
 
-- **`/_admin/`** mutates state (mounting and unmounting nests). Open on localhost; off it, every
-  request requires `NUTHATCH_ADMIN_TOKEN`. Bind localhost and leave the token unset to disable remote
-  admin entirely.
+- **`/_admin/`** mutates state (mounting and unmounting nests). With `NUTHATCH_ADMIN_TOKEN` set,
+  every request must present it, on every bind, localhost included. Without one, off localhost the
+  routes are not served, and on localhost they answer only requests addressed to loopback (a
+  loopback `Host`, and `Origin` if sent), which stops a DNS-rebinding page. Behind a proxy that
+  forwards a public `Host`, a token-less runtime answers `401` until a token is set. `--no-admin`
+  removes the routes.
 - **The scaled-mode control plane** *refuses to start* off-localhost without `NUTHATCH_CONTROL_TOKEN` - 
   a refusal, not a warning. It decides what an entire fleet runs.
 - **Token comparison is constant-time**, on both surfaces.

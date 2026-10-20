@@ -92,7 +92,9 @@ reconsider the mounting budget before the machine makes the decision rather more
 
 The data API is read-only, but a runtime may also expose administrative routes that mount or remove
 nests, on the same port. The binary refuses to mount them off loopback unless `NUTHATCH_ADMIN_TOKEN`
-is set, and then checks the token on every admin request; `--no-admin` leaves them out entirely.
+is set, and once it is set checks it on every admin request, localhost included. Without a token, a
+localhost runtime answers only requests addressed to loopback, so one behind a proxy refuses them
+until a token is set. `--no-admin` leaves them out entirely.
 Do not undo that care by putting a token-bearing port on the public internet and then feel
 surprised when somebody experiments with it. Restrict the port, use a gateway where public access is
 needed, and keep database credentials and RPC URLs in deployment configuration rather than the nest
