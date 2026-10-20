@@ -132,8 +132,8 @@ nuthatch init 0xADDR --chain arbitrum-one --rpc https://your-endpoint.example/ar
 nuthatch dev --rpc https://your-endpoint.example/arbitrum
 ```
 
-Instead of `--rpc` on `dev`, you can set `rpc_urls` in `nuthatch.toml`. `--rpc` is repeatable and nuthatch round-robins across the pool with per-endpoint health tracking, so
-listing two or three gets you failover as well as throughput. To keep a paid key behind the free
+Instead of `--rpc` on `dev`, you can set `rpc_urls` in `nuthatch.toml`. `--rpc` is repeatable and
+nuthatch round-robins across the pool with per-endpoint health tracking, so listing two or three gets you failover as well as throughput. To keep a paid key behind the free
 endpoints instead, give it to `dev --rpc-fallback`: it is asked only while every other endpoint is
 failing, so it bills only for what they could not answer. Every endpoint in a pool must be on the
 **same chain** - nuthatch verifies this at startup and refuses a mixed pool, since indexing against
