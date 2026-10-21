@@ -20,6 +20,23 @@ import Layout from '../../layouts/Layout.astro';
 
       <p class="empty">Withdrawn on 13 October 2026, along with Lodestar and the rest of the Graph work. The endpoint now returns 410.</p>
 
+      <section class="chains">
+        <h2>A chain The Graph does not serve</h2>
+        <p>
+          Nuthatch indexes any EVM chain that has a JSON-RPC endpoint, including chains The Graph network does not
+          support or no longer supports. A set of chains is built in; for any other,
+          <code>nuthatch init 0xYourContract --chain my-chain --rpc https://your-endpoint</code> reads the chain id
+          from the endpoint and checks it at every start. <a href="/docs/reference/config/">The config reference</a>
+          shows the same nest written by hand, and <a href="/docs/build/subgraph-fallback">the fallback docs</a> cover
+          answering a subgraph's queries from it.
+        </p>
+        <p>
+          Non-EVM chains such as NEAR or Solana are not built today. If you need one, say so in
+          <a href="https://github.com/nuthatch-org/nuthatch/issues" rel="noopener">an issue</a>; support is added on
+          request.
+        </p>
+      </section>
+
       <div class="notes">
         <section>
           <h2>What they were not</h2>
@@ -51,6 +68,9 @@ import Layout from '../../layouts/Layout.astro';
     border: 1px dashed var(--border); border-radius: var(--radius); padding: 1.2rem 1.25rem;
     color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.86rem; margin: 0;
   }
+  .chains { margin-top: 2.5rem; max-width: 64ch; }
+  .chains h2 { font-size: 1.25rem; margin-bottom: 0.6rem; }
+  .chains p { color: var(--text-muted); line-height: 1.7; margin: 0 0 0.8rem; }
   .notes { margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: 2rem; }
   .notes h2 { font-size: 1.05rem; margin-bottom: 0.5rem; }
   .notes p { color: var(--text-muted); font-size: 0.93rem; line-height: 1.65; margin: 0; }
