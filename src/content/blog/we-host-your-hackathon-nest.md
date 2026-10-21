@@ -87,6 +87,6 @@ Today it found a real defect and two documentation lies. A week of our own testi
 
 So the offer stands, and it is not limited to The Graph's hackathons. Testnet, mainnet, any EVM chain
 with a public RPC. Send the addresses and the chain to the
-[Night's Watch Discord](https://discord.gg/CQewvyJ69Y). If your contracts are unverified, send the
+[Nuthatch Discord](https://discord.gg/p9Xc45txWa). If your contracts are unverified, send the
 ABIs too, or a link to the repo. We will tell you honestly if it will not work, and if it will, you
 will have a URL the same day.
