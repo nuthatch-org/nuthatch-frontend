@@ -5,20 +5,23 @@ import Layout from '../../layouts/Layout.astro';
 <Layout
   path="/subgraphs"
   title="Nest-backed subgraphs - Nuthatch"
-  description="From 6 to 13 October 2026, Nuthatch answered a few subgraphs The Graph network did not serve, as a stopgap until an indexer picked them up. They have been withdrawn."
+  description="The Graph is sunsetting support for a number of chains. Nuthatch ports a subgraph that is no longer live on the network to a nest, one to one, and hosts it for you."
 >
   <section class="page">
     <div class="wrap">
       <p class="section-label">Subgraphs</p>
       <h1>Nest-backed subgraphs</h1>
       <p class="lede">
-        From 6 to 13 October 2026, Nuthatch answered a handful of subgraphs that no indexer on The Graph network
-        served, from a nest built from the same contracts. They were a fallback, so that the apps querying them did
-        not go dark while the network caught up, and each came with a handback saying how to go back to the
-        network once an indexer allocated.
+        The Graph is sunsetting support for a number of chains, and subgraphs on them are going dark. We port a
+        subgraph that is no longer live on the network to a nest, one to one: the same contracts, the same
+        entities, the same queries, so the apps reading it carry on unchanged. We build each port on request and
+        run it on our servers.
       </p>
 
-      <p class="empty">Withdrawn on 13 October 2026, along with Lodestar and the rest of the Graph work. The endpoint now returns 410.</p>
+      <p class="empty">
+        On request. Reach out on the <a href="https://discord.gg/p9Xc45txWa" rel="noopener">Nuthatch Discord</a>
+        with the subgraph, or its contracts and chain.
+      </p>
 
       <section class="chains">
         <h2>A chain The Graph does not serve</h2>
@@ -33,29 +36,16 @@ import Layout from '../../layouts/Layout.astro';
         <p>
           Non-EVM chains such as NEAR or Solana are not built today; support is added on request.
         </p>
-        <p>
-          We will also run it for you. If you would rather not host a nest yourself, or you need a chain added,
-          reach out on the <a href="https://discord.gg/p9Xc45txWa" rel="noopener">Nuthatch Discord</a> with the
-          contract and the chain.
-        </p>
       </section>
 
       <div class="notes">
         <section>
-          <h2>What they were not</h2>
-          <p>
-            An attempt to take users off the network. A stopgap only ever covered a deployment no indexer served,
-            answered the fields a subgraph derives from decoded events and refused the rest by name, and charged
-            nothing. The aim in every case was to hand the subgraph back.
-          </p>
-        </section>
-        <section>
           <h2>Run it yourself</h2>
           <p>
-            A stopgap is the stock <code>nuthatch-graph</code> download run as any operator would run it.
-            <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">The BetSwirl BNB Chain handback</a>
-            shows how, and <a href="/docs/build/subgraph-fallback">the fallback docs</a> cover drawing the boundary.
-            <a href="/the-graph">Nuthatch and The Graph</a> explains how it sits beside the network rather than in place of it.
+            A hosted port is the stock <code>nuthatch-graph</code> download run as any operator would run it, so you
+            can take it in-house whenever you like.
+            <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">The BetSwirl BNB Chain port</a>
+            shows how, and <a href="/the-graph">Nuthatch and The Graph</a> explains how it sits beside the network.
           </p>
         </section>
       </div>
