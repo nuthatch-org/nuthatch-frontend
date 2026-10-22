@@ -2,7 +2,11 @@
   "redirects": [
     { "source": "/play", "destination": "/play/", "permanent": true },
     { "source": "/play/build", "destination": "/play/build/", "permanent": true },
-    { "source": "/play/build.html", "destination": "/play/build/", "permanent": true }
+    { "source": "/play/build.html", "destination": "/play/build/", "permanent": true },
+    { "source": "/play/timelapse", "destination": "/play/timelapse/", "permanent": true }
   ],
-  "rewrites": [{ "source": "/play/:path+", "destination": "https://nuthatch-play.vercel.app/:path+" }]
+  "rewrites": [
+    { "source": "/play/timelapse/", "destination": "https://nuthatch-play.vercel.app/timelapse/index.html" },
+    { "source": "/play/:path+", "destination": "https://nuthatch-play.vercel.app/:path+" }
+  ]
 }
