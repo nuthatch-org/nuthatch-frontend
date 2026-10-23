@@ -5,7 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 <Layout
   path="/subgraphs"
   title="Nest-backed subgraphs - Nuthatch"
-  description="The Graph is sunsetting support for a number of chains. Nuthatch ports a subgraph that is no longer live on the network to a nest, one to one, and hosts it for you."
+  description="The Graph is sunsetting support for a number of chains. Nuthatch ports a subgraph that is no longer live on the network to a nest from the same contracts, and hosts it for you."
 >
   <section class="page">
     <div class="wrap">
@@ -13,9 +13,10 @@ import Layout from '../../layouts/Layout.astro';
       <h1>Nest-backed subgraphs</h1>
       <p class="lede">
         The Graph is sunsetting support for a number of chains, and subgraphs on them are going dark. We port a
-        subgraph that is no longer live on the network to a nest, one to one: the same contracts, the same
-        entities, the same queries, so the apps reading it carry on unchanged. We build each port on request and
-        run it on our servers.
+        subgraph that is no longer live on the network to a nest from the same contracts. Its event-derived
+        fields answer exactly; a field a mapping computes is refused by name, so check your app's queries against
+        the port before switching. We build each port on request and run it on our servers, with no billing and
+        no accounts.
       </p>
 
       <p class="empty">

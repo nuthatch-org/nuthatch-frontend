@@ -50,7 +50,7 @@ const rows = [
     <div class="wrap">
       <Terminal />
       <p class="demo-caption">
-        A real run of 4.10.1, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
+        A real run of 5.9.0, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
         project; <code>dev</code> follows the tip, seals finalized ranges to Parquet, and serves it.
         <code>--backfill 300</code> starts 300 blocks behind the tip, so there are rows within
         seconds; without it <code>dev</code> backfills from deployment, which for a contract with a
@@ -217,7 +217,7 @@ const rows = [
         <div class="card ai-card">
           <span class="ai-kicker">For agents</span>
           <ul class="ai-list">
-            <li>A built-in MCP server: nine tools, three resources and two prompts on every nest, covering schema discovery, SQL, entity and balance lookup. Flags, exposure and a third prompt appear when the compliance pack is configured.</li>
+            <li>A built-in MCP server: eight tools on every nest, covering schema discovery, SQL, entity lookup and <code>diff</code>, plus <code>balance</code> and <code>top_balances</code> on a token nest; three resources and two prompts. Flags, exposure and a third prompt appear when the compliance pack is configured.</li>
             <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and a failed query comes back as a fix hint (<code>explain</code> checks a query before it runs) - so the agent gets it right first try.</li>
             <li>Ships <code>llms.txt</code> and a Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
             <li>Works fully offline against your local instance.</li>

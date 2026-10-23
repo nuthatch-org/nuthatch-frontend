@@ -28,6 +28,10 @@ const PAGES: Omit<PaletteItem, 'kind'>[] = [
   { title: 'Roadmap', url: '/roadmap', note: 'What is shipped, in progress and planned', also: 'rfcs plans' },
   { title: 'Manifesto', url: '/manifesto', note: 'Why Nuthatch is deterministic, free and permissively licensed' },
   { title: 'Nuthatch & The Graph', url: '/the-graph', note: 'A network for indexed data and a binary that produces it', also: 'horizon subgraph' },
+  { title: 'Hosting', url: '/subgraphs', note: 'We port a subgraph to a nest and host it on request, with no billing and no accounts', also: 'hosted subgraphs stopgap' },
+  { title: 'rotki', url: '/rotki', note: 'Account history for rotki from your own machine', also: 'address history etherscan' },
+  { title: 'Changelog', url: '/changelog', note: 'Every published release, newest first', also: 'releases versions' },
+  { title: 'Head count', url: '/count', note: 'How many people said yes to being counted', also: 'telemetry count' },
 ];
 
 /** Everything the palette matches by name. The full text is a separate, larger file. */

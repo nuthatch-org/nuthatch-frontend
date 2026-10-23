@@ -62,8 +62,7 @@ const mcpConfig = `{
           2026-09-06 Lodestar holds no Graph API key and has no gateway client in its code.
         </p>
         <p class="prod-box">
-          The deployment: nests backfilled and serving live on one Hetzner VPS, with Caddy
-          providing TLS and path routing. Resource use is monitored against a 2 GB footprint budget.
+          The deployment: self-hosted nests, backfilled and serving live behind TLS. Resource use is monitored against a 2 GB footprint budget.
           <a href="/blog/serving-lodestar-from-one-box">The full write-up is on the blog.</a>
         </p>
       </div>
@@ -91,10 +90,9 @@ const mcpConfig = `{
           It began with a rate limit. Subgraph Studio's development endpoint allows 3,000 queries a
           day, the app needed about 120,000, and Arc Testnet has no paid tier to buy. The nests were
           serving within two hours of the builder asking for a higher limit. They were testnet nests
-          that Nuthatch ran for the hackathon, and they were stopped on 2026-09-29, when
-          Nuthatch stopped running nests for others. The one exception since, stopgap nests for
-          BNB and Polygon subgraphs the network does not serve, is on
-          <a href="/the-graph">Nuthatch &amp; The Graph</a>.
+          that Nuthatch ran for the hackathon, and they were stopped on 2026-09-29. Hosting is offered again,
+          publicly, since October: the stock binary, run as any operator would, with no billing and
+          no accounts. See <a href="/subgraphs">Nest-backed subgraphs</a>.
           <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, kept as a
           record, and the nest itself is
           <a href="https://github.com/nuthatch-org/arcaidia-nest" rel="noopener">published</a>.
@@ -158,10 +156,9 @@ const mcpConfig = `{
         he ran it on his own hardware and can read every line of what produced the numbers.
       </p>
       <p class="note">
-        Derived views read finalized data; the raw event tables are fresh to the tip. A dashboard
-        built on views trails the chain head by finality - the honest trade for numbers that never
-        retract under you. An incremental entity is different: it follows its source through the
-        hot tip and carries its own applied-through provenance.
+        Views and raw tables both read the live tip and sealed history, so a view is as fresh as
+        its tables; rows above finality can still retract on a reorg. An incremental entity also
+        follows the tip and carries its own applied-through provenance.
       </p>
 
       <hr class="divider seg" />

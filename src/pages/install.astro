@@ -26,7 +26,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       </p>
 
       <h2 class="ih">Shell script</h2>
-      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS Apple Silicon and Linux x86_64, and Linux arm64 (<code>aarch64-unknown-linux-gnu</code>) from 4.12.0; on any other target it stops and prints the <code>cargo</code> command instead of installing something that will not run, as it does on Linux arm64 while the latest release has no binary for it. No Intel Mac binary is published: on an Intel Mac, build from source with Rust 1.95.0 (below). Both Linux binaries are dynamically linked and need glibc 2.35 or newer and no C++ runtime: Debian 12 and Ubuntu 22.04 qualify. RHEL 9 and Amazon Linux 2023 ship glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build.</p>
+      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS Apple Silicon and Linux x86_64, and Linux arm64 (<code>aarch64-unknown-linux-gnu</code>) from 4.12.0; on any other target it stops and prints the <code>cargo</code> command instead of installing something that will not run. No Intel Mac binary is published: on an Intel Mac, build from source with Rust 1.95.0 (below). Both Linux binaries are dynamically linked and need glibc 2.35 or newer and no C++ runtime: Debian 12 and Ubuntu 22.04 qualify. RHEL 9 and Amazon Linux 2023 ship glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build.</p>
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="note">
         Piping to a shell asks for trust. Read it first:
@@ -67,7 +67,6 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
 
       <h2 class="ih">Homebrew <span class="tag">planned</span></h2>
       <p>macOS and Linuxbrew, once a tap is published.</p>
-      <CopyBlock command="brew install nuthatch" />
 
       <h2 class="ih">Docker</h2>
       <p>

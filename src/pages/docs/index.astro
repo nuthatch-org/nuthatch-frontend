@@ -22,9 +22,14 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
   <h2>Build a nest</h2>
   <ul>
-    <li><a href="/docs/build/config/">nuthatch.toml</a> - the one config file a nest has.</li>
+    <li><a href="/docs/build/config/">nuthatch.toml</a> - the config every nest starts from.</li>
     <li><a href="/docs/build/views/">Authored SQL views</a> - first-class derived logic.</li>
+    <li><a href="/docs/build/entities/">Authored incremental entities</a> - a keyed relation kept up to date as blocks arrive.</li>
     <li><a href="/docs/build/recipes/">Recipes</a> - the <code>eth_call</code> you don't need.</li>
+    <li><a href="/docs/build/factories/">Factories</a> - index the children a contract spawns at runtime.</li>
+    <li><a href="/docs/build/contract-calls/">Contract calls and IPFS documents</a> - pinned reads, verified documents.</li>
+    <li><a href="/docs/build/compliance/">Compliance pack</a> - labels, flags, exposure and alerts over decoded transfers.</li>
+    <li><a href="/docs/build/webhooks/">Webhooks</a> - POST sealed rows to a URL.</li>
     <li><a href="/docs/build/subgraph-fallback/">Build a subgraph fallback</a> - protect the event-derived reads that cannot disappear.</li>
   </ul>
 
@@ -34,7 +39,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <li><a href="/docs/operate/deploy/">Deploy it</a> - systemd, Docker, a proxy in front, and backups.</li>
     <li><a href="/docs/operate/security/">Security</a> - <strong>read before exposing <code>/sql</code></strong>: the advisories, and what the guards actually stop.</li>
     <li><a href="/docs/operate/performance/">Performance</a> - what it measures at, and the three things that decide your backfill's wall clock.</li>
+    <li><a href="/docs/operate/serving/">Serving &amp; the admin UI</a> - the HTTP API, <code>/sql</code> and the admin page.</li>
     <li><a href="/docs/operate/many-nests/">Run many nests</a> - one runtime, one or more chains, tenancy included.</li>
+    <li><a href="/docs/operate/hosting-nests/">Host nests for others</a> - one runtime that other people's nests are mounted into over an API.</li>
     <li><a href="/docs/operate/scaled/">Scaled mode</a> - a fleet across machines, when one box is no longer enough.</li>
     <li><a href="/docs/operate/registry/">The nest registry</a> - publish and pull nests by name.</li>
     <li><a href="/docs/operate/upgrades/">Upgrading a nest</a> - the N-1 problem, solved.</li>

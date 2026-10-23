@@ -2,7 +2,7 @@
 
 > A self-hosted, AI-native blockchain indexer in one Rust binary. A contract address becomes a
 > live, queryable SQL API on your own machine, with no third-party data service in the path and
-> nothing phoning home. Tagline: "Be your own indexer."
+> nothing sent about you unless you say yes, once, to an anonymous head count. Tagline: "Be your own indexer."
 
 Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
 process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
@@ -26,7 +26,7 @@ is refused at load until the table is deleted.
 This file is written for language models and coding agents. It separates what the released binary
 does from what is designed and not built. The longer version is
 https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run against the released
-4.11.0 binary when this file was written.
+5.9.0 binary when this file was written.
 
 ## What it does today
 
@@ -70,12 +70,12 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
 - The compliance pack (opt-in): content-addressed label and list snapshots, threshold and velocity
   flags at `/flags`, counterparty exposure at `/exposure/{address}`, alert and row webhooks over a
   durable at-least-once outbox, a signed pack manifest, and `audit report` over the threshold flags.
-- A built-in MCP server (`nuthatch mcp`, stdio, bridging to a running `dev`): 11 tools in all, of
-  which seven (`status`, `schema`, `tables`, `table`, `sql`, `explain`, `entity`) are advertised on
-  every nest, `balance` and `top_balances` where the nest decodes transfers, and `flags` and
+- A built-in MCP server (`nuthatch mcp`, stdio, bridging to a running `dev`): 12 tools in all, of
+  which eight (`status`, `schema`, `tables`, `table`, `sql`, `explain`, `entity`, `diff`) are
+  advertised on every nest, `balance` and `top_balances` where the nest decodes transfers, and `flags` and
   `exposure` where compliance is configured; three resources
   (`nuthatch://schema|tables|status`); three prompts (`profile-contract`, `verify-a-number`, and
-  `investigate-address` where compliance is configured). A token nest therefore advertises nine
+  `investigate-address` where compliance is configured). A token nest therefore advertises ten
   tools and two prompts. Results carry a provenance stamp (`as_of`, `sealed_through`, `nid`,
   `registry_hash`). `GET /explain` validates a query without running it.
 - Nests as packages: `nuthatch nest bundle` writes a content-addressed `.bundle`; `nest load`
@@ -95,8 +95,8 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   status` check it, and `publish finalise` (4.8.0) marks a stopped nest's provisional tails final.
   `nuthatch seed --from <mirror> --dir <nest>` (4.9.0) fills a nest that has not indexed from such a
   mirror, checking every file against its hash, and the next `dev` follows the chain from where the
-  mirror ends. A public mirror of four Graph Protocol nests and one subgraph stopgap nest is at
-  https://www.nuthatch-indexer.com/mirror.
+  mirror ends. A public mirror of nine datasets (Graph Protocol nests, defi-pulse-nest and the retired
+  BetSwirl stopgap) is at https://www.nuthatch-indexer.com/mirror.
 - Sealed-history audit (4.5.0): `nuthatch audit sealed --rpc <second endpoint>` re-fetches a sample
   of sealed ranges and compares them row by row; `dev --audit-rpc` does it in the background.
 - `[extract] l1_blocks = true` (4.6.0) adds an `l1_blocks` table on a chain that reports its L1
@@ -112,6 +112,23 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   window, and its `chain_id` is verified against every endpoint at startup. The bundled public
   endpoints are for trying it out; they are rate-limited, sometimes answer empty instead of
   erroring, and are not for production.
+- Maintained views (4.14.0): a view listed in `maintained.toml` is answered from a stored copy of
+  its own evaluation, keyed on every input it read, and used only when those inputs hash the same, so
+  a copy is never stale. A nest that declares none behaves as before.
+- Address history (5.1.0 to 5.7.0): a `nuthatch.toml` with an `[address_history]` table and no
+  `[[contracts]]` watches accounts and serves their history at `GET /api` in Etherscan's shapes, for
+  rotki (https://www.nuthatch-indexer.com/rotki). Answers are exact or refused. Ethereum, Optimism,
+  Base, Arbitrum, Polygon, BNB Chain and Gnosis; several chains behind one `dev --dir`. The deposit
+  sweep (`[address_history.sweep]`, 5.4.0) reads each block once for a whole watched set. `nuthatch
+  partitions` builds verified block partitions a nest can start from; the Ethereum ones are published
+  (https://www.nuthatch-indexer.com/nests/hosted/ethereum-address-history).
+- `nuthatch diff` (5.9.0), with `GET /diff` and the MCP `diff` tool: what happened in a block range,
+  a block or a transaction, in fixed sentences with exact amounts from the rows a nest already holds.
+  No model, nothing inferred.
+- In a browser (https://www.nuthatch-indexer.com/play): Burrmill compiled to WebAssembly answers SQL
+  over a published nest's hash-checked segments in the tab; the nest builder scaffolds and indexes a
+  nest from a contract address there; a postcard is a `/play` link pinned to a nest's segments by
+  hash. None of it changes the binary.
 
 ## Guards and limits
 
@@ -138,14 +155,16 @@ callers get named queries at `/q/{name}` and never send SQL.
   at 1,595 to 1,788 MiB over four runs. 4.10.0 took a copy of the QoS nest, two statements at a
   time, from 1,746 to 1,749 MiB down to 1,298 to 1,349 MiB with identical answers.
 - Sentio's OBIB benchmark, case 6 (the Uniswap V2 factory over 10,001 mainnet blocks, 232 pairs
-  discovered as it ran): 5.9 s median of five runs of the published 4.10.1 binary against a keyless
-  public gateway, 35,271 events in 14 RPC requests at 241 MB peak RSS. The event count matches
+  discovered as it ran): 4.67 s median of five runs of the published 4.7.0 binary against a keyless
+  public gateway, 35,271 events in 14 RPC requests at 229 MB peak RSS
+  (https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md). The event count matches
   Sentio's; the stopwatch is one workload under one set of conditions.
 - No seal-direct or pipeline multiplier is quoted. The 8.7x and 20x figures were withdrawn in
   2.7.0 when their baseline was traced to an obsolete harness.
-- Running a nest at tip costs RPC requests: measured against a paid Arbitrum endpoint on
-  2026-09-06, about 9,900 CU a minute, roughly $185 a month; `--poll-interval 5m` cuts that by about
-  a hundred times for the same rows.
+- Running a nest at tip costs RPC requests. Since 4.15.2 a nest with no `--poll-interval` polls every
+  five minutes. Following every block cost about 9,900 CU a minute, roughly $185 a month, against a
+  paid Arbitrum endpoint (2026-09-06); five-minute polling is about a hundred times less for the
+  same rows.
 
 ## Not built (design targets)
 
@@ -157,9 +176,9 @@ it is parked, and only the `nuthatch-graph-<target>` download attached to every 
 4.11.0 serves it. The default binary and the images answer those routes with 404. Do not describe
 it as a drop-in subgraph replacement.
 
-Nuthatch runs no hosted nest service, with one exception approved 2026-10-06: it serves stopgap
-nests on the graph download for BNB Chain and Polygon subgraphs The Graph network does not serve,
-until an indexer picks each one up, with no billing and no accounts
+Nuthatch publicly offers to host nests on request (https://www.nuthatch-indexer.com/subgraphs): the
+stock binary run as an operator would, no billing, no accounts; ask on Discord. The subgraph stopgap
+nests it served from 2026-10-06 were withdrawn on 2026-10-13
 (https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/; the first handback is
 https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md).
 
@@ -185,7 +204,7 @@ and, from 4.12.0, Linux arm64 (glibc 2.35 or newer from 4.1.0; no C++ runtime), 
 `nuthatch-graph-<target>` sibling that serves GraphQL; `cargo +1.95.0 install --git
 https://github.com/nuthatch-org/nuthatch nuthatch` builds elsewhere, and the toolchain pin is
 required because `rust-toolchain.toml` does not apply to `cargo install`. Images:
-`ghcr.io/nuthatch-org/nuthatch:4.12.0` and `:4.12.0-scaled`, `linux/amd64` only. Every artifact
+`ghcr.io/nuthatch-org/nuthatch:5.9.0` and `:5.9.0-scaled`, `linux/amd64` only. Every artifact
 has a `.sha256` and a GitHub build-provenance attestation (`gh attestation verify <tarball> --repo
 nuthatch-org/nuthatch`).
 
@@ -218,7 +237,7 @@ function name the guard did not match) and v0.6.2 fixed an arbitrary file write 
 - [Upgrading a nest](https://www.nuthatch-indexer.com/docs/operate/upgrades/), [verifying a deployment](https://www.nuthatch-indexer.com/docs/operate/verifying/), [troubleshooting](https://www.nuthatch-indexer.com/docs/operate/troubleshooting/).
 - [Scaled mode](https://www.nuthatch-indexer.com/docs/operate/scaled/): the fleet.
 - [Agent-grade MCP](https://www.nuthatch-indexer.com/docs/ai/mcp/), [llms.txt in a nest](https://www.nuthatch-indexer.com/docs/ai/llms-txt/), [the builder skill](https://www.nuthatch-indexer.com/docs/ai/builder-skill/).
-- [The book](https://www.nuthatch-indexer.com/docs/book/): why the machine is shaped as it is, read against 4.12.0.
+- [The book](https://www.nuthatch-indexer.com/docs/book/): why the machine is shaped as it is, read against 5.9.0.
 - [Architecture](https://www.nuthatch-indexer.com/docs/contributing/architecture/) and [RFCs](https://www.nuthatch-indexer.com/docs/contributing/rfcs/).
 
 ## Links

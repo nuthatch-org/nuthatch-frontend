@@ -8,6 +8,8 @@ tags: ["nuthatch", "hackathon", "hosting", "the-graph", "arc", "sepolia"]
 
 > **Retired 2026-09-29; Nightswatch no longer hosts nests.** The offer below is withdrawn, and the
 > Arcaidia nests it describes were stopped that day. This post is kept as a record of what it was.
+> Since October 2026 hosting is offered again, without billing or accounts: see
+> [Nest-backed subgraphs](/subgraphs).
 
 *If you are building at a hackathon and an indexing quota is between you and your demo, send us a
 message. We will build the nest from your contracts, test it, and host it on our own box for the
