@@ -11,13 +11,11 @@ One **runtime** hosts one nest or many. Nests on the same chain share a single c
 process. Each cursor has its own tip, finality, and reorg boundary, and a per-cursor footprint
 budget.
 
-:::note[The roost is gone in 2.0]
-There used to be a separate *roost* concept and a `nuthatch roost dev` command, so you had to choose which
-shape you wanted before you knew which you wanted. There is now **one command**: `nuthatch dev`. What it runs is a
-property of the directory - a `nuthatch.toml` runs that one nest, a `mounts.toml` runs every nest it
-mounts. Run `nuthatch migrate` on a pre-2.0 directory and it rewrites itself; it moves data and never
-re-indexes.
-:::
+> **The roost is gone in 2.0.** There used to be a separate *roost* concept and a `nuthatch roost dev` command, so you had to choose which
+> shape you wanted before you knew which you wanted. There is now **one command**: `nuthatch dev`. What it runs is a
+> property of the directory - a `nuthatch.toml` runs that one nest, a `mounts.toml` runs every nest it
+> mounts. Run `nuthatch migrate` on a pre-2.0 directory and it rewrites itself; it moves data and never
+> re-indexes.
 
 ## Layout
 
