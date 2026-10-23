@@ -1,4 +1,5 @@
 [
+  {"version":"5.10.0","date":"2026-10-23","headline":"Nuthatch 5.10.0 adds `nuthatch watch`, a read-only view of a running nest (RFC-0069), and takes Burrmill forward: 2,048-row batches under a budget where it read 128, and addresses as 20 bytes inside a plan.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.10.0"},
   {"version":"5.9.0","date":"2026-10-22","headline":"Nuthatch 5.9.0 adds `nuthatch diff`: what happened in a block range, a block or a transaction, told in fixed sentences from the rows a nest already holds (RFC-0071).","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.9.0"},
   {"version":"5.8.2","date":"2026-10-20","headline":"Nuthatch 5.8.2 keeps a seal-direct backfill on a dense chain inside the per-cursor memory budget.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.8.2"},
   {"version":"5.8.1","date":"2026-10-20","headline":"Nuthatch 5.8.1 refuses to reopen a store, or reuse its segments, after an event's indexed parameters have moved.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.8.1"},

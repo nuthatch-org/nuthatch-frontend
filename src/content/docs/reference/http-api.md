@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.9.0 (2026-10-23)
+checked: 5.10.0 (2026-10-23)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -136,7 +136,7 @@ See [Build a subgraph fallback](/docs/build/subgraph-fallback/).
   the dashboard.
 - `GET /_admin/storage` - the sealed catalogue per table: segment count, rows, bytes and block range;
   `?table=<name>` adds that table's segments, newest first. Gated like the dashboard.
-- `GET /_admin/requests` *(unreleased: on main, not in 5.9.0)* - the last 256 requests served, as
+- `GET /_admin/requests` *(since 5.10.0)* - the last 256 requests served, as
   `{last_seq, capacity, requests}`. Each record is a route template, status, time and size, plus the
   declared query or entity name where the route names one; never SQL text, a query string, a client
   address or a path value that is data. Gated like the dashboard.
