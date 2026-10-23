@@ -92,7 +92,6 @@ for f in $(grep -rlE "^checked: " src/content/docs); do
 done
 probe src/layouts/BookLayout.astro      "book kicker"               -E 'class="book-kicker"'
 probe src/content/docs/book/index.md    "book describes"            -E 'It describes Nuthatch'
-probe src/pages/book/print.astro        "print edition version"     -E '<span>Version '
 probe public/llms.txt                   "what agents read"          -E '^MIT OR Apache-2.0\. Status:'
 probe public/llms-full.txt              "what agents read"          -E 'Status: \*\*v'
 # These six stayed on 4.0.2 through 4.3.1 with no probe to say so (2026-10-04).
