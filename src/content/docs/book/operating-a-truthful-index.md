@@ -99,9 +99,10 @@ page on; alerting stays with Prometheus.
 
 The data API is read-only, but a runtime may also expose administrative routes that mount or remove
 nests, on the same port. The binary refuses to mount them off loopback unless `NUTHATCH_ADMIN_TOKEN`
-is set, and once it is set checks it on every admin request, localhost included. Without a token, a
-localhost runtime answers only requests addressed to loopback, so one behind a proxy refuses them
-until a token is set. `--no-admin` leaves them out entirely.
+is set, and checks a token on every admin request, localhost included. On localhost without the
+variable it makes one in `<dir>/.admin-token`, readable by its owner only, and prints the admin URL
+with it at startup; nothing is admitted for merely appearing local, because a reverse proxy makes
+every request appear local. `--no-admin` leaves them out entirely.
 Do not undo that care by putting a token-bearing port on the public internet and then feel
 surprised when somebody experiments with it. Restrict the port, use a gateway where public access is
 needed, and keep database credentials and RPC URLs in deployment configuration rather than the nest

@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -60,14 +60,17 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   the rows the nest already holds (RFC-0071, since 5.9.0). `--block` or `--tx` narrows it to one block
   or transaction; `--since-last` runs on from the previous diff. `--flow` draws the token flow
   instead. `--format` is `text`, `markdown` or `json` (and `dot`/`mermaid` for `--flow`); `--top` caps
-  each list. A range above the sealed boundary is labelled provisional, and `--final-only` refuses
+  each list, up to 1,000 (above that it is refused, since 5.11.0). A range above the sealed boundary
+  is labelled provisional, and `--final-only` refuses
   it. Read-only; it reads the store directly, or asks a running `dev` at `--url`.
 - **`nuthatch count`** - the opt-in head count (RFC-0054). With no action it prints where things
   stand; `on`, `off`, `payload` (print what would be sent) and `forget`. Off until you say yes.
 - **`nuthatch watch`** - *since 5.10.0.* A read-only
   terminal view of a running nest (RFC-0069): tip, seal, memory against budget, RPC endpoints.
   `--url` names a solo `dev` or a runtime's root, `--ssh <host>` forwards to a nest bound to loopback
-  there, and `--nest` reads a target from `~/.config/nuthatch/watch.toml`. Piped, it prints lines
+  there, `--dir` names the nest whose `.admin-token` to present to a loopback `--url` when
+  `NUTHATCH_ADMIN_TOKEN` is unset, and `--nest` reads a target from `~/.config/nuthatch/watch.toml`.
+  Piped, it prints lines
   instead of a screen. `--record <file>` and `--replay <file>` save and redraw a session.
 
 `entities.toml` needs no special command: `dev` loads and maintains it. A nest declaring an entity
@@ -128,8 +131,9 @@ entity circuit.
 
 ## Scaled mode (RFC-0022)
 
-- **`nuthatch control`** / **`nuthatch worker`** - the control plane and a writer worker. Both need
-  the scaled build (`--features postgres-store`, or the `-scaled` release artifacts). See
+- **`nuthatch control`** / **`nuthatch worker`** - the control plane and a writer worker. `control` refuses to
+  start without `NUTHATCH_CONTROL_TOKEN`. Both need the scaled build (`--features postgres-store`, or
+  the `-scaled` release artifacts). See
   [Scaled mode](/docs/operate/scaled/).
 
 ## The compliance pack (RFC-0008)

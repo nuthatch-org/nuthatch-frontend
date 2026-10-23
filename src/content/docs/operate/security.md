@@ -2,7 +2,7 @@
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
 order: 4
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 ## Upgrade first
@@ -127,13 +127,13 @@ re-indexes nothing - and two tenants can share one dataset while exposing differ
 nuthatch binds `127.0.0.1` by default and is built to be **fronted**. TLS, authentication and metering
 are the operator's layer.
 
-- **`/_admin/`** mutates state (mounting and unmounting nests). With `NUTHATCH_ADMIN_TOKEN` set,
-  every request must present it, on every bind, localhost included. Without one, off localhost the
-  routes are not served, and on localhost they answer only requests addressed to loopback (a
-  loopback `Host`, and `Origin` if sent), which stops a DNS-rebinding page. Behind a proxy that
-  forwards a public `Host`, a token-less runtime answers `401` until a token is set. `--no-admin`
-  removes the routes.
-- **The scaled-mode control plane** *refuses to start* off-localhost without `NUTHATCH_CONTROL_TOKEN` - 
+- **`/_admin/`** mutates state (mounting and unmounting nests), and since 5.11.0 every request needs
+  a token, on every bind. `NUTHATCH_ADMIN_TOKEN` is used when set. Without it, a localhost nest or
+  runtime makes one on first start in `<dir>/.admin-token` (32 random bytes, owner-only, reused on
+  later starts) and prints the admin URL with it in the startup log; off localhost the routes are
+  not served. Nothing is admitted for looking local, because a reverse proxy makes every request
+  look local. `--no-admin` removes the routes.
+- **The scaled-mode control plane** *refuses to start* without `NUTHATCH_CONTROL_TOKEN`, on any bind -
   a refusal, not a warning. It decides what an entire fleet runs.
 - **Token comparison is constant-time**, on both surfaces.
 - **`/health` and `/ready`** stay unauthenticated so a load balancer can probe them. `/health`

@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -55,7 +55,8 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
   incremental entities), `recipes`, `analytics` (read-only SQL over hot ∪ sealed, and authored SQL
   views), `sqlmemo` (the `/sql` answer cache, keyed on the rows and segments a statement reads),
   `engine` + `engine_burrmill` (the engine trait, with Burrmill behind it), `serve` (the HTTP
-  surface), `sql_errors` (errors-as-prompts).
+  surface), `admin_token` (the admin credential a localhost nest makes for itself, since 5.11.0),
+  `sql_errors` (errors-as-prompts).
 - **Subgraph porting**: `subgraph_import` (`init --from-subgraph`), `port_emit` + `port_report` (the
   per-field coverage report), `graph_schema` + `graph_query` (the Graph-dialect GraphQL read surface,
   routed only in a `--features graph` build, which each release ships as `nuthatch-graph-<target>`).

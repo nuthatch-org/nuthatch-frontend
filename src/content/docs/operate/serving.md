@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -117,13 +117,14 @@ no CDN, no fonts, no analytics. Live activity streams over server-sent events fr
 
 Access follows the exposure rule:
 
-- **With `NUTHATCH_ADMIN_TOKEN` set**, every request must present it as `?token=…` or
-  `Authorization: Bearer …`, on every bind, localhost included. The comparison is constant-time, so
-  the token can't be recovered through a timing side-channel.
-- **On localhost without a token** the page answers only requests addressed to loopback: a
-  loopback `Host`, and a loopback `Origin` if one is sent. Behind a proxy that forwards a public
-  `Host` it answers `401` until a token is set.
-- **Off localhost without a token** the routes self-disable with a log line.
+- **Every request presents a token** as `?token=…` or `Authorization: Bearer …`, on every bind,
+  localhost included. The comparison is constant-time, so the token can't be recovered through a
+  timing side-channel.
+- **With `NUTHATCH_ADMIN_TOKEN` set**, that is the token.
+- **On localhost without it**, the nest makes one on first start in `<dir>/.admin-token`, readable
+  by its owner only and reused on later starts, and the startup log prints the admin URL with the
+  token in it. `nuthatch watch --dir <dir>` reads the same file.
+- **Off localhost without it** the routes self-disable with a log line.
 - `--no-admin` removes the routes entirely, for hosted deployments fronting their own dashboard.
 
 With [many nests in one runtime](/docs/operate/many-nests/), each mount's UI lives under its prefix: `/<alias>/_admin/`.

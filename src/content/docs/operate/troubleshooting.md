@@ -2,7 +2,7 @@
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
 order: 13
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
@@ -199,3 +199,16 @@ Two things the check will *not* tell you, on purpose. A contract that has emitte
 proves nothing either way, so it stays quiet rather than crying wolf. And one matching log is enough
 to clear it - a contract may legitimately emit events its ABI omits, and only the total mismatch is
 the silent failure.
+
+## `/_admin` answers 401 after upgrading to 5.11
+
+Since 5.11.0 every admin request needs a token, localhost included. With `NUTHATCH_ADMIN_TOKEN`
+unset, a localhost nest makes one in `<dir>/.admin-token` on first start and prints the admin URL
+with it in the startup log; pass it as `?token=…` or `Authorization: Bearer …`, or set the variable.
+`nuthatch watch --dir <dir>` reads the file itself. See [Security](/docs/operate/security/#exposure).
+
+## "is a symbolic link" at startup
+
+Since 5.11.0 a nest's input files must be regular files, because its identity is taken from what is in
+the directory. Replace the link with a copy of what it points to. A linked `segments/` or
+`nuthatch.redb` is fine.

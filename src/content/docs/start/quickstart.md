@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -99,7 +99,8 @@ appears in that range - start from `/balances` if you want an address that defin
 - **Derived state, no `eth_call`.** `nuthatch recipe add total_supply` derives an ERC-20's supply from
   its Transfers, no archive node. The shipped views expect `from`, `to` and `value`, so on WETH's
   `src`, `dst` and `wad` you rename the columns first. See [Recipes](/docs/build/recipes/).
-- **An admin UI and metrics** at `/_admin/` and `/metrics`.
+- **An admin UI and metrics** at `/_admin/` and `/metrics`. The admin UI needs a token: `dev` makes
+  one in `.admin-token` and prints the URL with it in the startup log.
 - **An MCP server** so an agent can drive it offline. See [MCP](/docs/ai/mcp/).
 
 > **Under two minutes.** That's the whole demo - install, `init`, `dev`, query. Everything after this

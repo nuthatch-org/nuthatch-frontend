@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -170,7 +170,7 @@ Then make three decisions explicitly rather than by default:
 | Surface | Decision |
 |---|---|
 | `/sql` | A real analytical surface. Guarded, but a caller can still ask expensive questions. Read [security](/docs/operate/security/) before exposing it to anyone you do not trust. |
-| `/_admin/` | **Mutates state** - it mounts and unmounts nests. With `NUTHATCH_ADMIN_TOKEN` set, every request must present it, localhost included; without one, off localhost it is not served and on localhost it answers only requests addressed to loopback, so `401` through a proxy. Want no remote admin at all? Bind localhost and pass `--no-admin`. |
+| `/_admin/` | **Mutates state** - it mounts and unmounts nests. Every request must present a token, localhost included: `NUTHATCH_ADMIN_TOKEN`, or on localhost without it the one the nest makes in `<dir>/.admin-token` and prints at startup. Off localhost without the variable it is not served. Want no remote admin at all? Bind localhost and pass `--no-admin`. |
 | `/health`, `/ready` | Unauthenticated by design so a load balancer can probe them. Leave them reachable. |
 
 ## 6. Watch the two numbers that matter
@@ -188,7 +188,8 @@ list in [metrics](/docs/operate/metrics/).
 
 `/ready` is the honest liveness signal for a load balancer: it answers *is this nest serving and making
 progress*, and reports `stalled` when every endpoint in the pool is refusing a window. A nest still
-backfilling is ready, so if "caught up" is what you need, add a `lag_blocks` threshold on top.
+backfilling is ready, so if "caught up" is what you need, add a `lag_blocks` threshold on top. Until
+the cursor first polls, `tip` and `lag_blocks` are `null`, so treat null as not yet caught up.
 
 ## 7. Back it up
 

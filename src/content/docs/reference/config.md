@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
@@ -181,7 +181,8 @@ since = "registration"            # "registration" (default) | "genesis" | a blo
 secret = "…"                      # optional; adds X-Nuthatch-Signature: sha256=<hex> (HMAC)
 ```
 
-`since = "registration"` means a `--seal-direct` backfill won't fire history at your endpoint. See
+`since = "registration"` means a `--seal-direct` backfill won't fire history at your endpoint. A
+`table` or `where` that does not bind, or any other `since`, refuses the nest at start, by field. See
 [Webhooks](/docs/build/webhooks/).
 
 ### Contract calls and IPFS documents

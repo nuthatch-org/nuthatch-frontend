@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -216,7 +216,8 @@ addresses.
 A nest's *authored inputs* - config, ABIs, views, labels, skills - canonicalise into a **bundle**
 pinned by a Merkle root. `nest load` verifies the manifest, every file's bytes, and that the decode
 registry regenerated from those inputs matches the author's pinned hash. A nest that cannot reproduce
-its own registry is refused.
+its own registry is refused, and since 5.11.0 so is one whose installed files do not compute the NID
+its manifest claims. Every input must be a regular file: a symbolic link is refused by name.
 
 That makes a bundle **tamper-evident**, which is not the same as safe - a valid bundle can still
 declare outbound endpoints you would rather it did not, so `load` warns about every non-loopback URL

@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -14,7 +14,7 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 - `GET /` - the index summary: contract(s), chain, rows indexed, last and sealed block.
 - `GET /health` - liveness; returns `ok`.
-- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that.
+- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that. `tip` and `lag_blocks` are `null` until the cursor first polls (since 5.11.0), never `0`, which would read as "at the tip".
 - `GET /metrics` - Prometheus text. See [Metrics & footprint](/docs/operate/metrics/).
 - `GET /nest` - the nest's identity: name, chain, content-addressed registry hash.
 - `GET /shape` - which capabilities this nest can actually answer for (balances, flags, exposure,
@@ -52,7 +52,7 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   and the MCP `diff` tool tell it. Name the range with `block=N`, or `from=A&to=B`, or `tx=0x…`
   together with `block` (this route makes no RPC call to find a transaction's block). `flow=true`
   draws the token flow instead of the story; `top` caps the entries listed (default 10 for a story,
-  25 for a flow); `final_only=true` refuses a range above `sealed_through` rather than labelling it
+  25 for a flow; above 1,000 refused since 5.11.0); `final_only=true` refuses a range above `sealed_through` rather than labelling it
   provisional; `format` is `json` (default), `text`, `markdown`, and for a flow `dot` or `mermaid`. It runs under the same permit, 30 s budget and hot-tip bounds as
   `/sql` (`504` past the budget), and refuses rather than truncates past 2,000,000 flow rows or
   500,000 distinct edges. A mount bounded to named queries refuses it, since a diff reads every table.
@@ -81,7 +81,7 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 An [address-history nest](/docs/reference/config/#address-history-nests) (RFC-0063) serves a different,
 smaller route set: `/api`, `/api/watch`, `/api/unwatch`, `/health`, `/ready` (with
-`"mode": "address_history"`), `/metrics` and `/diff`. It has no `/sql`, `/tables` or admin UI. An
+`"mode": "address_history"`), `/metrics` and `/diff`. It has no `/sql`, `/tables` or admin UI. Its `/diff` takes the same permits and 30 s deadline as an event nest's `/sql` (since 5.11.0): `503` when every permit is held, `504` over the budget. An
 event nest also answers `GET /api`, but only to say it has no `[address_history]`.
 
 - `GET /api?module=…&action=…` or `POST /api` with a form body, for a call too long for a query
@@ -128,9 +128,9 @@ See [Build a subgraph fallback](/docs/build/subgraph-fallback/).
 ## Admin & runtime
 
 - `GET /_admin/` - the built-in dashboard; `GET /_admin/events` streams live activity (SSE).
-  With `NUTHATCH_ADMIN_TOKEN` set both require it on every bind; without one they are not served
-  off localhost and answer only loopback-addressed requests on it (`401` otherwise). `--no-admin`
-  removes them. See [Serving & the admin UI](/docs/operate/serving/).
+  Both require a token on every bind (`401` without it): `NUTHATCH_ADMIN_TOKEN`, or on localhost
+  without it the one the nest makes in `<dir>/.admin-token` (since 5.11.0). Off localhost without
+  the variable they are not served. `--no-admin` removes them. See [Serving & the admin UI](/docs/operate/serving/).
 - `GET /_admin/config` - the nest's authored files (`nuthatch.toml`, views and the rest) as they are
   on disk, with keys, secrets and URL paths redacted, and what the running process uses. Gated like
   the dashboard.

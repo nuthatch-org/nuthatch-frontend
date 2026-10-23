@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional labels, flags, exposure and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 Some nests need more than raw rows: flag transfers that cross a threshold, measure an address's
@@ -41,7 +41,9 @@ url = "https://your-service/alerts"
   tool. `nuthatch lists fetch` still snapshots a published list (built-in `ofac-sdn`,
   `eu-consolidated`, or your own via `--url`/`--file`) as a pinned, hashed address set.
 - **`[flags]`** - two built-in rules, not arbitrary SQL. `threshold` flags any single transfer at or
-  above an amount; each match becomes a sealed, append-only **`threshold_flag`** annotation. `velocity`
+  above an amount; each match becomes a sealed, append-only **`threshold_flag`** annotation, on the tip path and, since
+  5.11.0, under a `--seal-direct` backfill too (a dataset sealed directly before 5.11.0 has no flags for
+  that history until re-indexed). `velocity`
   flags an address whose outbound volume over `velocity_window` **blocks** reaches `velocity_amount`;
   this one is a *live* windowed view (served at `/flags?kind=velocity`), not a sealed annotation - so it
   isn't deliverable via alerts. Amounts are base units as decimal strings; the window is a **block

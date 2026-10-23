@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -32,6 +32,26 @@ build's internal schema. The full contract is in the operator guide's
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
 
+## Upgrading to 5.11
+
+Replace the binary and restart. A 5.10.0 store is used as it is: no storage migration, and no
+existing nest's NID changes. 5.11.0 is a cold audit put right, and several behaviours are stricter:
+
+- **Anything that calls `/_admin`, the lifecycle routes or the control plane without a token gets
+  `401`.** There is no token-less localhost access any more. Set `NUTHATCH_ADMIN_TOKEN`, or read
+  `<dir>/.admin-token`, which a localhost nest makes on its first start without one. Set
+  `NUTHATCH_CONTROL_TOKEN` before starting `nuthatch control`; it refuses to start without it.
+- **A nest with a symlinked input file refuses to start.** Replace the link with a copy. A linked
+  `segments/` or `nuthatch.redb`, data on another disk, is still fine.
+- **A `[[webhooks]]` entry whose `table`, `where` or `since` cannot work refuses the nest.** It used
+  to be accepted and never fire. The error names the field.
+- **`top` above 1,000 is refused** by `nuthatch diff --top`, `/diff` and the MCP `diff` tool.
+- **A nest that declares `[flags] threshold` and backfills with `--seal-direct` now seals a
+  `threshold_flag` table**, as the tip path always did. Its NID is unchanged; a dataset sealed before
+  keeps its history without flags until re-indexed.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.11.0) have the rest.
+
 ## Upgrading to 5.8
 
 Replace the binary and restart. A 5.7.2 store is used as it is: no storage migration, and no NID or
@@ -42,7 +62,7 @@ nest's own directory or give one dataset a second one.
 - **The admin token applies on localhost.** With `NUTHATCH_ADMIN_TOKEN` set, every admin request
   must present it, on every bind. Without one, a localhost runtime answers only requests addressed to
   loopback, so behind a proxy that forwards a public `Host`, `/_admin` answers `401` until a token is
-  set.
+  set. (5.11.0 removes that loopback allowance; see above.)
 - **Names outside `[A-Za-z0-9_-]` refuse to load.** Check contract aliases and template names in
   deployed nests. A mount named like a runtime route, or a tenant named like a default-tenant alias,
   is refused too.

@@ -2,7 +2,7 @@
 title: "Nest identity & reuse"
 description: "How immutable nest versions, mounts, dataset adoption, and shared segments avoid needless re-indexing."
 order: 5
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 A content-addressed nest is deliberately unforgiving: change its authored inputs and it becomes a
@@ -65,6 +65,8 @@ only when all of the following hold:
 
 The source data is copied through a staging directory and atomically committed into the new
 `data/<nid>/` directory. It is never moved, because the old version or another tenant may still use it.
+Only derived state is copied (since 5.11.0), so a file the new version deleted stays deleted, and the
+adoption is refused unless the result computes the planned NID.
 If a copy fails, the destination remains input-only and can either retry adoption or backfill normally.
 
 This is why a view-only, query-allowlist, semantic, or documentation change can cost no chain RPC at
