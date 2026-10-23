@@ -2,7 +2,7 @@
 title: ABIs, events & tables
 description: How decoded events become SQL tables - one table per event, with implicit columns.
 order: 2
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Nuthatch is a log indexer: it turns a contract's **events** into **SQL tables**. This page explains the
@@ -15,7 +15,11 @@ At `init`, nuthatch resolves the contract's ABI - **Sourcify first, then keyless
 runtime. A `DecodeRegistry` is built from the vendored ABIs at startup: `topic0` → event decoder,
 filtered by contract address.
 
-If a contract is a proxy, edit the `abi` path in `nuthatch.toml` to point at the implementation's ABI.
+A standard proxy (EIP-1967, EIP-1822, legacy zeppelinos, beacon) is followed automatically: `init`
+prints `proxy → implementation 0x…` and vendors the implementation's ABI. For a bespoke proxy the
+resolvers miss, pass the implementation ABI with `nuthatch init 0xAddr --abi impl.json`, or point the
+`abi` path in `nuthatch.toml` at it and run `nuthatch schema`. See
+[Troubleshooting](/docs/operate/troubleshooting/#the-nest-indexes-nothing-and-reports-no-error).
 
 ## One table per event
 

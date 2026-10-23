@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -35,8 +35,9 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   `--seal-direct` (backfill finalized history straight to Parquet, bypassing the hot store),
   `--concurrency` (concurrent window fetches; 8-16 against your own node), `--window` (override the
   `getLogs` block-window - large for sparse contracts), `--no-admin`. Also `--rpc-fallback`
-  (endpoints asked only while every other one is failing), `--poll-interval` (default: the chain's
-  block time, never under 2 s), `--finality-only` (never index the unfinalised tip), `--cors`, and
+  (endpoints asked only while every other one is failing), `--poll-interval` (default five
+  minutes, or the chain's block time if longer; `--poll-interval 12s` follows mainnet's tip closely,
+  at the cost of more RPC calls), `--finality-only` (never index the unfinalised tip), `--cors`, and
   `--state-rpc` (archive endpoints for declared `[[calls]]`).
 
 ## Everyday companions
@@ -55,6 +56,19 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   segment catalogue instead.
 - **`nuthatch serve`** - serve a nest without indexing it; `--hot-store` reads a Postgres hot store in
   a scaled-mode build.
+- **`nuthatch diff --from A --to B`** - what happened in a block range, told in fixed sentences from
+  the rows the nest already holds (RFC-0071, since 5.9.0). `--block` or `--tx` narrows it to one block
+  or transaction; `--since-last` runs on from the previous diff. `--flow` draws the token flow
+  instead. `--format` is `text`, `markdown` or `json` (and `dot`/`mermaid` for `--flow`); `--top` caps
+  each list. A range above the sealed boundary is labelled provisional, and `--final-only` refuses
+  it. Read-only; it reads the store directly, or asks a running `dev` at `--url`.
+- **`nuthatch count`** - the opt-in head count (RFC-0054). With no action it prints where things
+  stand; `on`, `off`, `payload` (print what would be sent) and `forget`. Off until you say yes.
+- **`nuthatch watch`** - *unreleased: on `main`, not in 5.9.0 or the installer yet.* A read-only
+  terminal view of a running nest (RFC-0069): tip, seal, memory against budget, RPC endpoints.
+  `--url` names a solo `dev` or a runtime's root, `--ssh <host>` forwards to a nest bound to loopback
+  there, and `--nest` reads a target from `~/.config/nuthatch/watch.toml`. Piped, it prints lines
+  instead of a screen. `--record <file>` and `--replay <file>` save and redraw a session.
 
 `entities.toml` needs no special command: `dev` loads and maintains it. A nest declaring an entity
 must use the normal ingest path; `dev --seal-direct` is refused because direct sealing bypasses the
@@ -82,12 +96,16 @@ entity circuit.
 - **`nuthatch nest rename-alias <old> <new>`** - re-key a contract alias in `nuthatch.toml`, the ABI
   file and `semantic.toml`.
 - **`nuthatch seed --from <mirror>`** - fill a nest that has not indexed from a published mirror (a
-  path, `s3://bucket/prefix` or a public `https://` address) instead of backfilling over RPC.
+  path, `s3://bucket/prefix` or a public `https://` address) instead of backfilling over RPC. The
+  mirror must carry a seed snapshot, which a running nest's `dev --publish-target` writes, or
+  `publish sync` on a stopped one; segments alone are refused. Seed into the same authored nest that
+  was published: an edited one is a different dataset.
 - **`nuthatch nest nid --dir <nest>`** - print the NID the nest's data is stored under (`data/<nid>/`), without
   running it.
-- **`nuthatch publish sync|status|verify|finalise --target <prefix>`** - mirror sealed segments to a
-  directory or `s3://bucket/prefix`; `dev --publish-target` does it as they seal, and `finalise` marks
-  each table's provisional tail final so a seed can trust it.
+- **`nuthatch publish sync|status|verify --target <prefix>`** - mirror sealed segments to a
+  directory or `s3://bucket/prefix`; `dev --publish-target` does it as they seal.
+  **`nuthatch publish finalise`** lists each table's provisional tail on a stopped nest; `--yes` marks
+  them final so the mirror can carry them. It rewrites no file.
 - **`nuthatch migrate --dir <dir>`** - move a pre-2.0 directory to identity-keyed datasets, and apply
   a staged nest upgrade. Classifies the change and **refuses a breaking one by name**
   (`--allow-breaking` to accept). Moves data and never re-indexes; `--dry-run` prints the plan.

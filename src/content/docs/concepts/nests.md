@@ -2,7 +2,7 @@
 title: What is a nest?
 description: A nest is a content-addressed specification of a question about on-chain data - a spec, not a program.
 order: 1
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 A **nest** is the unit of everything in nuthatch. It's a content-addressed, reproducible
@@ -19,8 +19,10 @@ decode, the same tables, the same derived state - verifiably, on any machine.
   vendored ABIs. This is what `init` scaffolds from an address. See [nuthatch.toml](/docs/build/config/).
 - **Meaning** - `semantic.toml`, describing what each table and column *means*, so an agent (or a human)
   can query the nest without guessing. See [The semantic layer](/docs/build/semantic/).
-- **Logic** - authored SQL views over the decoded events (the tip ∪ sealed surface), plus recipes. Where
-  a nest computes derived answers. See [Authored SQL views](/docs/build/views/).
+- **Logic** - authored SQL views over the decoded events (the tip ∪ sealed surface), plus recipes,
+  [incremental entities](/docs/build/entities/) (`entities.toml`) and opt-in maintained copies of
+  views (`maintained.toml`). Where a nest computes derived answers. See
+  [Authored SQL views](/docs/build/views/).
 - **Identity** - the content-addressed manifest: a `sha256` over the canonical inputs, so a nest is a
   reproducible blob you can bundle, publish, and pull by hash. See [The registry](/docs/operate/registry/).
 
@@ -29,7 +31,7 @@ don't copy it.
 
 ## On disk
 
-`init 0xAddr` produces roughly:
+`init 0xAddr` produces an event nest, roughly:
 
 ```text
 my-nest/

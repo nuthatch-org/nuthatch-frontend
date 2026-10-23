@@ -2,7 +2,7 @@
 title: Authored SQL views
 description: General SQL authored with a nest and evaluated when a reader asks for it.
 order: 3
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 A nest's **logic layer** is authored SQL: `CREATE VIEW` statements over your decoded tables, kept in the
@@ -42,8 +42,15 @@ Authored views aren't just dropped in and hoped over. They're a first-class laye
 
 Views are read-only `CREATE VIEW`s over already-sealed segments and the hot snapshot. Nothing about them
 touches the deterministic ingest → decode → seal path - they are a *query-time* layer. That is why they
-are safe to add, edit, and iterate freely, and why a costly view still scans its inputs every time it is
-asked.
+are safe to add, edit, and iterate freely, and why by default a costly view scans its inputs each time it is
+evaluated.
+
+Two things spare a repeat. The answer memo returns a query's rows again while nothing it reads has
+changed: same sealed segments, same hot rows, same authored files. It is process-local and bounded
+(`NUTHATCH_SQL_MEMO_BYTES`, default 64 MiB). A view listed in `maintained.toml` goes further: nuthatch
+keeps a stored copy of its answer at the current inputs, rebuilt as blocks arrive, and a request at
+those inputs reads the copy instead of the definition. Neither ever serves an answer computed from
+other inputs. See [Maintaining an answer](/docs/book/maintaining-an-answer/).
 
 An [authored incremental entity](/docs/build/entities/) is the deliberate alternative for a frequent,
 expensive keyed aggregate. It lives in `entities/` with a declaration in `entities.toml`, has a bounded

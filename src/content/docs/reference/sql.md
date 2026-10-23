@@ -2,7 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
@@ -68,6 +68,10 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   analytical queries, and a 16 KiB limit on the query text itself. On `/sql` a query cut off by the
   timeout is answered with 504 (400 before 3.12.1). A rejection is the node protecting itself - narrow the query
   rather than fighting the guard. Validate cheaply first with `explain`.
+  Input bounds can refuse a query before it runs. The unsealed rows a query copies from the hot
+  tip are capped at 2,000,000 rows and, separately, 64 MiB of stored row JSON (so a few wide rows
+  can hit it well under the row count); either answers `503` naming the reason. A declared query
+  (`/q/{name}`) is refused with `422` past 512 MiB of source bytes read. The full list is under [resource guards](/docs/operate/security/#resource-guards).
 - **Provenance-stamped.** Results carry `as_of` (the block the answer is current to),
   `sealed_through`, `source`, the nest's `nid` and its `registry_hash`, plus each entity's own
   watermark when the query read one, so a number can be cited against a fixed watermark and

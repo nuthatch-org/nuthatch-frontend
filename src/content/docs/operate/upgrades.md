@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -20,7 +20,10 @@ consumers eat downtime or stale data during the flip.
   column, or MCP tool is removed, renamed or retyped.
 
 The promise is upgrade only; a downgrade is not covered. A released 5.x only gets patches, features
-wait for the monthly minor (5.1, 5.2), and correctness and security fixes ship immediately. Also not
+wait for the monthly minor (5.1, 5.2), and correctness and security fixes ship immediately. A
+correctness fix is not a break: a config that was accepted but silently produced wrong data may be
+refused at startup, and a security fix with no compatible form may break a surface
+in a patch. The release notes name each one and say what to change. Also not
 covered: the off-by-default cargo features `graph`, `folds` and `counter`; the SQL dialect behind
 `/sql`; segment hashes across `arrow-rs` versions; the admin UI's HTML; and the `postgres-store`
 build's internal schema. The full contract is in the operator guide's
@@ -117,12 +120,18 @@ actually changes, which is the moment it matters.
 
 ## Stage the new version and migrate
 
-With `--dry-run`, `migrate` prints the plan and names any breaking change; without it, it applies the
-plan:
+An update is staged by placing the new version's authored nest (its files, not a data directory) at
+`<runtime>/nests/<alias>/` on a stopped runtime. `migrate` sees that its identity differs from the
+mount's and treats it as an upgrade. With `--dry-run` it prints the plan and names any breaking
+change; without it, it applies the plan:
 
 ```sh
+sudo systemctl stop nuthatch
+mkdir -p my-runtime/nests
+cp -R usdc-v2 my-runtime/nests/usdc
 nuthatch migrate --dir my-runtime --dry-run
 nuthatch migrate --dir my-runtime
+sudo systemctl start nuthatch
 ```
 
 The runtime compares the staged version's schema against what the alias currently serves:
@@ -174,20 +183,23 @@ existing derived state instead of backfilling. The copy is staged and committed 
 is retained because another mount may still be using it. On a real 428 MB nest this took about 0.14 s.
 
 **Shared segments.** Sealed segments are content-addressed, so two nests that decode the same contract
-produce byte-identical files and hold **one copy** between them. A second nest indexing a contract you
-already index costs no new bytes.
+produce byte-identical files and hold **one copy** between them. Only byte-identical segments are
+shared: a second dataset still keeps its own hot store, and a different event selection, range or
+writer version can produce segments of its own.
 
 ## What is not being claimed
 
-Authored SQL views are currently defined at query time over the hot and sealed data. They are not
-materialised, so a view edit does not have stored view data to recompute. The reuse above is therefore
-whole-dataset adoption: it avoids re-fetching raw chain history when the stored-data inputs are
-unchanged.
+Authored SQL views are evaluated at request time over the hot and sealed data. A view listed in
+`maintained.toml` also keeps a stored copy of that evaluation under `maintained/<view>/`, keyed by a
+hash of every input it read, the binary and the authored files included. A view edit or a new binary
+changes that key, so the copy is simply not used and a new one is built; it is never part of the
+chain-data identity. The reuse above is therefore whole-dataset adoption: it avoids re-fetching raw
+chain history when the stored-data inputs are unchanged. It is not per-derivation grafting, which is
+not shipped.
 
-Nuthatch does inspect views for cycles and for constructs that would be unsafe to cache if they become
-materialised. A volatile view such as one calling `now()` is legal today, but it is not evidence that a
-future per-derivation cache could reuse that view's output. The current data-adoption decision does not
-depend on views because views do not write stored bytes. See [Nest identity & reuse](/docs/concepts/nest-identity/)
+A volatile view such as one calling `now()` is legal, but `maintained.toml` refuses it and the answer
+cache never keeps it, since its answer depends on more than its inputs. The data-adoption decision does not depend on views,
+because no view writes chain data. See [Nest identity & reuse](/docs/concepts/nest-identity/)
 for the two boundaries.
 
 ## Coming from 1.x

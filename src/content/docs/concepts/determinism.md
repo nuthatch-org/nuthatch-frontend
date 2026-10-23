@@ -2,7 +2,7 @@
 title: Determinism
 description: Decode, derivation, and reorg handling are deterministic and re-executable - LLM output never sits in the data path.
 order: 5
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Determinism is a non-negotiable in nuthatch's core, not a nice-to-have. Anything that feeds stored state
@@ -15,8 +15,10 @@ same inputs at the same block always produce the same output, on any machine, on
   *re-running* it - no TEE attestation, no zk proofs. Verifiability = deterministic re-execution of pure
   logic plus content-addressed segments. Nothing heavier.
 - **Content-addressing works.** A sealed segment is a `sha256` over its bytes; determinism is what makes
-  the same range yield the same hash everywhere. That's the basis for segment reuse across upgrades and
-  for a verifiable shared cache.
+  the same range yield the same hash wherever the same release seals it. That's the basis for a
+  verifiable shared cache. The Parquet bytes carry the writer's version, so a release that moves the
+  writer can hash identical rows differently: across versions, compare decoded rows, not hashes.
+  Older segments stay readable and need no resealing.
 - **Reorgs become retractions.** A deterministic derivation can be *un-applied* - a reorg re-feeds the
   same facts with negative weight and the state converges. Non-determinism would make that impossible.
 
@@ -29,9 +31,12 @@ same inputs at the same block always produce the same output, on any machine, on
 - **Contract state** - where nuthatch *derives* a read (see [Recipes](/docs/build/recipes/)) it's pure
   SQL over indexed events, no fetch at all. Token metadata (`decimals`/`symbol`/`name`) is
   pulled once and cached, since it never changes. Mutable state comes only through declared
-  [`[[calls]]`](/docs/build/contract-calls/), each an `eth_call` pinned to a specific block
-  (EIP-1898), sampled every N blocks or triggered by a row, so its answer is a pure function of `(code, storage, block,
-  calldata)` and re-execution against an archive endpoint returns the same value. A general
+  [`[[calls]]`](/docs/build/contract-calls/), each an `eth_call` pinned to a block number, sampled
+  every N blocks or triggered by a row, so its answer is a pure function of `(code, storage, block,
+  calldata)` and re-execution against an archive endpoint returns the same value on the canonical
+  chain. A number names a height, not a fork; `canonical = true` (which needs `schema_version = 3`)
+  pins the call to the block hash with EIP-1898 `requireCanonical` instead, and its stored answer
+  carries that fork identity. A general
   execution engine for arbitrary state (RFC-0024) remains a deferred design.
 
 ## LLMs generate code, never data

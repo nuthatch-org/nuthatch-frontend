@@ -2,7 +2,7 @@
 title: "MCP server"
 description: "The built-in MCP surface - schema discovery, SQL, entity lookup, and provenance."
 order: 4
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 The protocol reference for the built-in Model Context Protocol server. For the experience - wiring
@@ -18,7 +18,7 @@ described in the [HTTP API reference](/docs/reference/http-api/) - an agent gets
 
 ## Tools
 
-The seven generic tools below are advertised on every nest. The capability-gated ones are advertised
+The eight generic tools below are advertised on every nest. The capability-gated ones are advertised
 only where they will return data (RFC-0025): `balance`/`top_balances` where the nest has a
 transfer-shaped decoder, and `flags`/`exposure` where compliance is configured.
 
@@ -32,6 +32,10 @@ transfer-shaped decoder, and `flags`/`exposure` where compliance is configured.
 - `explain` (`query`) - validate a query **without executing it**; returns `{valid: true}` or an error
   with a fix hint. Cheaper than `sql` - check before you spend.
 - `entity` (`id`) - one row by id (`{block:012}-{logindex:06}`).
+- `diff` (`from` + `to`, or `block`, or `tx` with its `block`; `flow`, `top`, `final_only`) - what
+  happened in that range as a JSON document of fixed sentences with exact amounts, the same bytes as
+  `nuthatch diff --format json` and `GET /diff`. `flow: true` gives the token flow instead;
+  `final_only` refuses a range above the sealed boundary. Since 5.9.0.
 - `balance` (`address`) / `top_balances` (`limit`) - derived balances from the IVM view (i128 base
   units as decimal strings).
 - `flags` (`kind`) - threshold or velocity compliance flags (RFC-0008).

@@ -2,7 +2,7 @@
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
 order: 4
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 ## Upgrade first
@@ -60,10 +60,16 @@ Denying a query is cheaper than an OOM that takes co-tenants with it:
 | concurrent analytical queries | 2 |
 | query text length | 16 KiB |
 | unsealed tip rows per query | 2,000,000, then `503` |
+| unsealed tip row data per query | 64 MiB, then `503` |
+| source bytes a declared query may scan | 512 MiB, then `422` |
 
 The tip bound **refuses rather than truncates** - a partial tip would silently change the answer to an
 aggregate, and a wrong number is worse than an error. The `503` names `sealed_through` so a caller can
-narrow to sealed data and get a correct answer immediately.
+narrow to sealed data and get a correct answer immediately. The 64 MiB tip bound counts the stored rows
+a query reads, not what it returns, so wide rows can meet it far below two million; it is separate from
+the 64 MiB result cap. A declared query (`queries.toml`) is bounded before it runs by the bytes it
+would read from segments and the tip together, and one over 512 MiB is refused with `422` and the
+bound, never evaluated.
 
 ## Bounding what a mount will answer
 
@@ -130,8 +136,9 @@ are the operator's layer.
 - **The scaled-mode control plane** *refuses to start* off-localhost without `NUTHATCH_CONTROL_TOKEN` - 
   a refusal, not a warning. It decides what an entire fleet runs.
 - **Token comparison is constant-time**, on both surfaces.
-- **`/health` and `/ready`** stay unauthenticated so a load balancer can probe them. They reveal
-  nothing.
+- **`/health` and `/ready`** stay unauthenticated so a load balancer can probe them. `/health`
+  returns only `ok`. `/ready` deliberately reports operational state: the version, chain progress,
+  lag, freshness and sealing. Weigh that before routing it to a public probe.
 
 ## Running someone else's nest
 

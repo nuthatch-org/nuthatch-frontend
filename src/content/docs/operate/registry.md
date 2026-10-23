@@ -2,7 +2,7 @@
 title: The nest registry
 description: Publish and pull nests by name - a filesystem folder or an S3 bucket, with private nests, decoupled and never mandatory.
 order: 9
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be
@@ -28,8 +28,11 @@ nuthatch nest bundle ./my-nest
 nuthatch nest publish my-nest-<hash>.bundle --registry <path|s3://bucket/prefix> --as horizon@1.2.0
 ```
 
-**3. Pull and run it** anywhere - resolved by name, fetched, and **hash-verified** on install (a pull is
-exactly as safe as a hash-pinned file load).
+**3. Pull and run it** anywhere - resolved by name, fetched, and **hash-verified** on install. The
+check is against the hash the registry's index names for that version today: it proves the registry
+served the bundle it named, not that the name still means the bundle you reviewed. To stop a retagged
+version changing what you install, load by a NID you trust (below), which is refused unless the
+bundle computes to it.
 
 ```sh
 nuthatch nest load horizon@1.2.0 --registry <path|s3://bucket/prefix>

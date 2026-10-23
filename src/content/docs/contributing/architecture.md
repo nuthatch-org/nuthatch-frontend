@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -19,9 +19,10 @@ reorg cannot reach sealed history - see [Internals](/docs/contributing/internals
 RPC ingestion                     (a colocated reth ExEx mode is designed, not built, RFC-0003)
   → deterministic decode          (ABI → typed rows; the decode registry)
   → redb hot store                (the mutable tip: entity point-reads, reorg rollback)
-  → sealed Parquet segments       (immutable, content-addressed, past finality)
-  → IVM views                     (incrementally-maintained derivations, e.g. balances)
-  → serve                         (axum HTTP + the MCP bridge)
+      ├→ IVM views                (incrementally-maintained derivations, e.g. balances; fed as rows
+      │                            arrive, retracted on a reorg, never waiting for sealing)
+      └→ sealed Parquet segments  (immutable, content-addressed, past finality)
+  → serve                         (axum HTTP + the MCP bridge, over IVM state, hot and sealed)
 ```
 
 The load-bearing properties:
@@ -29,8 +30,10 @@ The load-bearing properties:
 - **Determinism in the core.** Decode, reorg handling, and anything feeding stored state is
   deterministic and re-executable - same inputs, same bytes. LLMs may generate code and tests;
   LLM output never sits in the runtime data path.
-- **Single writer.** Only the ingestion thread writes. The analytical engine only reads the sealed
-  segments and the hot rows; never design around a second writer.
+- **Single cursor.** Exactly one ingestion task per chain advances that chain's state. Other tasks do
+  write redb (the alert worker drains the outbox; the IPFS resolver stores a document only while the
+  row that named it is still there), but none of them advances the chain. Queries only read: the
+  analytical engine reads the sealed segments and the hot rows, and only ingestion writes segments.
 - **The hot/cold seam.** Reorgs only ever touch the hot store; a sealed segment is immutable and
   content-addressed. The `/sql` surface unions both so queries never see the seam.
 - **The footprint budget.** ≤2 GB RAM per active-chain cursor, CI-enforced. A design that
@@ -60,9 +63,20 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
   CLI reference), `metadata`.
 - **Compliance**: `labels`, `lists`, `flags`, `velocity`, `exposure`, `alerts`, `webhooks`, `pack`,
   `audit`, `sealed_audit`.
+- **Maintained views & diff**: `maintained` (stored copies of declared views, keyed by every input
+  they read), `diff` + `story` (`nuthatch diff`: a transaction, block or range told by fixed rules
+  over the served rows, no model).
+- **Address history**: `address_mode` and the `address_*` modules (a nest with `[address_history]`
+  and no contracts: its own cursor and an Etherscan-shaped `/api`, sharing nothing with the event
+  pipeline above), `address_history` (its config, including the deposit sweep).
 - **Lifecycle & ops**: `config`, `project` (init/add/scaffolding), `lifecycle` (the
   compatible-vs-breaking classifier), `migrate`, `prune`, `runtime`, `metrics`, `bench`, `check`,
   `cli`.
+- **Shared crates**: `decode/`, `identity/`, `scaffold/` and `seal/` are separate crates so the
+  browser playground and nest builder compile the same decode, identity, `init` and sealing code to
+  WebAssembly and produce the same bytes a node does; `timelapse/` replays sealed history as frames.
+- **Unreleased on main**: `watch/` (`nuthatch watch`, RFC-0069), a read-only terminal view of a
+  running nest. It is not in 5.9.0.
 
 ## Where to start reading
 

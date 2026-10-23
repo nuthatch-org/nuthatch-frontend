@@ -2,12 +2,12 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
-the ingest thread is the only data writer. A runtime additionally has two authenticated admin mutation
-routes for mounting and unmounting nests. In a [runtime](/docs/operate/many-nests/), each nest's full
+the ingest thread is the only data writer. A runtime additionally has authenticated lifecycle mutation
+routes for mounting, suspending, moving and unmounting nests. In a [runtime](/docs/operate/many-nests/), each nest's full
 surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 ## Status & introspection
@@ -48,6 +48,14 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   queries, and the *only* SQL route on an `sql = "allowlist"` mount - where `/sql` and `/explain` are
   refused with the list of names you may ask for instead. See
   [Bounding what a mount will answer](/docs/operate/security/#bounding-what-a-mount-will-answer).
+- `GET /diff` *(since 5.9.0)* - what happened in a block, a range or a transaction, as `nuthatch diff`
+  and the MCP `diff` tool tell it. Name the range with `block=N`, or `from=A&to=B`, or `tx=0x…`
+  together with `block` (this route makes no RPC call to find a transaction's block). `flow=true`
+  draws the token flow instead of the story; `top` caps the entries listed (default 10 for a story,
+  25 for a flow); `final_only=true` refuses a range above `sealed_through` rather than labelling it
+  provisional; `format` is `json` (default), `text`, `markdown`, and for a flow `dot` or `mermaid`. It runs under the same permit, 30 s budget and hot-tip bounds as
+  `/sql` (`504` past the budget), and refuses rather than truncates past 2,000,000 flow rows or
+  500,000 distinct edges. A mount bounded to named queries refuses it, since a diff reads every table.
 
 ## Derived & compliance
 
@@ -68,6 +76,35 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 - `GET /ipfs/gave-up` - the `[[ipfs]]` documents resolution gave up on, in block order. Each is
   absent from sealed history.
+
+## Etherscan-shaped API
+
+An [address-history nest](/docs/reference/config/#address-history-nests) (RFC-0063) serves a different,
+smaller route set: `/api`, `/api/watch`, `/api/unwatch`, `/health`, `/ready` (with
+`"mode": "address_history"`), `/metrics` and `/diff`. It has no `/sql`, `/tables` or admin UI. An
+event nest also answers `GET /api`, but only to say it has no `[address_history]`.
+
+- `GET /api?module=…&action=…` or `POST /api` with a form body, for a call too long for a query
+  string. A key given in both with different values is refused, and `chainId` is read as `chainid`.
+  Answers use Etherscan's envelope, `{"status", "message", "result"}`. A range the nest cannot cover
+  inside `request_deadline` answers `status "0"` with a result starting `NUTHATCH_INCOMPLETE:`, which
+  a client can retry; a range before `start_block` says where history starts.
+  - `module=account`: `txlist`, `txlistinternal` (also by `txhash`), `tokentx`, `tokennfttx`,
+    `token1155tx`, `txsBeaconWithdrawal`, `getminedblocks`, with `address`, `startblock`,
+    `endblock` and Etherscan's `page`, `offset` and `sort`; plus nuthatch's own `nuthatchProducedBlocks`,
+    `nuthatchValidatorBlocks` and `nuthatchDeposits` (the sweep's deposit feed, paged by `after` and
+    `offset`, up to 10,000). A `chainid` other than the nest's is refused.
+  - `module=block&action=getblocknobytime`.
+  - On a loopback bind only, `module=proxy` (`eth_blockNumber`, `eth_getBlockByNumber`,
+    `eth_getTransactionByHash`, `eth_getTransactionReceipt`, `eth_call` and similar), `module=logs`
+    `getLogs`, and account `balance`/`balancemulti` are forwarded to the nest's own RPC and stored
+    nowhere. Off loopback the operator's RPC is not lent out.
+- `GET /api/watch` lists the watched set. `POST /api/watch` and `POST /api/unwatch` take a JSON body
+  of `{"address"}`, `{"validator"}` or, to add only, `{"addresses": [...]}`. They change what the nest
+  asks its RPC for, so they answer `403` on any bind but loopback.
+
+A directory of chain nests serves the same routes at one listener, choosing the chain by `chainid`;
+it serves no `/diff`.
 
 ## GraphQL (the graph download only)
 
@@ -94,6 +131,15 @@ See [Build a subgraph fallback](/docs/build/subgraph-fallback/).
   With `NUTHATCH_ADMIN_TOKEN` set both require it on every bind; without one they are not served
   off localhost and answer only loopback-addressed requests on it (`401` otherwise). `--no-admin`
   removes them. See [Serving & the admin UI](/docs/operate/serving/).
+- `GET /_admin/config` - the nest's authored files (`nuthatch.toml`, views and the rest) as they are
+  on disk, with keys, secrets and URL paths redacted, and what the running process uses. Gated like
+  the dashboard.
+- `GET /_admin/storage` - the sealed catalogue per table: segment count, rows, bytes and block range;
+  `?table=<name>` adds that table's segments, newest first. Gated like the dashboard.
+- `GET /_admin/requests` *(unreleased: on main, not in 5.9.0)* - the last 256 requests served, as
+  `{last_seq, capacity, requests}`. Each record is a route template, status, time and size, plus the
+  declared query or entity name where the route names one; never SQL text, a query string, a client
+  address or a path value that is data. Gated like the dashboard.
 - The **runtime lifecycle routes** below mutate runtime state: they follow the same token rule and
   disappear with `--no-admin`.
 - `GET /nests` *(runtime only)* - the roster of mounted nests: name, chain, registry hash, table
@@ -123,7 +169,9 @@ route key: `usdc` for the default tenant, `acme/usdc` for any other, fixed for t
 | `DELETE /_admin/nests/<name>` | Unmount (drain, then remove routes); `?reclaim=true` also frees the dataset | `200` `{"unmounted", "reclaim"?}` |
 | `DELETE /_admin/datasets/<nid>` | Free a dataset unmounted earlier | `200` reclaimed, `409` kept, `404` absent |
 
-A job is `{"name", "nid", "phase", "reason"?, "since_unixtime"}`, with `phase` one of `accepted`,
+A job is `{"name", "nid"?, "phase", "reason"?, "since_unixtime", "generation", "is_move"?}`.
+`generation` counts claims on the name, so a forgotten worker cannot mount over a newer one;
+`is_move: true` marks a move, so a restart resumes it as one. `phase` is one of `accepted`,
 `fetching`, `joining`, `live`, `failed`, or `suspended` while paused. Reading a job never waits on a mount in progress; unfinished
 jobs resume after a restart. Mount refusals: `400` malformed NID or a name boot would refuse, `404` NID not held and no
 `--registry`, `409` name taken, chain not declared or its cursor dead, `507` over the cursor's RAM

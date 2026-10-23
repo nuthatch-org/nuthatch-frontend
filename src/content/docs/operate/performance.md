@@ -2,7 +2,7 @@
 title: "Performance"
 description: What has been measured, what has not, and the three things that actually decide your backfill's wall clock.
 order: 12
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 ## The number
@@ -160,11 +160,18 @@ rows and segments it reads, so a committed row or a newly sealed segment in a ta
 next request computes. Since 4.11.0 the key covers only what the statement reads, not every cursor
 poll, so a quiet nest at the tip answers a repeat from memory. The 4.11.0
 [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v4.11.0) measured a repeated
-`bets` query on the BetSwirl stopgap nest at 10.4 s before and 3 ms after; the first run of a
-statement is as slow as it was ([#1951](https://github.com/nuthatch-org/nuthatch/issues/1951) is
-open for that). The memo is bounded by `NUTHATCH_SQL_MEMO_BYTES` (default 64 MiB, `0` turns it off),
-lives in the process and is cleared by a restart. Statements that call `now()`, `random()` and the
-like are never remembered.
+`bets` query on the BetSwirl stopgap nest at 10.4 s before and 3 ms after; the memo does nothing for
+the first run of a statement. The memo is bounded by `NUTHATCH_SQL_MEMO_BYTES` (default 64 MiB, `0`
+turns it off), lives in the process and is cleared by a restart. Statements that call `now()`,
+`random()` and the like are never remembered.
+
+For a first request, since 4.14.0 a view listed in `maintained.toml` is
+[maintained](/docs/book/maintaining-an-answer/): after each commit or seal at the tip, the nest
+evaluates it in the background and stores the answer under `maintained/`, keyed on every input it
+read. A request whose inputs hash to a stored copy reads it; one that arrives before the copy for its
+inputs is built falls back to evaluating the definition, as slow as before. The memo and a maintained
+copy are separate: the first remembers whole statements in memory, the second stores one view on
+disk and survives a restart.
 
 ## Measuring your own
 

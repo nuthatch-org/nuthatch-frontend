@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
@@ -75,7 +75,9 @@ This brings up every mounted nest and serves them behind one listener (`--listen
   `/weth/_admin/`, and so on. Byte-identical routes to a solo nest, just prefixed.
 
 The backfill flags you know from `dev` apply to every mounted nest: `--backfill N`,
-`--seal-direct`, `--concurrency`, `--window`, `--rpc` overrides, `--no-admin`.
+`--seal-direct`, `--concurrency`, `--window`, `--rpc` overrides, `--no-admin`. `--rpc` and
+`--rpc-fallback` work only for a single-chain runtime: a multichain runtime refuses them as
+ambiguous, and takes each chain's endpoints from its `rpc_urls` under `[[chains]]`.
 
 ## Mount and unmount without a restart
 

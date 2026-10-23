@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -20,12 +20,13 @@ how the process is supervised. nuthatch sees a tenant as an opaque label and kno
 it. Sign-in, plans, per-tenant authorisation, quotas and billing belong to a gateway in front of the
 runtime; process supervision belongs to systemd or a container restart policy.
 
-Hosting is for operators. The nuthatch team runs no hosted nest service, with one
-exception approved on 2026-10-06: it serves
+Hosting is for operators, and the nuthatch team is one of them. It
+[offers to host nests](/subgraphs/) for people and teams who ask on the
+[Nuthatch Discord](https://discord.gg/p9Xc45txWa): the stock binary run as any operator would run it,
+on our own boxes, with no billing, no accounts and no platform. One use is
 [subgraph stopgap nests](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
 for BNB Chain and Polygon subgraphs The Graph network does not serve, until an indexer picks each one
-up. Each is the stock binary run as any operator would run it, with no billing, no accounts and no
-platform. The first is BetSwirl on BNB Chain, and its
+up. The first is BetSwirl on BNB Chain, and its
 [handback](https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md) says how
 to run it yourself and how to go back to the network.
 
@@ -136,7 +137,7 @@ If the NID had to be fetched, it was fetched and verified, and it stays installe
 nh -XPOST localhost:8288/_admin/nests -d '{"name":"usdc","nid":"9f2c…"}'
 ```
 
-It answers `202 {"name":"usdc","nid":"9f2c…","phase":"accepted","since_unixtime":1790700000}`.
+It answers `202 {"name":"usdc","nid":"9f2c…","phase":"accepted","since_unixtime":1790700000,"generation":0}`.
 A mount is a **job**, because fetching and catching up can take minutes. Poll the one job, or list
 every mount the runtime knows as `{"mounts": [...]}`:
 

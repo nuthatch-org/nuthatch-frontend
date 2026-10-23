@@ -2,14 +2,14 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
 follows one log entry from an RPC response to a row someone queries, then covers what each component
 refuses to do, which is usually the more interesting half.
 
-Line counts are given as a sense of weight, not a metric. The crate's `src/` alone is about 150,000 lines of Rust.
+Line counts are given as a sense of weight, not a metric. The crate's `src/` alone was about 204,000 lines of Rust in October 2026.
 
 ## The shape of it
 
@@ -34,7 +34,7 @@ other guarantee is downstream of it.
 ## Ingest - `rpc.rs`, `indexer.rs`
 
 `indexer.rs` is the loop that makes it alive: poll logs, decode, store, and serve concurrently. One
-process, one cursor, one observable failure boundary.
+ingestion loop per chain cursor, each its own observable failure boundary; a runtime can run several.
 
 `rpc.rs` is a deliberately thin JSON-RPC client - `eth_blockNumber`, `eth_getLogs`, block headers,
 and `eth_call` - with round-robin failover across the configured endpoints and per-endpoint health
@@ -82,17 +82,21 @@ re-decoded - that would change answers under consumers who already have them.
 
 ## The hot store - `store.rs`
 
-redb, embedded, holding the mutable tip. Five tables: `entities`, `meta`, `blocks`,
-`checkpoint_hashes`, `outbox`.
+redb, embedded, holding the mutable tip. Four tables: `entities`, `meta`, `blocks`, `outbox`. A
+`--features graph` build adds a fifth, `checkpoint_hashes`, a reverse index over the checkpoints; a
+default build never creates it.
 
 Entities are keyed `{block:012}-{log_index:06}`, zero-padded so lexicographic iteration is
 chain-ordered - which makes "everything above block N" a range scan rather than a filter, and that is
 exactly what a reorg needs.
 
-One honest note the module carries about itself: it used to claim a single writer, and that was
-wrong. Two tasks write - the ingest loop, and the alert-delivery worker draining the outbox. They
-touch disjoint key ranges and redb serialises write transactions internally, so integrity holds, but
-the comment was a claim about the code that the code did not honour. It now says what is true.
+Three tasks write it: the ingest loop (entities, checkpoints, meta and the outbox enqueue), the
+alert-delivery worker draining the outbox, and the IPFS resolver storing fetched documents and their
+typed rows. The resolver shares the ingest loop's key range, so it writes only in a transaction that
+finds the row naming the document still there from the same block; if a reorg rollback or a seal's
+prune has removed that row, the late write is a no-op. redb serialises write transactions, so each
+check and its write are atomic. What is single is the cursor: one ingestion task per chain advances
+the chain state. (The module once claimed a single writer; it was wrong, and now says what is true.)
 
 ## Sealing - `seal.rs`
 
@@ -153,8 +157,10 @@ Counterparty exposure (the compliance path) is a second circuit over the same fa
 
 Two surfaces over the same data.
 
-**Point-reads** come from redb directly - entity by id, balances, flags. Cheap, no SQL engine
-involved.
+**Point-reads** take three paths. An entity by id reads redb first; on a miss (the row has been sealed
+and pruned) it scans the sealed segments through Burrmill, under the same admission gate and deadline
+as `/sql`, so a busy server answers `503`. Balances and flags are read from the in-memory IVM views,
+not redb, with no SQL engine involved.
 
 **Analytical SQL** runs on [Burrmill](https://github.com/nuthatch-org/burrmill), an embedded engine
 on DataFusion. A session opens empty and registers, for each table a statement binds, the segment
@@ -183,9 +189,11 @@ by `NUTHATCH_SQL_MEMO_BYTES` (64 MiB by default, `0` turns it off) and cleared b
 
 `/sql` is a genuine analytical surface exposed to callers, so it is guarded: a 30-second timeout, a
 50,000-row cap, a 64 MiB result ceiling, 2 concurrent analytical queries, a 16 KiB query-length limit,
-and a refusal past 2,000,000 unsealed tip rows. That last one **refuses rather than truncating**,
-because a partial tip silently changes the answer to an aggregate, and a wrong number is worse than an
-error.
+and a refusal past 2,000,000 unsealed tip rows or 64 MiB of stored tip row JSON, whichever comes
+first. Those tip limits **refuse rather than truncating**, because a partial tip silently changes the
+answer to an aggregate, and a wrong number is worse than an error. The 64 MiB tip limit bounds input
+copied from the hot store, separately from the 64 MiB result ceiling. A declared (named) query is
+also refused before it runs if the sealed segments plus the hot snapshot it would read pass 512 MiB.
 
 Two controls stop `/sql` touching the filesystem, deliberately with different failure modes - see
 [security](/docs/operate/security/).

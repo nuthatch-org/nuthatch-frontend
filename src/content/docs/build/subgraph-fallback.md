@@ -2,7 +2,7 @@
 title: "Build a subgraph fallback"
 description: "Keep the event-derived part of a GraphQL data path available when a subgraph is unavailable."
 order: 6
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Nuthatch is not automatically a drop-in GraphQL replacement. It indexes deterministic on-chain event
@@ -20,14 +20,16 @@ prices or running totals will usually not work unmodified; a bot or an event rea
 The useful question is not “can we replace this entire subgraph?” It is: **which reads cannot afford to
 disappear, and are they derivable from chain logs?**
 
-## The stopgap nests
+## Hosted nests and stopgaps
 
-Nuthatch runs no hosted nest service, with one exception. From 2026-10-08 Studio traffic for BNB
-Smart Chain and Polygon moves onto The Graph network, and a deployment no network indexer picks up
-stops answering. For those, Nuthatch serves **stopgap nests**: the stock `nuthatch-graph` binary, run as
-any operator would, answering the subgraph's event-derived fields until an indexer serves the
-deployment and its developer points back at the network. There is no billing and no account. The
-first is BetSwirl on BNB Chain; [its handback package](https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md)
+If you would rather not run it yourself, Nuthatch hosts nests on request: the stock binary, run as
+any operator would, with no billing and no account. [Nest-backed subgraphs](/subgraphs/) is the
+public offer; reach out on the Nuthatch Discord with the subgraph, or its contracts and chain.
+
+Stopgaps were the first case. From 2026-10-08 Studio traffic for BNB Smart Chain and Polygon moves
+onto The Graph network, and a deployment no network indexer picks up stops answering. For those,
+Nuthatch serves **stopgap nests**: the stock `nuthatch-graph` binary, answering the subgraph's event-derived fields until an indexer serves the
+deployment and its developer points back at the network. The first is BetSwirl on BNB Chain; [its handback package](https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md)
 says what it answers, how to run it yourself and how to go back.
 [The dispatch on learn-thegraph.com](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
 explains how many deployments were stranded, what a stopgap nest is and is not, and how its answers
