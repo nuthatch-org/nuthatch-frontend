@@ -3,7 +3,7 @@ import { join, relative, sep } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
 const site = 'https://nuthatch-indexer.com';
-const routes = ['/', '/install', '/changelog', '/example', '/stories', '/roadmap', '/nests', '/mirror', '/manifesto', '/the-graph', '/platform', '/blog', '/docs'];
+const routes = ['/', '/install', '/changelog', '/example', '/stories', '/roadmap', '/nests', '/mirror', '/manifesto', '/the-graph', '/platform', '/blog', '/docs', '/subgraphs', '/rotki', '/count', '/play/', '/play/build/'];
 
 async function markdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -13,6 +13,10 @@ async function markdownFiles(dir) {
   }));
   return nested.flat();
 }
+
+// Hosted dataset pages are built from src/data/hosted.ts; read their ids rather than import TypeScript.
+const hostedSource = await readFile(join(root, 'src/data/hosted.ts'), 'utf8');
+for (const [, id] of hostedSource.matchAll(/^    id: '([^']+)',$/gm)) routes.push(`/nests/hosted/${id}`);
 
 const docsRoot = join(root, 'src/content/docs');
 const docs = await markdownFiles(docsRoot);

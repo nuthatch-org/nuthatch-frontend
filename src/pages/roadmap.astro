@@ -33,6 +33,8 @@
      then fixes through 3.8.5. v3.7.0: RFC-0052 segment publishing and RFC-0055 `emit dune`. v3.0.0: RFC-0041 made authored incremental entities stable, after the
      alpha found and fixed restart truncation, history-growing update cost, an explain cache leak,
      a 429 misclassification, and split-lock freshness labelling.
+     Re-checked at v5.9.0 (2026-10-23): shipped groups for RFC-0062, 0054, 0063/0064, 0071 and the tab; nest diff/upgrade
+     (removed in 2.0) replaced; watch (RFC-0069) in progress for 5.10.0.
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -78,6 +80,17 @@ const RFCS = {
   '0058': '0058-cross-nest-sql.md',
   '0059': '0059-checkpointed-folds.md',
   '0060': '0060-the-network-subgraph-endpoint.md',
+  '0054': '0054-the-head-count.md',
+  '0062': '0062-maintained-views.md',
+  '0063': '0063-address-history.md',
+  '0064': '0064-deposit-sweep.md',
+  '0065': '0065-the-nest-in-a-tab.md',
+  '0066': '0066-the-nest-builder.md',
+  '0068': '0068-nest-postcards.md',
+  '0069': '0069-the-engine-room.md',
+  '0070': '0070-time-lapse.md',
+  '0071': '0071-nuthatch-diff.md',
+  '0072': '0072-chain-weather.md',
 };
 const rfc = (n: keyof typeof RFCS) => `${REPO}/blob/main/docs/rfcs/${RFCS[n]}`;
 const rfcsDir = `${REPO}/tree/main/docs/rfcs`;
@@ -136,7 +149,7 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
         <li>A per-nest semantic layer (<code>semantic.toml</code>, seeded from the ABI at <code>init</code>): the <code>schema</code> tool serves <em>this</em> nest's meaning - table/column descriptions, the hot/cold coverage seam, and derived footguns (reserved-word and big-int columns) - not one static string for every nest.</li>
         <li>Errors as prompts - a failed query returns a one-line fix hint (nearest real table/column, reserved word, big-int) over the raw engine message; <code>explain</code> validates a query without executing it, so an agent self-corrects in one round-trip.</li>
         <li>Result shaping + provenance - MCP results come back as compact aligned tables with truncation-as-guidance and a citable stamp (<code>as of block N, sealed_through M, registry &lt;hash&gt;</code>).</li>
-        <li>The full MCP surface - 11 tools, 3 resources (<code>nuthatch://schema|tables|status</code>), and 3 prompts (<code>profile-contract</code>, <code>investigate-address</code>, <code>verify-a-number</code>), all offline; nothing in the data path touched.</li>
+        <li>The full MCP surface - 12 tools (eight on every nest, <code>diff</code> among them, two more on a token nest, two with compliance), 3 resources (<code>nuthatch://schema|tables|status</code>), and 3 prompts (<code>profile-contract</code>, <code>investigate-address</code>, <code>verify-a-number</code>), all offline; nothing in the data path touched.</li>
         <li>A repo-installable Claude Code skill (<a href={rfc('0017')} rel="noopener">RFC-0017</a>) teaches an agent to <em>drive</em> nuthatch - init, config, factories, runtimes, ops - with CLI/config references generated from the source and CI-checked for drift.</li>
       </ul>
 
@@ -203,13 +216,13 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
       <p class="grp">Nest registry (<a href={rfc('0019')} rel="noopener">RFC-0019</a>)</p>
       <ul class="rl">
         <li><code>nest publish &lt;bundle&gt; --registry &lt;path|s3://…&gt; --as name@version</code> writes a bundle to a content-addressed store; <code>nest load name@version --registry …</code> resolves, fetches, and installs it - the pulled blob hash-verified by the same install path, so a registry pull is as safe as a hash-pinned file load. A filesystem path <em>is</em> a registry; an S3-compatible bucket (MinIO/S3/R2) is the fleet path, behind <code>--features object-store</code>.</li>
-        <li><strong>Private nests</strong> live behind your bucket's own auth (<code>AWS_*</code> env, including <code>AWS_ENDPOINT</code>); a missing or rejected credential fails with a clear "this nest is private", never a bare "not found". Self-hosted-first: the registry is decoupled and never mandatory - a self-built bundle and <code>load &lt;file        <li><strong>A bundle is also addressed by its NID</strong> (3.13.0): <code>nest publish</code> records it under the identity <code>nest nid</code> prints, and <code>nest load &lt;nid&gt; --registry …</code> refuses a bundle whose recomputed NID differs from the one asked for.</li>
-|dir&gt;</code> touch no registry at all.</li>
+        <li><strong>Private nests</strong> live behind your bucket's own auth (<code>AWS_*</code> env, including <code>AWS_ENDPOINT</code>); a missing or rejected credential fails with a clear "this nest is private", never a bare "not found". Self-hosted-first: the registry is decoupled and never mandatory - a self-built bundle and <code>load &lt;file|dir&gt;</code> touch no registry at all.</li>
+        <li><strong>A bundle is also addressed by its NID</strong> (3.13.0): <code>nest publish</code> records it under the identity <code>nest nid</code> prints, and <code>nest load &lt;nid&gt; --registry …</code> refuses a bundle whose recomputed NID differs from the one asked for.</li>
       </ul>
 
       <p class="grp">Safe upgrades - no resync tax (<a href={rfc('0020')} rel="noopener">RFC-0020</a>)</p>
       <ul class="rl">
-        <li><code>nuthatch nest diff &lt;old&gt; &lt;new&gt;</code> classifies a nest update: <em>compatible</em> (additive only - a new table or column) or <em>breaking</em> (a consumer-observable change - removed, renamed, or retyped). <code>nuthatch nest upgrade --to &lt;new&gt;</code> then handles either kind. A <strong>compatible</strong> update is hot-swapped with zero downtime - it serves the old version, indexes the new one concurrently, and atomically flips the endpoint the moment the new one catches up, so the served address never changes. A <strong>breaking</strong> update instead serves the new version on a new endpoint (<code>/next</code>) alongside the old - which keeps working, now carrying a <code>Deprecation</code> header - so downstream migrate on their own clock before the old is sunset. Either way, updating a nest stops being a subgraph-style genesis resync. And when a compatible update's decode is unchanged, the new version mounts the old's sealed content-addressed segments instead of re-indexing history at all - a true no-re-index upgrade subgraphs structurally can't do.</li>
+        <li>A nest update is classified at the moment its identity changes: <em>compatible</em> (additive only - a new table or column) or <em>breaking</em> (a consumer-observable change - removed, renamed, or retyped). <code>nuthatch migrate</code> applies a compatible update, and an edit that leaves what is stored unchanged adopts the existing dataset with no re-index; a breaking update is named and refused until <code>--allow-breaking</code>. On a running runtime, <code>POST /_admin/move/&lt;name&gt;</code> catches a new version up beside the old and switches the name's routes in one step, so readers never see an error between. Either way, updating a nest stops being a subgraph-style genesis resync. <code>nest diff</code> and <code>nest upgrade</code> were the 0.6 shape and were removed in 2.0; see <a href="/docs/operate/upgrades/">Upgrading a nest</a>.</li>
       </ul>
 
       <p class="grp">Multichain roost (<a href={rfc('0021')} rel="noopener">RFC-0021</a>)</p>
@@ -254,6 +267,32 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
         <li><strong>And it did not write for a whole release.</strong> Until 0.9.3 <code>worker</code> registered, took leases, loaded secrets and reported - and contained no indexing code at all. Ten level-5 checks passed throughout, because every one of them tested the control plane and none asserted that a row appeared. We would rather you read that here than discover it.</li>
       </ul>
 
+      <p class="grp">Maintained views (<a href={rfc('0062')} rel="noopener">RFC-0062</a>, 4.14.0)</p>
+      <ul class="rl">
+        <li>A view listed in <code>maintained.toml</code> is answered from a stored copy of its own request-time evaluation, keyed on every input it read: the binary, the authored files, the segments and the hot rows. A request uses the copy only when its inputs hash the same, so a copy cannot be stale or differ. A nest that declares none behaves as before.</li>
+      </ul>
+
+      <p class="grp">The head count (<a href={rfc('0054')} rel="noopener">RFC-0054</a>, 4.15.0)</p>
+      <ul class="rl">
+        <li>After a successful <code>init</code>, nuthatch asks once whether it may count you. Enter is no. A yes sends two kinds of event with no identifier, and the tally is <a href="/count">public</a>. It is the one network call the binary makes about an operator, and it is off until a person turns it on.</li>
+      </ul>
+
+      <p class="grp">Address history (<a href={rfc('0063')} rel="noopener">RFC-0063</a>, <a href={rfc('0064')} rel="noopener">RFC-0064</a>, 5.1.0 to 5.7.0)</p>
+      <ul class="rl">
+        <li>A nest that watches accounts rather than contracts, and serves their history at <code>/api</code> in Etherscan's shapes, so <a href="/rotki">rotki</a> can use it as an indexer. Answers are exact or refused. It covers Ethereum, Optimism, Base, Arbitrum, Polygon, BNB Chain and Gnosis, several chains behind one endpoint, and proven block proposers for validators on mainnet.</li>
+        <li><code>nuthatch partitions</code> builds verified block partitions a nest can start from instead of an RPC backfill; <a href="/nests/hosted/ethereum-address-history">the Ethereum ones are published</a>. The deposit sweep (5.4.0) reads each block once for a whole watched set, so its cost is per block rather than per address.</li>
+      </ul>
+
+      <p class="grp">The diff (<a href={rfc('0071')} rel="noopener">RFC-0071</a>, 5.9.0)</p>
+      <ul class="rl">
+        <li><code>nuthatch diff</code>, <code>GET /diff</code> and the MCP <code>diff</code> tool tell what happened in a block range, a block or a transaction in fixed sentences with exact amounts, from the rows a nest already holds. No model, and nothing inferred.</li>
+      </ul>
+
+      <p class="grp">A nest in a browser tab (<a href={rfc('0065')} rel="noopener">RFC-0065</a>, <a href={rfc('0066')} rel="noopener">RFC-0066</a>, <a href={rfc('0068')} rel="noopener">RFC-0068</a>)</p>
+      <ul class="rl">
+        <li><a href="/play">The playground</a> runs decode, sealing and Burrmill compiled to WebAssembly in a tab, queries a published nest's segments checked by hash, and keeps it current from public RPCs. <a href="/play/build">The nest builder</a> scaffolds a nest from a contract address with <code>init</code>'s own code and indexes it in the tab. A postcard is a <code>/play</code> link that pins a published nest's segments by hash. None of it changes the binary.</li>
+      </ul>
+
       <p class="grp">Release and footprint</p>
       <ul class="rl">
         <li><strong>v5.9.0 is the current release</strong>, and 5.x is the stable line. It adds <code>nuthatch diff</code>, which tells what happened in a block range, a block or a transaction in fixed sentences from the rows a nest already holds, with no model and no storage migration (<a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v5.9.0" rel="noopener">release notes</a>). <strong>5.8.2</strong> keeps a seal-direct backfill on a dense chain inside the per-cursor memory budget: a blocks nest at 3,000 transactions per block peaked at 3,090 MiB and now peaks at 245 MiB (<a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v5.8.2" rel="noopener">release notes</a>). <strong>5.8.1</strong> refuses to reopen a store, or reuse its segments, after an event's indexed parameters have moved (<a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v5.8.1" rel="noopener">release notes</a>). <strong>5.8.0</strong> was a cold audit of 5.7.2 put right, 107 verified defects across stored-state correctness, isolation between tenants and what an untrusted caller can reach; several defaults are stricter, among them the admin token, which now applies on localhost too (<a href="/docs/operate/upgrades/">upgrade notes</a>, <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v5.8.0" rel="noopener">release notes</a>). <strong>5.7.2</strong> moved <code>init</code>'s output and the nest identity into crates a browser tab can build, for the <a href="/play/build">nest builder</a>. Address-history nests serve <a href="/rotki">rotki</a> on Ethereum and six more chains, several of them from one address, with verified Ethereum validator proposals from block 23,551,570, withdrawals, produced blocks and MEV. Requests have an eight-second default deadline, and incomplete history is refused. <strong>5.0.1</strong> shipped 5.0.0, which was tagged but never published: 4.15.2 with the WASM transform layer and live screening removed (<code>nuthatch transform</code>, <code>nuthatch screen</code>, <code>nuthatch audit replay</code>, <code>[screening]</code>, the <code>screen_status</code> MCP tool, and wasmtime with them); a nest with a <code>[screening]</code> table loads once the table is deleted. The <code>exex</code> stub is gone too. Release binaries are built with fat LTO, about a third smaller on macOS, and Arrow and Parquet 59 replace the second copy of 58, so a segment sealed by 5.0.0 hashes differently from the same rows sealed by 4.15; the decoded rows are identical and nothing is re-indexed (<a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v5.0.1" rel="noopener">release notes</a>). <strong>4.15.2</strong>: a nest without <code>--poll-interval</code> polls every 5 minutes. <strong>4.15.1</strong> fixed a GraphQL <code>Bytes</code> filter given a checksummed address. <strong>4.15.0</strong> added the opt-in <a href="/count">head count</a>, <strong>4.14.0</strong> maintained views, and <strong>4.13.0</strong> narrowed pages over left joins. <strong>4.12.0</strong> (2026-10-06): a cheaper engine on view-heavy nests (shared subqueries planned once, compacted join build sides; <a href="https://github.com/nuthatch-org/nuthatch/pull/1965" rel="noopener">#1965</a>), prebuilt Linux arm64 binaries for the default and graph builds (<a href="https://github.com/nuthatch-org/nuthatch/pull/1963" rel="noopener">#1963</a>), and a shutdown that no longer waits on an open admin tab (<a href="https://github.com/nuthatch-org/nuthatch/pull/1967" rel="noopener">#1967</a>).</li>
@@ -277,7 +316,10 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
       <h2 class="stat s-progress">In progress</h2>
       <ul class="rl">
         <li>
-          Nothing is partly landed and under way. Of the reth ExEx groundwork (<a href={rfc('0003')} rel="noopener">RFC-0003</a>), the <code>Source</code> trait and the library split are in; the <code>exex</code> feature's stub was removed in 5.0.0, and the ExEx itself is designed, not built. Wiring it needs a synced node and the work is deferred; it is listed under Planned.
+          <code>nuthatch watch</code>, a read-only terminal view of a running nest: the tip, the seal, memory against its budget and the RPC endpoints (<a href={rfc('0069')} rel="noopener">RFC-0069</a>). Built on main and arriving in 5.10.0; it is not in 5.9.0.
+        </li>
+        <li>
+          Of the reth ExEx groundwork (<a href={rfc('0003')} rel="noopener">RFC-0003</a>), the <code>Source</code> trait and the library split are in; the <code>exex</code> feature's stub was removed in 5.0.0, and the ExEx itself is designed, not built. Wiring it needs a synced node and the work is deferred; it is listed under Planned.
         </li>
       </ul>
 
@@ -285,9 +327,18 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
       <h2 class="stat s-planned">Planned</h2>
         <p class="note">
           <strong>The 2026 feature freeze ran from 2026-08-20 to 2026-09-08, and is lifted.</strong>
-          The work since is the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data, x402
-          at the counter, the lakehouse commitments and pricing query access), plus RFC-0053, RFC-0052
-          and RFC-0055. What the freeze deferred stays deferred, and reopens one item at a time
+          The work since began with the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data,
+          x402 at the counter, the lakehouse commitments and pricing query access), plus RFC-0052 and
+          RFC-0053. Accepted since 2026-10-07: <a href={rfc('0062')} rel="noopener">RFC-0062</a>
+          (maintained views, stopped after S2, shipped in 4.14.0), <a href={rfc('0054')} rel="noopener">RFC-0054</a>
+          (the head count, 4.15.0), <a href={rfc('0063')} rel="noopener">RFC-0063</a> and
+          <a href={rfc('0064')} rel="noopener">RFC-0064</a> (address history and the deposit sweep, 5.1.0 to 5.7.0),
+          <a href={rfc('0065')} rel="noopener">RFC-0065</a> and <a href={rfc('0066')} rel="noopener">RFC-0066</a>
+          (the tab and the nest builder, at <a href="/play">/play</a>), <a href={rfc('0068')} rel="noopener">RFC-0068</a>
+          (postcards, live), <a href={rfc('0071')} rel="noopener">RFC-0071</a> (the diff, 5.9.0) and
+          <a href={rfc('0069')} rel="noopener">RFC-0069</a> (the engine room, in progress).
+          <a href={rfc('0070')} rel="noopener">RFC-0070</a> (time-lapse) and
+          <a href={rfc('0072')} rel="noopener">RFC-0072</a> (chain weather) were parked on 2026-10-22. What the freeze deferred stays deferred, and reopens one item at a time
           (<code>docs/frozen-for-2027.md</code>). Nothing here is repudiated.
           <a href={rfc('0058')} rel="noopener">RFC-0058</a> (cross-nest SQL),
           <a href={rfc('0059')} rel="noopener">RFC-0059</a> (checkpointed folds) and

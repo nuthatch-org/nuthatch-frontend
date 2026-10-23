@@ -8,7 +8,8 @@ draft: false
 ---
 
 > **Retired 2026-09-29; Nightswatch no longer hosts nests.** The service this post describes has
-> closed. This post is kept as a record of what it was.
+> closed. This post is kept as a record of what it was. Since October 2026 hosting is offered again,
+> without billing or accounts: see [Nest-backed subgraphs](/subgraphs).
 
 > **Updated, 2026-09-24, later still.** There are now three plans, Free, Builder at 29 USDC and Pro
 > at 79 USDC, in place of Free and a $20 Paid, priced by how often a nest checks for new blocks;

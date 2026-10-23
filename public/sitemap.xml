@@ -30,6 +30,7 @@
   <url><loc>https://nuthatch-indexer.com/blog/why-i-built-nuthatch</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/why-nuthatch-makes-no-eth-calls</loc></url>
   <url><loc>https://nuthatch-indexer.com/changelog</loc></url>
+  <url><loc>https://nuthatch-indexer.com/count</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/ai/builder-skill</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/ai/llms-txt</loc></url>
@@ -94,8 +95,13 @@
   <url><loc>https://nuthatch-indexer.com/manifesto</loc></url>
   <url><loc>https://nuthatch-indexer.com/mirror</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/hosted/ethereum-address-history</loc></url>
   <url><loc>https://nuthatch-indexer.com/platform</loc></url>
+  <url><loc>https://nuthatch-indexer.com/play/</loc></url>
+  <url><loc>https://nuthatch-indexer.com/play/build/</loc></url>
   <url><loc>https://nuthatch-indexer.com/roadmap</loc></url>
+  <url><loc>https://nuthatch-indexer.com/rotki</loc></url>
   <url><loc>https://nuthatch-indexer.com/stories</loc></url>
+  <url><loc>https://nuthatch-indexer.com/subgraphs</loc></url>
   <url><loc>https://nuthatch-indexer.com/the-graph</loc></url>
 </urlset>

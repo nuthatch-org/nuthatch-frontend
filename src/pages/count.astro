@@ -3,7 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import CodeCard from '../components/CodeCard.astro';
 
 const endpoint = 'https://count.nuthatch-indexer.com';
-const payload = '{"v":1,"event":"init","version":"4.15.0","os":"linux","arch":"x86_64","chain":42161,"source":"addresses"}';
+const counted = '{"v":1,"event":"counted","version":"5.9.0","os":"linux","arch":"x86_64"}';
+const payload = '{"v":1,"event":"init","version":"5.9.0","os":"linux","arch":"x86_64","chain":42161,"source":"addresses"}';
 const receiver = 'https://github.com/nuthatch-org/nuthatch/tree/main/count/receiver';
 ---
 
@@ -39,10 +40,16 @@ const receiver = 'https://github.com/nuthatch-org/nuthatch/tree/main/count/recei
       <section class="notes">
         <h2>What is sent</h2>
         <p>
-          With a yes, each <code>init</code> sends one object like this to {endpoint}. It carries the
+          Saying yes sends one <code>counted</code> object to {endpoint}, so the page can tell people
+          from nests. After a yes at <code>init</code> it also carries that nest's chain and kind of
+          <code>init</code>; <code>nuthatch count on</code> sends it with neither.
+        </p>
+        <CodeCard code={counted} lang="json" label="counted" />
+        <p>
+          With a yes, each <code>init</code> then sends one object like this. It carries the
           version, the platform, a chain id from the built-in list (anything else is sent as 0) and which
           kind of <code>init</code> it was. There is no identifier and no address.
-          <code>nuthatch count payload</code> prints yours.
+          <code>nuthatch count payload</code> prints both of yours.
         </p>
         <CodeCard code={payload} lang="json" label="init" />
         <h2>What is kept</h2>
@@ -53,8 +60,9 @@ const receiver = 'https://github.com/nuthatch-org/nuthatch/tree/main/count/recei
         </p>
         <h2>Changing your mind</h2>
         <p>
-          <code>nuthatch count off</code> stops it, and <code>nuthatch count</code> shows where things
-          stand. Setting <code>NUTHATCH_NO_COUNT</code> or <code>CI</code> silences it on that machine.
+          <code>nuthatch count off</code> stops it, <code>nuthatch count on</code> says yes,
+          <code>nuthatch count forget</code> makes the next <code>init</code> ask again, and
+          <code>nuthatch count</code> shows where things stand. Setting <code>NUTHATCH_NO_COUNT</code> or <code>CI</code> silences it on that machine.
         </p>
       </section>
     </div>
