@@ -63,7 +63,9 @@ identity, or NID, is hashed from the same manifest with that version replaced by
 and a domain prefix in front, so upgrading the binary alone never moves a nest's identity. The NID
 identifies what was authored, not which directory happens to contain it and not who mounted it. Two
 copies of the same inputs have the same identity. A one-byte change in an ABI, configuration or view
-creates a new identity.
+creates a new identity. The one deliberate exception is an address-history nest's
+`[address_history]` table, which is cut out of `nuthatch.toml` before hashing: the accounts it
+watches are private and change at runtime, and they are not part of what the nest is.
 
 That is deliberately strict. The hash is not a version label chosen at a meeting. It is a statement
 that this exact package is what the runtime verified. Human names and versions remain useful for

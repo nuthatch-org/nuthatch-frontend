@@ -88,6 +88,13 @@ the first three as a service issue and the last as an opportunity to reduce quer
 reconsider the mounting budget before the machine makes the decision rather more abruptly. The
 [metrics guide](/docs/operate/metrics/) contains runnable Prometheus examples.
 
+For a person rather than an alert, 5.10.0 adds `nuthatch watch --url http://127.0.0.1:8288`, a
+terminal view of a running nest or runtime: the tip, the seal, memory against its budget and the RPC
+endpoints, with one panel per cursor when pointed at a runtime. It reads `/ready`, `/`, `/metrics` and `/nests` and nothing else, so
+it can change nothing, and where a figure has no source it says `NO SIGNAL` rather than drawing a
+zero. Piped, it writes one line per nest per interval. It is something to look at, not something to
+page on; alerting stays with Prometheus.
+
 ## Secure the separate surfaces
 
 The data API is read-only, but a runtime may also expose administrative routes that mount or remove
@@ -105,6 +112,13 @@ write. Use named queries or an allowlist for public services. Keep the node's bu
 concurrency and result bounds on. Per-caller rates and quotas require authenticated identity, so
 place them at the gateway. Calling a local concurrency semaphore a rate limiter would be a category
 error with a pleasingly dangerous outcome.
+
+One outbound call is worth knowing about before it surprises anyone. The binary makes no network
+call about its operator by default, but an interactive `nuthatch init` that succeeds asks once
+whether it may send a head count: one small JSON object per nest created, with no identifier and no
+addresses. Nothing is sent until somebody answers yes. `nuthatch count payload` prints exactly what
+would be sent, `nuthatch count off` withdraws the answer, and `NUTHATCH_NO_COUNT` (or `CI`) silences
+both the question and a stored yes on an unattended machine.
 
 ## Recover without inventing history
 

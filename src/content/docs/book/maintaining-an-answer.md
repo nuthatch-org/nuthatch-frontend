@@ -7,24 +7,39 @@ order: 7
 An indexer has two chances to pay for a calculation. It can wait until somebody asks, scan the facts
 then, and return the result as a view. Or it can do a little work for each arriving block, retain a
 bounded answer, and make the later read cheap. Neither is universally better. The first is flexible;
-the second is useful precisely because it is constrained.
+the second is useful precisely because it is constrained. Between them sits a compromise: pay the
+whole of the first price, but pay it once the data has changed rather than when somebody asks, and
+keep the result.
 
 Nuthatch 3.0 makes that choice available to a nest author through an **authored incremental entity**.
 It is the first release in which the author, rather than only the built-in balance circuits, can say
 that a relation should be maintained during indexing.
 
-## Two kinds of authored SQL
+## Three kinds of authored SQL
 
 An ordinary `views/*.sql` file contains `CREATE VIEW`. It runs on the hot and sealed query surface when
 a reader asks for it. It can use the broad read-only SQL surface. It has no permanent state and does
 not affect ingest. This is the sensible default.
 
+A view can also be listed in `maintained.toml` (4.14.0), with a `[[view]]` entry naming it. The
+view's SQL is unchanged. After a commit or seal reaches the tip, off the indexing path, the nest
+evaluates it exactly as a request would and stores the answer under `maintained/<view>/`, keyed on
+a hash of everything the evaluation read: the binary and engine, the authored files, and the schema,
+sealed segments and hot rows of the tables it reaches. A request reads the stored copy only when its
+own inputs hash to that key, and otherwise computes as before, so a copy cannot be stale and cannot
+differ from the view it stands in for. A newer state always wins over a build still queued for an
+older one. What it cannot do is cover inputs its key does not: a view that reaches an incremental
+entity, an offchain snapshot, the label snapshots, a factory's children view or a volatile function
+is refused at load, by name. It is a copy of a whole answer, recomputed whole, and it gains none of
+an entity's incremental behaviour.
+
 An entity has one `SELECT` in `entities/` and a declaration in `entities.toml`. That declaration gives
 the result a key and a maximum row count. Nuthatch compiles the admitted subset to an incremental
 circuit and feeds it facts as they arrive. The relation can be queried through SQL or read by key.
 
-The distinction stops a pleasing but false sales pitch. Naming a view does not make it incremental.
-An entity does, but it gains that property by accepting resource limits and less SQL, not by attaching
+The distinction stops a pleasing but false sales pitch. Naming a view does not make it incremental,
+and nor does maintaining one: a maintained view is still the full query, run sooner. An entity is
+incremental, but it gains that property by accepting resource limits and less SQL, not by attaching
 an adjective to a SQL query.
 
 ## Why the restriction earns its keep
@@ -67,6 +82,7 @@ bypasses the ingest route used to maintain entities, so it is refused for a nest
 is better to reject an unsupported fast path than to finish a backfill with an elegant, empty
 answer.
 
-The practical authoring details are in the [entities guide](/docs/build/entities/). The next chapter
+The practical authoring details are in the [entities guide](/docs/build/entities/), and maintained
+views sit beside them in [authoring modes](/docs/concepts/authoring/). The next chapter
 returns to identity, where changing an entity definition has different consequences from changing the
 facts beneath it.

@@ -2,6 +2,7 @@
 title: "Nuthatch: the book"
 description: "A guided tour of how Nuthatch turns chain logs into durable, queryable data."
 order: 1
+checked: 5.9.0
 ---
 
 This is the long-form companion to the Nuthatch documentation. The reference manual tells you
@@ -9,11 +10,14 @@ which command and setting to use. This book explains why the machine is shaped a
 invariants it protects, and what each boundary buys you when something goes wrong at three in the
 morning.
 
-It describes Nuthatch 5.8.2. It is deliberately grounded in the running implementation, not a
-design sketch for a future product: each mechanism a chapter narrates was read against the function
-that implements it in that release, and the worked examples in the first two appendices were re-run
-on the 4.11.0 release binary; 4.12.0 changed the engine's plans and shutdown, not what they show. Where the system has a limitation, it is named. A system that is honest
-about its edge is more useful than one that claims to be a universal solvent.
+It describes Nuthatch 5.9.0, checked against the source on 2026-10-23; `nuthatch watch`, which
+arrives in 5.10.0, says so where it appears. It is deliberately grounded in the running
+implementation, not a design sketch for a future product: each mechanism a chapter narrates was read
+against the function that implements it, and the worked examples in the first two appendices were
+re-run on the 4.11.0 release binary. They were replayed again on a 5.9.0 build on 2026-10-23 and
+reached the same outcomes at that day's block heights; the figures printed are the dated ones each
+appendix gives. Where the system has a limitation, it is named. A system that is honest about its edge is more
+useful than one that claims to be a universal solvent.
 
 ## How to read it
 

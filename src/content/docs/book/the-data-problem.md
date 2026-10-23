@@ -21,6 +21,27 @@ the resulting event data through SQL and HTTP. There is no allocation, indexing 
 control plane between the RPC endpoint and the query. A nest is something a team can keep beside
 the application that depends on it.
 
+That describes the event nest, which is the subject of this book. There is a second kind, and it is
+worth knowing where it parts company before the chapters that follow assume otherwise.
+
+## Accounts rather than contracts
+
+A nest whose `nuthatch.toml` carries an `[address_history]` table and no contracts watches accounts
+instead: their transactions, internal transfers, token transfers, withdrawals and the blocks they
+produced. It needs no ABI. It serves that history at `/api` in Etherscan's shapes, so a client
+written against an explorer can be pointed at it, and it answers a range it has not fetched with
+`NUTHATCH_INCOMPLETE` and an action it does not serve with `NUTHATCH_UNSUPPORTED`, rather than with
+an empty list a client would read as no history at all.
+
+It runs on a light path of its own: one cursor reading the chain head and backfilling each watched
+account up to the finalized block, with no SQL engine, no sealing and no derived entities. The
+tables, views, segments and mirrors of the following chapters therefore do not apply to it. It is not
+mounted beside event nests in a runtime, though one `nuthatch dev` can answer for several chains'
+address-history nests behind a single `/api`. The accounts it watches are private and change at
+runtime, so they are kept out of the nest's identity, and such a nest is never bundled.
+[RFC-0063](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0063-address-history.md)
+has the design and its coverage limits.
+
 ## The useful boundary
 
 A transaction log is public chain history. Given the same block range, contract addresses and ABI,
@@ -68,6 +89,11 @@ This bounded scope gives Nuthatch several useful properties:
   every file checked against the content address the catalogue names. What the hashes do not
   prove is that the catalogue is true to the chain; that remains the reader's question to ask of
   whoever published it.
+- The same history can be read without the binary at all. The [playground](/play/) runs Burrmill,
+  the query engine, as WebAssembly in a browser tab over a published nest's segments, checking each
+  against its hash, and the [nest builder](/play/build/) scaffolds a nest from a contract address
+  with `init`'s own code, shows its NID, and indexes it in the tab or hands it over for `nuthatch
+  dev`. The mirror's publisher is still the party being trusted.
 
 The machine does not know the business meaning of an event. It knows how to preserve and present it
 without quietly changing its mind. The semantic layer belongs in views and application code, where

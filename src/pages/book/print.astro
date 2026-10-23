@@ -2,7 +2,10 @@
 import Layout from '../../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 
-const chapters = (await getCollection('docs'))
+const docs = await getCollection('docs');
+// The cover reads the book index's stamp, so the two cannot drift.
+const edition = docs.find((doc) => doc.id === 'book')?.data.checked;
+const chapters = docs
   .filter((doc) => doc.id.startsWith('book/') && doc.id !== 'book')
   .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
 const rendered = await Promise.all(chapters.map(async (doc) => ({ doc, Content: (await render(doc)).Content })));
@@ -21,7 +24,7 @@ const rendered = await Promise.all(chapters.map(async (doc) => ({ doc, Content: 
       <header class="print-cover">
         <p>Nuthatch</p>
         <h1>The book</h1>
-        <span>Version 5.8.2 · October 2026</span>
+        <span>Version {edition} · October 2026</span>
       </header>
       <nav class="print-toc" aria-label="Contents">
         <h2>Contents</h2>
