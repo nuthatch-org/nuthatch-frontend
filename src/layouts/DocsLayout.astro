@@ -19,13 +19,13 @@ const { title, description, slug, headings = [], checked } = Astro.props;
 // ordered by the page's `order` frontmatter. Single source of truth - add a page, it appears.
 const GROUPS = [
   { dir: 'start', label: 'Start here' },
-  { dir: 'book', label: 'Read the book' },
   { dir: 'concepts', label: 'Concepts' },
   { dir: 'build', label: 'Build a nest' },
   { dir: 'operate', label: 'Operate' },
   { dir: 'reference', label: 'Reference' },
   { dir: 'ai', label: 'AI-native' },
   { dir: 'contributing', label: 'Contributing' },
+  { dir: 'book', label: 'Read the book' },
 ];
 const all = await getCollection('docs');
 const groups = GROUPS.map((g) => ({

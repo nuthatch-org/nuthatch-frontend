@@ -14,12 +14,10 @@ integration, it costs nothing when it isn't configured.
 > reaches for a gated service mid-decode. That would break the
 > [no-phone-home rule](/docs/concepts/determinism/).
 
-:::note[Removed in 5.0.0]
-Live sanctions screening went with the WASM transform layer: the `[screening]` table, `nuthatch
-screen`, `nuthatch audit replay` and the `screen_status` MCP tool. A `nuthatch.toml` that still
-declares `[screening]` is refused at load, with an error that names the table; delete it and the nest
-loads unchanged. `sanction_hit` rows a 4.x nest already sealed stay queryable from `/sql`.
-:::
+> **Removed in 5.0.0.** Live sanctions screening went with the WASM transform layer: the `[screening]` table, `nuthatch
+> screen`, `nuthatch audit replay` and the `screen_status` MCP tool. A `nuthatch.toml` that still
+> declares `[screening]` is refused at load, with an error that names the table; delete it and the nest
+> loads unchanged. `sanction_hit` rows a 4.x nest already sealed stay queryable from `/sql`.
 
 ## The shape
 

@@ -132,11 +132,9 @@ what prevents an attestation from an unrelated repository being accepted.
 
 In 2.0 there is **no upgrade command**. The runtime does the classifying, and grafting does the rest.
 
-:::note[What changed]
-`nuthatch nest diff` and `nuthatch nest upgrade` were removed in 2.0. They carried real information,
-but only if you remembered to run them. That information now arrives at the moment a nest's identity
-actually changes, which is the moment it matters.
-:::
+> **What changed.** `nuthatch nest diff` and `nuthatch nest upgrade` were removed in 2.0. They carried real information,
+> but only if you remembered to run them. That information now arrives at the moment a nest's identity
+> actually changes, which is the moment it matters.
 
 ## Stage the new version and migrate
 
