@@ -7,7 +7,7 @@
 Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
 process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
 licensed
-MIT OR Apache-2.0. Status: v5.9.0, released 2026-10-22, on the stable 5.x line. 5.9.0 adds `nuthatch diff`: what
+MIT OR Apache-2.0. Status: v5.10.0, released 2026-10-23, on the stable 5.x line. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted analytical reads read 2,048 rows at a time and treat addresses as 20-byte values inside a plan. 5.9.0 adds `nuthatch diff`: what
 happened in a block range, a block or a transaction, in fixed sentences from the rows a nest already
 holds; read-only, with no storage migration. 5.8.2 keeps a seal-direct backfill on a dense chain inside the memory budget. 5.8.1 refuses to reopen a store after an event's indexed parameters have moved. 5.8.0 fixes
 the 107 defects of a cold audit of 5.7.2 and makes several defaults stricter: a set

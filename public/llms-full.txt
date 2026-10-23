@@ -2,8 +2,9 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.9.0**, released 2026-10-22, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.9.0 adds `nuthatch diff`: what happened in a block range, a block or a
+"Be your own indexer." Status: **v5.10.0**, released 2026-10-23, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted
+analytical reads read 2,048 rows at a time and treat addresses as 20-byte values inside a plan. 5.9.0 adds `nuthatch diff`: what happened in a block range, a block or a
 transaction, in fixed sentences from the rows a nest already holds; read-only, with no storage
 migration. 5.8.2 keeps a seal-direct backfill on a dense chain inside the per-cursor memory
 budget. 5.8.1 refuses to reopen a store, or reuse its segments, after an event's indexed
@@ -450,8 +451,8 @@ promised; order is.
 
 - Shipped: everything in "What it does today", plus a published stability contract, a `cargo-deny`
   gate, the CI footprint job and the release gate.
-- In progress: the `watch` subcommand (RFC-0069), a read-only terminal view of a running nest, built on
-  main and arriving in 5.10.0; it is not in 5.9.0. Of the reth ExEx groundwork (RFC-0003), the `Source` trait and
+- Shipped in 5.10.0: the `watch` subcommand (RFC-0069), a read-only terminal view of a running nest.
+- In progress: of the reth ExEx groundwork (RFC-0003), the `Source` trait and
   the library split are in; 5.0.0 removed the `exex` stub, and the ExEx is designed, not built.
 - Planned: a Homebrew tap (RFC-0005's last open piece); reth ExEx tip mode and then firehose-class
   extraction of traces and state diffs (RFC-0014); IVM generalisation; wildcard signature-scoped indexing;

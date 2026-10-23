@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.9.0 (2026-10-23)
+checked: 5.10.0 (2026-10-23)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -64,7 +64,7 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   it. Read-only; it reads the store directly, or asks a running `dev` at `--url`.
 - **`nuthatch count`** - the opt-in head count (RFC-0054). With no action it prints where things
   stand; `on`, `off`, `payload` (print what would be sent) and `forget`. Off until you say yes.
-- **`nuthatch watch`** - *unreleased: on `main`, not in 5.9.0 or the installer yet.* A read-only
+- **`nuthatch watch`** - *since 5.10.0.* A read-only
   terminal view of a running nest (RFC-0069): tip, seal, memory against budget, RPC endpoints.
   `--url` names a solo `dev` or a runtime's root, `--ssh <host>` forwards to a nest bound to loopback
   there, and `--nest` reads a target from `~/.config/nuthatch/watch.toml`. Piped, it prints lines

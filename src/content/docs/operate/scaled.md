@@ -2,7 +2,7 @@
 title: "Scaled mode: a fleet"
 description: When one machine is no longer enough - a writer pool, an independently-scaled serving tier, and a control plane.
 order: 11
-checked: 5.9.0 (2026-10-23)
+checked: 5.10.0 (2026-10-23)
 ---
 
 Everything else in these docs is **embedded mode**: one binary, no external services, the thing

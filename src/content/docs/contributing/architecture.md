@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.9.0 (2026-10-23)
+checked: 5.10.0 (2026-10-23)
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -75,8 +75,8 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
 - **Shared crates**: `decode/`, `identity/`, `scaffold/` and `seal/` are separate crates so the
   browser playground and nest builder compile the same decode, identity, `init` and sealing code to
   WebAssembly and produce the same bytes a node does; `timelapse/` replays sealed history as frames.
-- **Unreleased on main**: `watch/` (`nuthatch watch`, RFC-0069), a read-only terminal view of a
-  running nest. It is not in 5.9.0.
+- `watch/` (`nuthatch watch`, RFC-0069, since 5.10.0): a read-only terminal view of a running
+  nest.
 
 ## Where to start reading
 

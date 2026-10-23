@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 5.9.0 (2026-10-23)
+checked: 5.10.0 (2026-10-23)
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -86,7 +86,7 @@ A nest that declares [maintained views](/docs/book/maintaining-an-answer/) adds 
 A fallback count climbing beside the hits means requests are arriving before the copy for their
 inputs is built.
 
-Unreleased, on main for the next release: `nuthatch_nest_last_reorg_depth_blocks{nest}` and
+Since 5.10.0: `nuthatch_nest_last_reorg_depth_blocks{nest}` and
 `nuthatch_nest_last_reorg_unixtime{nest}`, absent until a nest has reorged, which `nuthatch watch`
 reads.
 

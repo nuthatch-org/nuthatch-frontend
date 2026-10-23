@@ -2,7 +2,7 @@
 title: Determinism
 description: Decode, derivation, and reorg handling are deterministic and re-executable - LLM output never sits in the data path.
 order: 5
-checked: 5.9.0 (2026-10-23)
+checked: 5.10.0 (2026-10-23)
 ---
 
 Determinism is a non-negotiable in nuthatch's core, not a nice-to-have. Anything that feeds stored state
