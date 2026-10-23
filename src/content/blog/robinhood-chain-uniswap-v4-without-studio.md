@@ -46,9 +46,9 @@ Adding subgraph support is a decision for The Graph Foundation, which is taking 
 integrations from Edge & Node. It may well come. It is not there today, and no change to your manifest
 will get the deploy past that check.
 
-We have written the error up properly, with the evidence, at
-[graph-support #38](https://github.com/nuthatch-org/graph-support/issues/38), so the next person who
-searches for it finds the answer rather than a silent channel.
+We have written the error up properly, with the evidence, and [Ask Graphy](https://askgraphy.com)
+answers from that write-up, so the next person who asks about it finds the answer rather than a
+silent channel.
 
 ## Nuthatch indexes Robinhood Chain already
 
