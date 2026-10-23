@@ -13,13 +13,11 @@ A **recipe** is an authored SQL view (see [Authored SQL views](/docs/build/views
 from indexed events instead of fetching it. Deterministic, free, no archive node - and a capability
 subgraphs structurally lack, because their storage isn't content-addressed.
 
-:::note
-Derive-first is the **default**, not the only option. Since v2.6.0 a nest can also make the call: a
-[`[[calls]]` block](/docs/build/contract-calls/) pins a contract read to a fixed block and stores the
-result as a table. Reach for a recipe when the value is derivable, because it costs nothing and needs
-no archive node. Reach for a pinned call when it is not - an immutable `decimals()`, or a view function
-whose inputs were never emitted.
-:::
+> **Note.** Derive-first is the **default**, not the only option. Since v2.6.0 a nest can also make the call: a
+> [`[[calls]]` block](/docs/build/contract-calls/) pins a contract read to a fixed block and stores the
+> result as a table. Reach for a recipe when the value is derivable, because it costs nothing and needs
+> no archive node. Reach for a pinned call when it is not - an immutable `decimals()`, or a view function
+> whose inputs were never emitted.
 
 ## Use one
 
