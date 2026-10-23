@@ -450,7 +450,7 @@ promised; order is.
 
 - Shipped: everything in "What it does today", plus a published stability contract, a `cargo-deny`
   gate, the CI footprint job and the release gate.
-- In progress: `nuthatch watch` (RFC-0069), a read-only terminal view of a running nest, built on
+- In progress: the `watch` subcommand (RFC-0069), a read-only terminal view of a running nest, built on
   main and arriving in 5.10.0; it is not in 5.9.0. Of the reth ExEx groundwork (RFC-0003), the `Source` trait and
   the library split are in; 5.0.0 removed the `exex` stub, and the ExEx is designed, not built.
 - Planned: a Homebrew tap (RFC-0005's last open piece); reth ExEx tip mode and then firehose-class
