@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -13,8 +13,9 @@ indexing is a nest that's serving.
 
 Three kinds of read, one process:
 
-- **Point-reads** - `/entity/{id}`, `/balance/{address}`: sub-millisecond lookups against the redb
-  hot store.
+- **Point-reads** - `/entity/{id}` reads the redb hot store first and, on a miss, falls back to a
+  guarded query over the sealed segments under the same permit and deadline as `/sql`.
+  `/balance/{address}` reads the in-memory incremental balances view.
 - **Analytical SQL** - `/sql?q=…`: read-only SQL on Burrmill over the live tip ∪ sealed history.
   Every event is a table named `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/).
 - **Introspection** - `/`, `/tables`, `/schema`, `/nest`, `/metrics`: what this nest is, what it
@@ -43,13 +44,18 @@ raise:
   this guard when something is genuinely wrong. Note it is a **refusal, not a downgrade** - an
   over-budget tip is never silently answered from sealed data alone, which would return a different
   number without saying so.
+- **64 MiB of unsealed row data** copied per query, beside the row count. Wide rows, such as typed
+  IPFS rows, can reach it well under two million rows. It bounds what the query reads from the tip,
+  not what it returns, and past it the answer is the same `503` with `sealed_through`.
 - **SELECT/WITH only.** The query surface is read-only by construction; the ingest thread is the
   only writer.
 
-The engine runs each session under a memory limit (`NUTHATCH_ANALYTICS_MEMORY_LIMIT`, 512 MB by default)
-and a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so the analytical path stays inside the
+Every session over one dataset draws on one shared memory pool, so two concurrent statements, or two
+mounts of the same dataset, compete for the same budget. The pool is sized by
+`NUTHATCH_BURRMILL_MEMORY_LIMIT`, falling back to `NUTHATCH_ANALYTICS_MEMORY_LIMIT` (512 MB by default),
+and the engine runs a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so the analytical path stays inside the
 [footprint budget](/docs/operate/metrics/).
-A statement that needs more memory than its session has is refused with an out-of-memory error, not
+A statement that needs more memory than the pool has left is refused with an out-of-memory error, not
 spilled: since 4.1 a hash join or final aggregate cannot spill to disk, though a sort can (4.3.0).
 
 ## Repeated statements

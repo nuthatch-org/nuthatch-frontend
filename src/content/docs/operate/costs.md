@@ -1,8 +1,8 @@
 ---
 title: "What it costs to run"
-description: "RPC requests are the bill RAM doesn't show - what following tip costs per day, why block_timestamps is the reason, and the honest number for a nest nobody reads."
+description: "RPC requests are the bill RAM doesn't show - what following tip costs, what block_timestamps adds, and how to measure the number for your own nest."
 order: 6
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 [Metrics & footprint](/docs/operate/metrics/) covers RAM. This page covers a different bill: **RPC
@@ -18,17 +18,17 @@ and when a window commits, a reorg check, a checkpoint and a `finalized` probe. 
 block for as long as it ran. From 3.11 the default poll interval was the chain's block time, never
 under 2 s; since 4.15.2 it is 5 minutes. An idle poll skips the reorg check.
 
-## `block_timestamps` is the reason
+## What `block_timestamps` costs
 
-A timestamp lives in the block header, not in the log `eth_getLogs` returns, so serving
-[`block_timestamp`](/docs/reference/config/#block_timestamps) costs one extra `eth_getBlockByNumber`
-per distinct block. That cost does not end when backfill does - a nest at tip pays it again on every
-new block, indefinitely.
+Serving [`block_timestamp`](/docs/reference/config/#block_timestamps) needs each row's block
+time. Current execution clients put `blockTimestamp` on every log, and nuthatch takes it from there,
+fetching an `eth_getBlockByNumber` header only for an event-bearing block whose logs lack it. A block
+with no kept row costs no timestamp header at all; the poll loop's own tip requests are a separate
+bill, covered above.
 
-**Since 3.11, only on a node that does not say.** Current execution clients put `blockTimestamp` on
-every log, and nuthatch now takes the timestamp from there, fetching a header only for a block whose
-logs lack it. The same 20,000-block Sepolia backfill paid 4,444 `eth_getBlockByNumber` on 3.9.0 and
-34 after, and sealed byte-identical segments.
+Before 3.11 nuthatch bought a header for every block that carried a row. The same 20,000-block
+Sepolia backfill paid 4,444 `eth_getBlockByNumber` on 3.9.0 and 34 after, and sealed byte-identical
+segments.
 
 Turning it off is only an option if nothing that reads your nest ever asks a time-series question.
 It's an init-time choice, not a flag you can flip later: dropping the column afterward is a breaking
@@ -95,10 +95,11 @@ reorged. `/ready` reports both in its `freshness` object. Since 4.15.2 an unset 
 minutes, so a new row can take that long to appear; pass a shorter interval, such as `2s`, for a nest
 whose readers need the tip closely.
 
-## What that costs against a priced endpoint
+## What that cost against a priced endpoint, in August
 
 None of the volume above was billed - most of those nests run against a free public endpoint. Pricing
-the header-fetch load alone against a metered one, the same way
+the header-fetch load alone against a metered one in August 2026, when the model was a header per
+block and the cursor polled every block, the same way
 [`benchmarks.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/benchmarks.md#what-a-backfill-costs-against-a-metered-endpoint-2026-08-19)
 prices a backfill:
 
@@ -113,21 +114,23 @@ own published pay-as-you-go rates, checked 2026-08-22:
 [compute unit costs](https://www.alchemy.com/docs/reference/compute-unit-costs),
 [pricing](https://www.alchemy.com/pricing).
 
-This is the header-fetch term only, for one chain at Arbitrum's block rate. It excludes `eth_getLogs`
-polling and every other RPC method a nest calls, so it's a floor, not a full bill.
+That was the header-fetch term only, for one chain at Arbitrum's block rate, under a model nuthatch
+no longer follows. It is kept as a historical comparison, not a floor.
 
 ## The honest number
 
-A nest sitting at tip, answering nobody, still costs on the order of **~$100/month** against a paid
-provider. That figure is this computation, not a measurement - the reference deployment itself paid
-nothing for it, because it runs against a free endpoint.
+What a nest at tip costs today depends on the poll interval, the chain, how many blocks carry your
+events and the provider's pricing. The default interval is **5 minutes** (or the chain's block time,
+if longer), so a nest nobody reads polls rarely.
 
 Measured against a paid endpoint on 2026-09-06 ([#1173](https://github.com/nuthatch-org/nuthatch/issues/1173)),
-a nest at tip on Arbitrum spent about 9,900 CU a minute, roughly $185 a month, and the computation
-above had the attribution wrong: headers are bought only for blocks that produced a kept row, and 95
-of that day's 345,600 blocks did. The header per block was the poll loop's own. At
-`--poll-interval 5m` the same nest spends on the order of a hundred CU a minute for the same rows.
+a nest at tip on Arbitrum polling every block spent about 9,900 CU a minute, roughly $185 a month, and
+the computation above had the attribution wrong: headers are bought only for blocks that produced a
+kept row, and 95 of that day's 345,600 blocks did. The header per block was the poll loop's own. At
+`--poll-interval 5m`, now the default, the same nest spends on the order of a hundred CU a minute for
+the same rows.
 
-This isn't a recommendation to turn `block_timestamps` off. It's a real, inherent cost of following
-tip with timestamps on, and whether to pay it is a decision made against your own consumers, not a
-default this page is telling you to change.
+For a current estimate, measure your own nest at the interval you chose: `nuthatch_rpc_methods_total`
+on [`/metrics`](/docs/operate/metrics/) counts calls by method, ready to multiply by a provider's
+per-method CU schedule. A shorter `--poll-interval` buys fresher rows with more requests; whether to
+pay for that is a decision made against your own consumers.

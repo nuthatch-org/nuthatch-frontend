@@ -2,7 +2,7 @@
 title: "Scaled mode: a fleet"
 description: When one machine is no longer enough - a writer pool, an independently-scaled serving tier, and a control plane.
 order: 11
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Everything else in these docs is **embedded mode**: one binary, no external services, the thing
@@ -121,7 +121,9 @@ The two reasons need different responses:
 
 - `noroomrightnow` - every worker is at its budget. **Add a worker.**
 - `toolargeforanyworker` - the cursor alone exceeds the largest worker's entire budget. **Adding
-  workers will not help.** Split the nests across chains, or raise the budget.
+  workers will not help.** Reduce what that cursor carries, run some of its nests in a separate
+  fleet or runtime, or measure and raise the worker budget. A nest's chain is part of its data, not a
+  placement choice.
 
 Collapsing those into one message would send you shopping for hardware that cannot fix it.
 
@@ -132,6 +134,7 @@ Every FE node resolves an endpoint through the control plane, not through the re
 
 ```sh
 curl -XPUT localhost:8290/nests/usdc/pin \
+  -H "Authorization: Bearer $NUTHATCH_CONTROL_TOKEN" \
   -H 'Content-Type: application/json' -d '{"version":"1.3.0","bundle_hash":"0x…"}'
 ```
 
@@ -153,6 +156,7 @@ Private RPC URLs and API keys live in the control plane, keyed by nest:
 
 ```sh
 curl -XPUT localhost:8290/nests/usdc/secrets \
+  -H "Authorization: Bearer $NUTHATCH_CONTROL_TOKEN" \
   -H 'Content-Type: application/json' -d '{"key":"rpc_url","value":"https://private…"}'
 ```
 

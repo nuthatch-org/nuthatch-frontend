@@ -2,7 +2,7 @@
 title: Runtimes & cursors
 description: One runtime, many nests, across one or more chains, with one isolated cursor per chain.
 order: 2
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 A **runtime** is one process hosting one nest or many. A **cursor** is a single chain's follow
@@ -10,8 +10,8 @@ position - the thing that reads the tip, tracks finality, and handles reorgs. Th
 them is the whole story.
 
 In 2.0 the runtime also owns **tenancy**: a mount is `(tenant, nest identity)`, two tenants mounting
-the same nest share one dataset, and a single-tenant runtime is simply `N=1` with a default tenant
-nobody has to type. There used to be a separate *roost* concept wrapping all this; it was retired, and
+the same nest share one dataset, and a tenant label left out means
+`default`. One tenant may still mount many nests. There used to be a separate *roost* concept wrapping all this; it was retired, and
 the runtime absorbed it.
 
 ## The single-cursor law

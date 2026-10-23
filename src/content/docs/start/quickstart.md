@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -55,6 +55,10 @@ nuthatch dev --backfill 300
 `--backfill 300` starts 300 blocks behind the tip, about an hour of mainnet, so there are rows within
 seconds. Without the flag `dev` backfills from the contract's deployment block. For WETH that is millions of blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
 `nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
+
+Once caught up, `dev` asks for the tip every five minutes by default, so new rows can take that long
+to appear. Add `--poll-interval 12s` to follow mainnet's tip closely; every poll is an RPC call, so
+it costs more traffic.
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with
 > zero setup, and they are fine for trying it out or following a low-traffic contract. They are shared
@@ -148,6 +152,9 @@ the wrong chain corrupts state silently.
   decide your backfill's wall clock.
 - **[Security](/docs/operate/security/)** - read this before exposing `/sql` to anyone you do not trust.
 - **[Verifying a deployment](/docs/operate/verifying/)** - prove it works on your own hardware.
+- **[Try it in a tab](/play/)** - no install: query a published nest in the browser, or
+  [build one](/play/build/) from a contract address, index it there and download it to run with
+  `nuthatch dev --dir`. A `/play` link can carry a query pinned to a published nest's segments.
 
 - [What is a nest?](/docs/concepts/nests/) - the mental model
 - [Build a nest](/docs/build/config/) - `nuthatch.toml`, views, factories, recipes

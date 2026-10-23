@@ -2,7 +2,7 @@
 title: Storage & sealing
 description: A hot redb tip store, content-addressed Parquet sealed past finality, unified behind one SQL surface.
 order: 3
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Nuthatch stores data in two tiers, split at the finality boundary - and glues them behind one SQL
@@ -21,12 +21,16 @@ Once a block range passes finality (a conservative depth), its rows are **sealed
 **content-addressed** (`sha256`) zstd **Parquet** segment under `segments/`, catalogued in
 `manifest.json` with block bounds and row count. Segments sealed before 3.7.0 are Snappy; a nest
 holding both serves across the seam. A monotonic `sealed_through` watermark advances so each
-range seals exactly once, and the sealed rows are then pruned from the hot store. A table with fewer
-than 1,000 final rows (or 16 MiB) at a cut is sealed provisionally and folded into its next cut, so a
-quiet nest keeps its tip in redb a while before its first segment appears.
+range seals exactly once, and the sealed rows are then pruned from the hot store. A table whose
+final rows at a cut are under 1,000 rows, under 16 MiB of row JSON and span less than three hours of
+chain time, all three at once, is sealed provisionally and folded into its next cut, so a quiet nest
+keeps its tip in redb a while before its first segment appears. Rows with no `block_timestamp` skip
+the age test and keep the row and byte floors alone.
 
-Because a segment's identity is a hash over its bytes, the same range always produces the same segment -
-on any machine, on any run. That's what makes segments *reusable* across nest versions (see
+Because a segment's identity is a hash over its bytes, the same range sealed by the same release produces
+the same segment, on any machine, on any run. The bytes include the Parquet writer's version, so a
+release that moves the writer can hash identical rows differently; across versions, compare decoded
+rows rather than hashes. That's what makes segments *reusable* across nest versions (see
 [Upgrading a nest](/docs/operate/upgrades/)) and shareable as a verifiable cache.
 
 > **Sealed is immutable, forever.** Segments are sealed strictly *past finality*, so the columnar layer

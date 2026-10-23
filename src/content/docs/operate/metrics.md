@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -35,7 +35,13 @@ Process-level counters:
 | `nuthatch_sql_queries_total` | Analytical queries served. |
 | `nuthatch_sql_rejections_total` | Queries refused by the guards. The unlabelled series is the total; the `reason` label splits it into `busy`, `too_large`, `invalid`, `bounded`, `admission`, `timeout` and `out_of_memory`. |
 | `nuthatch_sql_memo_hits_total`, `nuthatch_sql_memo_misses_total` | `/sql` answers served from the answer cache, and those computed. Since 4.11.0 the cache keys on the rows and segments a statement reads, so a repeated statement over unchanged data is a hit even while the cursor polls. |
-| `nuthatch_rpc_requests_total` | Upstream RPC calls made. |
+| `nuthatch_rpc_requests_total` | Outbound HTTP POSTs to RPC endpoints, one per request or batch, retries included. Not a method count. |
+| `nuthatch_rpc_methods_total{method}` | Individual JSON-RPC calls by method: a batch of 200 `eth_getBlockByNumber` counts 200 here. Multiply by a provider's per-method CU schedule to estimate a bill; see [costs](/docs/operate/costs/). |
+
+Per RPC endpoint, labelled `endpoint` by host and port, never a full URL (which can carry a key):
+`nuthatch_rpc_endpoint_requests_total`, `nuthatch_rpc_endpoint_failures_total`,
+`nuthatch_rpc_endpoint_retries_total` (failover retries onto that endpoint), and the
+`nuthatch_rpc_request_duration_seconds` histogram. An endpoint appears once it has been called.
 
 With [many nests in one runtime](/docs/operate/many-nests/), the height and poll gauges above
 (`nuthatch_tip_height`, `nuthatch_last_block`, `nuthatch_last_poll_unixtime`) are solo-runtime only
@@ -66,6 +72,24 @@ and `nuthatch_entity_state_bytes`. Page on `faulted`; investigate a `current` ga
 zero or a progress age that keeps climbing. This is the difference between a maintained answer that is
 fresh and one that merely happens to have a table-shaped name.
 
+A nest that declares [maintained views](/docs/book/maintaining-an-answer/) adds series labelled by
+`nest` and `view`; a nest without `maintained.toml` has none:
+
+| Series | Meaning |
+|---|---|
+| `nuthatch_maintained_hits_total` | Requests answered from a stored copy. |
+| `nuthatch_maintained_fallbacks_total` | Requests that found no copy at their inputs and evaluated the definition. |
+| `nuthatch_maintained_builds_total`, `nuthatch_maintained_build_failures_total` | Copies written, and builds that failed; `/ready` names the last error. |
+| `nuthatch_maintained_last_build_milliseconds` | How long the last successful build took. |
+| `nuthatch_maintained_copies`, `nuthatch_maintained_copy_bytes` | Copies on disk, current plus retained, and their bytes. |
+
+A fallback count climbing beside the hits means requests are arriving before the copy for their
+inputs is built.
+
+Unreleased, on main for the next release: `nuthatch_nest_last_reorg_depth_blocks{nest}` and
+`nuthatch_nest_last_reorg_unixtime{nest}`, absent until a nest has reorged, which `nuthatch watch`
+reads.
+
 A nest started with `--publish-target` adds the mirror's series, labelled by nest:
 
 | Series | Meaning |
@@ -87,9 +111,11 @@ one cursor (≤2 GB total, shared across its nests); a multichain runtime's tota
 cursors. Density is RAM-bounded, not free: a runtime refuses to mount a nest whose projected
 footprint would blow the ceiling (`max_rss_mb`, default 2048).
 
-Inside the budget, the analytical path is separately bounded - each analytical session runs under its own
-memory cap and thread limit, and the concurrency gate bounds the aggregate. If you're tight, lower
-concurrency rather than raising the per-query cap.
+Inside the budget, the analytical path is separately bounded. Every session over one dataset shares
+one memory pool, and two mounts of the same dataset share it too. `NUTHATCH_BURRMILL_MEMORY_LIMIT`
+sets the pool, falling back to `NUTHATCH_ANALYTICS_MEMORY_LIMIT` when unset, and a startup check
+refuses a split that would breach the cursor budget. Separately, the process-wide concurrency gate
+bounds how many queries run at once. If you're tight, lower concurrency rather than raising the pool.
 
 ## A small, useful alert set
 

@@ -2,7 +2,7 @@
 title: "Nest identity & reuse"
 description: "How immutable nest versions, mounts, dataset adoption, and shared segments avoid needless re-indexing."
 order: 5
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 A content-addressed nest is deliberately unforgiving: change its authored inputs and it becomes a
@@ -107,13 +107,15 @@ changing their meaning. Review still matters.
 
 ## What grafting means today
 
-Views are currently defined at query time over the hot and sealed data. They are not materialised, so a
-view edit has no stored view output to recompute. Today's “grafting” is therefore the whole-dataset
-adoption described above: it removes the needless raw-history backfill caused by an identity change.
+Today's “grafting” is the whole-dataset adoption described above: it removes the needless raw-history
+backfill caused by an identity change, and it does not depend on any derived output.
 
-Per-derivation DAG reuse is a later optimisation, for the point at which Nuthatch has materialised
-derivations to reuse. A volatile expression such as `now()` is valid in a query-time view, but it is
-not evidence that a future materialised cache could safely reuse that view's output.
+Derived output is handled separately. A view is evaluated at request time over the hot and sealed
+data. A view listed in `maintained.toml` also keeps stored copies, each keyed by a hash of every input
+it read, so a changed view or binary simply builds a new copy (see
+[Maintaining an answer](/docs/book/maintaining-an-answer/)). [Authored entities](/docs/build/entities/)
+rebuild locally when the identity changes. Per-derivation DAG reuse across an identity change, grafting
+one view's or entity's state onto a new nest, is not shipped.
 
 ## Next
 

@@ -2,7 +2,7 @@
 title: Contract calls and IPFS documents
 description: Pin a contract read to a block, or resolve and verify an IPFS document, without giving up determinism.
 order: 9
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Two things a subgraph could do and a nest could not, until v2.6.0. Both are opt-in: a nest that
@@ -38,6 +38,24 @@ contract = "0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48"   # or contract_column =
 signature = "balanceOf(address)"
 args = ["{to}"]
 ```
+
+### Call options
+
+| Field | Meaning |
+| --- | --- |
+| `name` | The result table. `[A-Za-z0-9_]`. |
+| `contract` | A fixed `0x` address. Row-driven calls may use `contract_column = "{column}"` instead. |
+| `calldata` | Hex calldata with selector, for a sampled call. Exclusive with `on`. |
+| `every` | Sample every N blocks (default 1,000). Sampled calls only. |
+| `start` | First block to sample from. Defaults to the nest's own start. |
+| `on` | The table whose rows drive the call. |
+| `signature`, `args` | The ABI signature and positional arguments; `{column}` reads the source row, anything else is a literal. |
+| `on_any` | Several driving tables instead of one `on`. A fixed getter still runs once per block. |
+| `canonical` | Pin the read to the block **hash** (EIP-1898 `requireCanonical`) with no block-number fallback. |
+
+`on_any` and `canonical` need `schema_version = 3`, which only a nuthatch built with
+`--features graph` reads. A default build refuses such a nest rather than ignore the fields.
+Without `canonical`, a call is pinned by block number.
 
 ### Why this is still deterministic
 
@@ -99,12 +117,41 @@ The `bytes32` form is worth knowing about: The Graph's own GNS stores subgraph m
 because 32 bytes is what a sha2-256 digest actually is and the `Qm...` text is merely one encoding of
 it. A CIDv0 is `base58btc(0x12 0x20 || digest)`, so the digest is re-framed rather than re-hashed.
 
+### CIDs inside JSON, and typed rows
+
+When the column holds JSON that names the CID rather than the CID itself, say which top-level key,
+and optionally which documents to resolve at all:
+
+```toml
+[[ipfs]]
+name = "qos_document"
+on = "oracle__data_submitted"
+cid_column = "data"
+cid_json_path = "hash"                  # one top-level key, not a path expression
+json_match = { topic = "indexer_qos" }  # resolve only objects whose string fields equal these
+
+[ipfs.rows]                             # explode each proven document into a typed table
+table = "qos_attempt"
+max_rows = 1000                         # a document with more elements yields no typed rows
+keep_content = false                    # keep the CID, drop the raw body from the document row
+columns = [
+  { name = "indexer", type = "address" },
+  { name = "latency_ms", type = "u64" },
+]
+```
+
+Column types are `string`, `number` (kept as decimal text; cast it in a view), `u64`, `i64`, `bool`
+and `address`. Every typed row also carries `cid`, `document_log_index`, `source_log_index` and
+`element`. A document that is not JSON, has too many elements or has a non-object element is refused
+for its typed rows and counted in `nuthatch_nest_ipfs_rows_refused_total`; nothing unverified is
+ever stored.
+
 ### Gateways are not part of the nest
 
 Configure them with `--ipfs`, never in `nuthatch.toml`:
 
 ```sh
-nuthatch dev --ipfs http://127.0.0.1:5001/api/v0/cat?arg=
+nuthatch dev --ipfs 'http://127.0.0.1:5001/api/v0/cat?arg='
 ```
 
 A gateway is an access path, not part of what a nest *is*, and two operators resolving the same CID

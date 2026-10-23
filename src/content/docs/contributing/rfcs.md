@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -48,8 +48,9 @@ are cited, and targets are labeled as targets, never as results.
 - **0019 The nest registry** *(Implemented)* - publish and pull by `name@version`, and **workers
   pull the nests they are assigned** - by content address when the fleet pins a `bundle_hash`, so
   re-tagging a version in a registry cannot change what a fleet runs.
-- **0020 Nest lifecycle & the N-1 upgrade** *(Implemented)* - `diff`, hot-swap, deprecation,
-  segment reuse. The resync tax, killed.
+- **0020 Nest lifecycle & the N-1 upgrade** *(Implemented)* - `nest diff`, hot-swap, deprecation,
+  segment reuse. The resync tax, killed. Those commands were removed in 2.0; `migrate` and the admin
+  mount lifecycle do the job now. Today's `nuthatch diff` is RFC-0071 and is unrelated.
 - **0021 The multichain runtime** *(Closed 2026-09-08; slice 1 shipped, live two-chain run done)* -
   one runtime, one isolated cursor per chain.
 - **0022 Distributed scaled mode** *(Implemented - control plane and ingestion both)* - read/write
@@ -89,7 +90,8 @@ are cited, and targets are labeled as targets, never as results.
   content-addressed nest identity, mounts become `(tenant, NID)` records, a shared nest indexed once.
 - **0033 Nest identity and derivation grafting** *(Deferred 2026-09-08; slices 1-3, 5-6
   implemented)* - edit a nest
-  without re-indexing the chain behind it, via a per-derivation reuse key that sits below the NID.
+  without re-indexing the chain behind it. Shipped as whole-dataset adoption for edits that keep the
+  data identity; per-derivation DAG reuse is deferred.
 - **0034 The query allowlist** *(Deferred 2026-09-08; phases 1-2 implemented)* - a bounded public SQL surface without a
   resync: named parameterised queries only, never raw SQL text.
 - **0035 The 2.0 breaking surface** *(Implemented, v2.0.0)* - the roost retired, one coordinated
@@ -148,6 +150,23 @@ are cited, and targets are labeled as targets, never as results.
 - **0062 Maintained views** *(Accepted 2026-10-07, shipped in 4.14.0; S3 and S4 not pursued)* - a
   join-heavy view answered from a stored copy of its own evaluation, reused only while every input hashes
   the same.
+- **0063 Address history** *(Accepted 2026-10-09, shipped in 5.1.0)* - a nest that watches accounts
+  rather than contracts and serves an Etherscan-shaped `/api`, for rotki.
+- **0064 The deposit sweep** *(Accepted 2026-10-14, shipped in 5.4.0)* - an address-history nest that
+  reads each block once for a large, growing address set.
+- **0065 The nest in a tab** / **0066 The nest builder** *(Accepted 2026-10-17 and 2026-10-18)* -
+  decode, sealing and Burrmill in a browser worker, and a nest scaffolded and indexed in one tab. Not a
+  binary change: they are [/play](/play/) and [/play/build](/play/build/).
+- **0068 Nest postcards** *(Accepted 2026-10-21, live in /play)* - a link that opens a published nest,
+  pinned to its segments by hash, from any static host.
+- **0069 The engine room** *(Accepted 2026-10-21, all six slices built)* - `nuthatch watch`, a
+  read-only terminal view of a running nest. On main, not in a release yet.
+- **0070 Time-lapse** *(Parked 2026-10-22, after S2)* - a contract's sealed history replayed at speed.
+  The tab player is at [/play/timelapse/](/play/timelapse/); nothing further is started.
+- **0071 The diff** *(Accepted 2026-10-21, shipped in 5.9.0)* - `nuthatch diff`, a route and an MCP
+  tool: a block, transaction or range told in fixed sentences, with no model.
+- **0072 Chain weather** *(Parked 2026-10-22, after S0)* - a daily report a nest writes about itself.
+  Not built.
 
 ## Conventions
 

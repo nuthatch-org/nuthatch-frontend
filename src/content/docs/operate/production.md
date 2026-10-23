@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -83,12 +83,15 @@ author intended. See [the registry](/docs/operate/registry/).
 Run the history once by hand so you watch it finish and know how long it takes:
 
 ```sh
+WINDOW=160   # replace with the window doctor recommended
 sudo -u nuthatch nuthatch dev --dir /opt/nuthatch/my-nest \
-  --seal-direct --concurrency 8 --window "$(: use what doctor told you)"
+  --concurrency 8 --window "$WINDOW"
 ```
 
-`--seal-direct` writes finalized history straight to Parquet instead of through the hot store, which
-avoids writing and later pruning the same rows in redb. Its speedup over the ordinary path is being
+For a nest with no `entities.toml`, add `--seal-direct`: it writes finalized history straight to
+Parquet instead of through the hot store, which avoids writing and later pruning the same rows in
+redb. A nest that declares authored entities refuses it, because those windows would never reach the
+entities, so it takes the ordinary path above. Its speedup over the ordinary path is being
 re-measured on a deterministic replay rig after public-RPC runs disagreed, so do not plan from an old
 multiplier. Let it reach the tip, then stop it. The service you install next will resume rather than
 start over.
@@ -113,7 +116,7 @@ Type=simple
 User=nuthatch
 WorkingDirectory=/opt/nuthatch/%i
 ExecStart=/usr/local/bin/nuthatch dev --dir /opt/nuthatch/%i \
-          --listen 127.0.0.1:8288 --seal-direct --concurrency 8
+          --listen 127.0.0.1:8288 --concurrency 8
 Restart=on-failure
 RestartSec=5
 # The per-cursor budget. A regression gets killed and restarted rather than taking the box with it.
@@ -190,10 +193,14 @@ backfilling is ready, so if "caught up" is what you need, add a `lag_blocks` thr
 ## 7. Back it up
 
 The nest directory is the whole of it. Sealed segments are content-addressed and immutable, so they
-copy safely **while the process runs**:
+copy safely **while the process runs**. The hot store, `nuthatch.redb`, is a live redb file: stop the
+service for a consistent copy, or snapshot the filesystem, and back it up with the segments, since
+every resume marker lives in it:
 
 ```sh
+sudo systemctl stop nuthatch@my-nest
 rsync -a /opt/nuthatch/my-nest/ backup:/backups/my-nest/
+sudo systemctl start nuthatch@my-nest
 ```
 
 Restoring is putting the directory back and starting the binary. No schema migration, no external

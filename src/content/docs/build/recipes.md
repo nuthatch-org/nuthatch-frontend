@@ -2,7 +2,7 @@
 title: Recipes - the eth_call you usually do not need
 description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node. When a read is not derivable, pinned calls are there.
 order: 6
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 The Foundation reports that **over 70% of subgraphs call `eth_call`**. But most of those reads aren't
@@ -75,11 +75,16 @@ SELECT address, reserve0, reserve1 FROM (
 
 ## Derived vs `eth_call`
 
-Every recipe is proven against what the chain's own `eth_call` returns - the derived value is
-**byte-for-byte** the fetched one, not merely plausible. Where a read genuinely *can't* be derived (an
-oracle price, an ungoverned param), that's the irreducible residue a fallback handles - the derive-first
-path here needs **no archive node and no external dependency**. It's the differentiator, and it's the
-default.
+A recipe matches what the chain's own `eth_call` returns, byte for byte, when its inputs allow it:
+the nest holds the token's whole relevant history (every mint and burn for `total_supply`, every
+transfer for balances), both are read at the same block, the token follows standard ERC-20 semantics,
+and every value fits in 38 digits. A value past 38 digits is skipped, and a rebasing token moves
+balances without a `Transfer`. A nest that indexes only recent history gets the **net
+change** over its range, not a supply or a balance.
+
+Where a read genuinely *can't* be derived (an oracle price, an ungoverned param), that's the
+irreducible residue a fallback handles - the derive-first path here needs
+**no archive node and no external dependency**. It's the differentiator, and it's the default.
 
 ## What about metadata?
 

@@ -1,13 +1,15 @@
 ---
 title: "Configuration"
-description: "nuthatch.toml and mounts.toml, field by field."
+description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
-Four files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `entities.toml` declares
-maintained relations; `semantic.toml` is
-covered in [The semantic layer](/docs/build/semantic/); `mounts.toml` mounts many nests. A nest
+All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
+optional ones: `entities.toml` declares incremental relations, `maintained.toml` keeps stored copies of
+chosen views, `queries.toml` caps the named queries any mount may serve, and `semantic.toml` is covered
+in [The semantic layer](/docs/build/semantic/). `mounts.toml` belongs to a runtime rather than a nest,
+and mounts many nests. A nest
 declaring a `schema_version` newer than the binary understands is rejected on load - the guard that
 makes `init --from` and `nest load` safe.
 
@@ -186,8 +188,86 @@ secret = "…"                      # optional; adds X-Nuthatch-Signature: sha25
 
 `[[calls]]` pins an `eth_call` read to a block and needs an archive endpoint, given to `dev` with
 `--state-rpc`. `[[ipfs]]` resolves documents a nest names and proves each against its CID; `dev --ipfs`
-names the gateways. Both are covered field by field in
-[Contract calls and IPFS documents](/docs/build/contract-calls/).
+names the gateways. The guide is
+[Contract calls and IPFS documents](/docs/build/contract-calls/); the keys are these.
+
+| `[[calls]]` key | Meaning |
+|---|---|
+| `name` | Result table name |
+| `contract` | Fixed address to call; or `contract_column = "{col}"` to take it from the source row |
+| `calldata` | Hex calldata with selector, for a sampled call with fixed arguments |
+| `every` | Sample every N blocks (default 1000) |
+| `start` | First block to sample from (default: the nest's own start) |
+| `on` | Row-driven: the event table whose rows fire the call |
+| `on_any` | Row-driven across several tables (not with `on`); needs `schema_version = 3` |
+| `signature`, `args` | Row-driven: the ABI signature, and positional arguments where `{column}` reads the source row |
+| `canonical` | `true` pins by block hash with `requireCanonical` (EIP-1898) and never falls back to the block number; needs `schema_version = 3` |
+
+| `[[ipfs]]` key | Meaning |
+|---|---|
+| `name` | Table for the resolved documents |
+| `on`, `cid_column` | The table whose rows carry CIDs, and the column holding them |
+| `cid_json_path` | The column holds JSON naming the CID under this top-level key |
+| `json_match` | Resolve only JSON objects whose string fields equal these values; the rest are declined, not counted as failures |
+| `[ipfs.rows]` | `table`, `max_rows`, `keep_content` (default `true`) and `columns = [{ name, type }]`, with `type` one of `string`, `number`, `u64`, `i64`, `bool`, `address`: each proven document exploded into typed rows |
+
+### `[extract]`
+
+Extraction beyond events, off by default.
+
+```toml
+[extract]
+blocks = true            # one row per block, header fields; ordinary RPC
+top_level_calls = true   # transactions sent directly to this nest's contracts, calldata decoded
+# l1_blocks = true       # Arbitrum-family: l1_block_number per log-bearing block; not beside blocks
+# traces = true          # internal calls; needs a colocated node
+# state = true           # storage writes; needs a colocated node
+# contracts = ["router"] # scope traces/state to these aliases
+# selectors = ["0x…"]    # scope traces to these 4-byte selectors
+# unbounded = true       # accept unscoped traces/state anyway
+```
+
+`blocks`, `l1_blocks` and `top_level_calls` come from ordinary RPC and run today. `traces` and `state`
+have decode and schema but no source: a nest that enables either is refused at startup, after the
+scope check, rather than served empty tables. Unscoped `traces` or `state` is refused as unbounded
+unless `unbounded = true` is typed.
+
+## Address-history nests
+
+A nest may declare `[address_history]` and no `[[contracts]]` (RFC-0063). It indexes no contract: it
+follows watched accounts and serves their history Etherscan-shaped at `/api`, with its own `/ready`
+and `/metrics` (see [HTTP API](/docs/reference/http-api/#etherscan-shaped-api)). Declaring both is
+refused. It runs alone under `nuthatch dev`, not in a runtime, and refuses the event-indexing flags
+(`--backfill`, `--seal-direct`, `--window`, `--state-rpc`, `--ipfs` and the rest). `--trace-rpc`
+names a trace-capable endpoint for internal transactions; without it the nest's own RPCs are used.
+
+```toml
+[nest]
+name = "my-accounts"
+chain = "mainnet"
+chain_id = 1
+rpc_urls = ["https://…"]
+schema_version = 1
+
+[address_history]
+addresses = ["0xd8da6bf26964af9d7eed9e03e53415d37aa96045"]
+```
+
+| Key | Meaning |
+|---|---|
+| `addresses` | Accounts to watch. May be empty: a client registers its own through `/api/watch`. A mixed-case address must pass its EIP-55 checksum |
+| `start_block`, `end_block` | History bounds; a request before `start_block` is refused as incomplete |
+| `poll_interval` | How often the head is read (default `5m`; `dev --poll-interval` overrides) |
+| `request_deadline` | The longest a request for uncovered history may wait (default `8s`) |
+| `mev_relays` | `true` asks the MEV-Boost relays' public API about blocks a watched address produced or was paid for. Off by default: the relays see this machine's IP |
+| `validators` | Validator indices whose proposed blocks to prove, Ethereum mainnet only |
+| `beacon_url` | A beacon node API, for proposer data the mirror has not published. Off unless named |
+| `[address_history.mirror]` | `url`, `chain_id`, `from_block`, optional `to_block`, and `cache_mb` (at least 64): verified block partitions downloaded rather than read block by block |
+| `[address_history.sweep]` | Read every block once for the whole watched set (RFC-0064): `from_block` (default: the finalized head at first run), `internal` (trace for internal transfers), `confirmations` (sweep this far under the head instead of to finality; a reorg retracts), `webhook` (POST the deposit feed, at least once, oldest first) |
+
+A directory whose subdirectories are address-history nests, one per chain, runs with `nuthatch dev
+--dir <that directory>`: each keeps its own cursor and one listener serves `/api`, choosing the chain
+by `chainid`. It serves no `/diff`.
 
 ## `entities.toml`
 
@@ -211,6 +291,49 @@ than the SQL `/sql` accepts, so use an authored view for a query it refuses.
 Adding this file to a nest with history makes the next normal start seed the relation from local sealed
 segments and the hot tail. It does not re-index from RPC. Do not start an entity-bearing nest with
 `--seal-direct`: 3.0.0 refuses that combination rather than serving an empty maintained relation.
+
+## `maintained.toml`
+
+Optional (RFC-0062, since 4.14.0). It names authored views to answer from a stored copy of their own
+request-time evaluation.
+
+```toml
+recent = 4          # older copies kept per view besides the current one (default 4)
+
+[[view]]
+name = "daily_volume"
+```
+
+A copy is keyed by a hash of every input the view reads: the binary, the authored files, the sealed
+segments and hot rows of the tables it reaches, and their schema. It is served only at exactly those
+inputs, so it is never stale; anything else answers from the definition as usual. Copies are rebuilt
+after a commit or seal reaches the tip, off the commit path, and live in the dataset under
+`maintained/<view>/`; a view no longer declared loses its copies. The file is
+authored, so it is in the NID, but outside the data identity: adding it re-indexes nothing.
+
+Each `name` must be an authored view in `views/*.sql`, named in lowercase letters, digits and `_`. A
+view is refused at load, by name, when it or anything it reads calls a volatile function, or reads
+`labels`, an offchain snapshot view, a factory `__children` view or an incremental entity, since a
+copy's identity does not cover those yet. See
+[Maintaining an answer](/docs/book/maintaining-an-answer/).
+
+## `queries.toml`
+
+Optional. The author's ceiling on named queries (RFC-0034 §3): every mount of the nest may serve
+these or fewer, never more, and a mount left on `sql = "open"` serves exactly these rather than
+free-form SQL. A mount's own queries are declared the same way under `[[mounts.queries]]`.
+
+```toml
+[[queries]]
+name = "transfers_to"
+sql = "SELECT * FROM usdc__transfer WHERE \"to\" = {addr} ORDER BY block_number DESC LIMIT {n}"
+params = { addr = "address", n = "int" }
+```
+
+Parameter types are `int` and `address` only. Every `{placeholder}` must be declared and every
+declaration used, checked at load. A mount query whose name is not in the ceiling, or whose statement
+differs from the author's, is refused. See
+[Bounding what a mount will answer](/docs/operate/security/#bounding-what-a-mount-will-answer).
 
 ## `mounts.toml`
 

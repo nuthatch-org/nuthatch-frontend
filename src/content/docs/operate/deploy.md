@@ -2,7 +2,7 @@
 title: "Deploy it"
 description: systemd, Docker, and a reverse proxy - the whole distance from "it works on my laptop" to "it is running on my box".
 order: 2
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one
@@ -26,8 +26,9 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=nuthatch
-WorkingDirectory=/var/lib/nuthatch/mynest        # the nest directory (holds nuthatch.toml)
-ExecStart=/usr/local/bin/nuthatch dev --listen 127.0.0.1:8288 --seal-direct --concurrency 8
+# The nest directory (holds nuthatch.toml). systemd has no inline comments.
+WorkingDirectory=/var/lib/nuthatch/mynest
+ExecStart=/usr/local/bin/nuthatch dev --listen 127.0.0.1:8288 --concurrency 8
 Restart=on-failure
 RestartSec=5
 # Once set, the admin UI requires it on every bind; behind a proxy it is what lets /_admin answer.
@@ -46,6 +47,10 @@ journalctl -u nuthatch -f
 
 The log shows a clean progress line during backfill, then quiet tip-following.
 
+For a long first backfill of a nest with no `entities.toml`, `--seal-direct` writes finalized history
+straight to Parquet, skipping the hot store. A nest that declares authored entities refuses it, because
+those windows would never reach the entities.
+
 `MemoryMax=2G` matches the per-cursor budget nuthatch enforces on itself. Setting it means an
 unexpected regression is killed and restarted rather than taking the box with it.
 
@@ -55,7 +60,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nuthatch-org/nuthatch:5.8.2
+  ghcr.io/nuthatch-org/nuthatch:5.9.0
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
@@ -113,10 +118,14 @@ is ready. If a caller must only see a nest near the tip, gate on `lag_blocks` as
 ## Back it up
 
 The nest directory is the whole of it. Sealed segments are content-addressed and immutable, so they
-are safe to copy **while the process is running**:
+are safe to copy **while the process is running**. The hot store, `nuthatch.redb`, is a live redb
+file: stop the process for a consistent copy, or snapshot the filesystem. Back the two up together,
+since every resume marker lives in the hot store.
 
 ```sh
+systemctl stop nuthatch
 rsync -a /var/lib/nuthatch/mynest/ backup:/backups/mynest/
+systemctl start nuthatch
 ```
 
 Restoring is putting the directory back and starting the binary. There is no schema to migrate and no
@@ -124,9 +133,11 @@ external state to reconcile - which is the reason the hot/cold split exists in t
 
 ## Upgrading the binary
 
-A binary swap. No data migration, no re-backfill: a newer release reads an older one's hot store and
-sealed segments as they are. Proven in production across 0.3.0 → 0.6.0 → 0.6.2 → 1.0.0 on a box that
-has been serving public traffic throughout.
+Within 5.x, a binary swap. No data migration, no re-backfill: a newer release reads an older one's
+hot store and sealed segments as they are. Two older crossings are not drop-in: a pre-2.0 runtime
+directory needs `nuthatch migrate`, and a nest that still declares `[screening]` must drop it before
+it loads on 5.0 or later. Read the [upgrade notes](/docs/operate/upgrades/) for the versions you are
+crossing first.
 
 ```sh
 systemctl stop nuthatch

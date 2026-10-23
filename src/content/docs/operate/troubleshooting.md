@@ -2,7 +2,7 @@
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
 order: 13
-checked: 5.8.2
+checked: 5.9.0 (2026-10-23)
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
@@ -21,8 +21,13 @@ It probes and reports the largest `getLogs` window that endpoint will actually s
 and whether it has archive history - **measured against that endpoint**, not read from its
 documentation, which is frequently wrong and often differs by tier.
 
-Most "backfill is stuck" reports are an endpoint that lacks archive history for the deploy block, or
-one whose real window is a fraction of its published one. Both show up here in seconds.
+Most "backfill is stuck" reports are an endpoint that lacks old history, or one whose real window is a
+fraction of its published one. The window shows up here in seconds. History needs more care: doctor
+probes old state and the logs at the start of the chain separately, and only `archive depth yes -
+deep backfills` means it saw old logs served. `yes (state) ... old logs not established` means
+pinned `eth_call` works but a log backfill is unproven, because an empty answer looks the same whether
+logs were pruned or never emitted. Neither probe is your deploy block, so before a long backfill, run a
+small address-filtered `eth_getLogs` at the block you intend to start from.
 
 ## Backfill seems stuck
 
@@ -112,6 +117,11 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 
 - **503 "server busy"** - the analytical gate is saturated (2 concurrent, after a 250 ms wait). It's
   node self-protection: retry, don't raise the cap.
+- **503 naming `sealed_through`** - the unsealed tip is over 2,000,000 rows or 64 MiB of row data
+  for one query. This is not load: retrying will not help until the tip seals. Query a block range at
+  or below the `sealed_through` the response gives.
+- **422 "named query's scan bound"** - a declared query would read more than 512 MiB of source
+  bytes, so it was refused unevaluated, with its bound. Narrow its parameters.
 - **504, 30 s timeout** - the query is too heavy. Add a `WHERE`/`LIMIT`, aggregate with `GROUP BY`, or
   validate cheaply with [`/explain`](/docs/reference/http-api/) first.
 - **Binder and parse errors come back with a fix hint** derived from the real schema: an unknown
@@ -123,8 +133,10 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 The budget is per-cursor and CI-enforced; in a runtime it's shared across that cursor's nests
 (`max_rss_mb`, default 2048), and a mount projected to exceed it is refused. Check the per-nest
 estimated footprint (and the runtime-wide actual `nuthatch_rss_bytes`) in the `/nests` roster. Analytical
-queries carry their own per-session memory cap and thread limit;
-if you're tight, lower query concurrency rather than the per-query cap.
+sessions over one dataset share one memory pool (`NUTHATCH_BURRMILL_MEMORY_LIMIT`, falling back to
+`NUTHATCH_ANALYTICS_MEMORY_LIMIT`), so concurrent queries compete for it rather than each getting
+their own; the concurrency gate decides how many run at once. If you're tight, lower query
+concurrency rather than the pool.
 
 ## "semantic.toml drift" warnings at startup
 
