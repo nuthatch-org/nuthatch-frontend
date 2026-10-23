@@ -62,6 +62,11 @@ stored facts before serving it. The maintained relation is read by key under `/d
 name from `/sql`, beside the decoded tables. The [entities guide](/docs/build/entities/) spells out
 those limits.
 
+A view that is merely slow, rather than naturally keyed, has a gentler option since 4.14.0: list it
+in `maintained.toml`, and the nest keeps a copy of its answer, computed after each change and served
+only while the inputs it was computed from are still the current ones. The next chapter sets the
+three side by side.
+
 ## Serving safely
 
 The SQL endpoint is read-only and bounded. It has a concurrency semaphore, a request timeout, a
@@ -81,6 +86,23 @@ the port that carries the admin routes needs the corresponding protection.
 MCP and semantic descriptions provide more guided access for agents and tools. They are not a
 second data model. They describe and query the same underlying tables, views and entities.
 
+## What happened here
+
+Since 5.9.0 a nest can also say what happened in a block, a range or a transaction.
+`nuthatch diff --block N` (or `--from A --to B`, or `--tx HASH`) tells it in fixed sentences, built
+from the rows the nest already holds and no language model: control-plane events such as ownership,
+pauses and upgrades in full, the largest movements per token, new holders, approvals, and every
+other row either told by a `story` line its author wrote in `semantic.toml` or grouped. `--flow`
+draws the token flow instead. `GET /diff` and the MCP `diff` tool return the same document, byte for
+byte. A range above the sealed boundary is told and labelled provisional, and `--final-only` refuses
+it.
+
+The diff inherits the boundary of the nest beneath it. An event nest can tell only the events it
+indexes: a native transfer, or a call that emitted nothing it selected, is not in its rows, and the
+document says what it could not see. Net flow is the sum of the transfers seen, not a balance. On an
+address-history nest the same command reads the watched accounts' transactions and transfers
+instead.
+
 ## A good consumer contract
 
 For a dashboard or service, define a small query contract: the rows, ordering, finality behaviour
@@ -91,4 +113,5 @@ become a tactical challenge.
 
 The [SQL reference](/docs/reference/sql/), [HTTP API](/docs/reference/http-api/) and
 [authored views guide](/docs/build/views/) provide the exact surfaces. The next chapter explains
-how this data can be retained and reused even as its surrounding nest package evolves.
+when an answer is worth keeping rather than computing on each request, and the two ways of keeping
+one.

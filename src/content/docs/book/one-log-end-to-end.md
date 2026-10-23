@@ -32,9 +32,11 @@ An empty result still matters. The cursor must advance over a block range with n
 otherwise it would return to the same quiet range forever. Progress is about blocks successfully
 accounted for, not merely rows received.
 
-Where the nest declares `[extract] l1_blocks`, the window also fetches the header of every block
-that produced a row, so the L1 block it settled against is recorded beside the logs. That is the
-one case in which the fetch step reads more than `eth_getLogs`.
+`eth_getLogs` is not the only read. Block timestamps, which this nest indexes by default, cost one
+`eth_getBlockByNumber` per block that produced a row, a round trip of their own; where the nest
+declares `[extract] l1_blocks`, those headers also supply the L1 block each settled against. The
+cursor reads the tip and the hashes of its checkpoints as well, and declared contract reads, IPFS
+documents or extracted calls add requests of their own.
 
 As run: `init` resolved USDC's ABI through its proxy via Sourcify and wrote the nest in 4.4 s. `dev`
 reported `finality Depth(64), window 20`, had the API live within 0.2 s of starting, and announced
@@ -63,10 +65,13 @@ is that the mapping from byte sequence to row is reviewable and repeatable.
 Factories add one wrinkle. A factory event can discover child contracts which should be indexed
 thereafter. On the ordinary path, discovery happens inside the one decode pass, log by log in chain
 order, so a child created earlier in a window is known by the time its first log is reached. The
-direct-seal backfill, which fetches a window by topic alone, runs a discovery pass over the window
-first and discards its rows, then performs the authoritative decode with the children known, so a
-child discovered in the window is already known when its own logs are decoded. The final row path
-remains the same either way. Discovery is not allowed to become a second, differently behaving
+direct-seal backfill asks by address instead: it fetches a window for the base contracts and every
+child known so far, decodes it, and fetches the same window again for any child that decode
+discovered, repeating until a pass discovers nothing new, which is what catches a factory's factory.
+Only then is the whole window decoded with every child known, and that decode is the one kept. Once
+the children outnumber what an address filter can sensibly carry, it switches to one fetch by topic
+alone, filtered locally, unless the endpoint refuses such a query. The final row path remains the
+same in every case. Discovery is not allowed to become a second, differently behaving
 decoder.
 
 ## 3. Establish a canonical local order

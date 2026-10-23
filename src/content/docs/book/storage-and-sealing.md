@@ -31,8 +31,8 @@ bug, where it is more expensive and less visible.
 
 When rows are final enough, Nuthatch writes them to Parquet segments and records them in the
 segment catalogue, `segments/manifest.json`. A segment is immutable content with a bounded block
-range, table identity and hash; the hash is the SHA-256 of the file's bytes, and it is also the
-file's name. The catalogue describes the set of segments that make up the sealed historical view
+range, table identity and hash; the hash is the SHA-256 of the file's bytes, and it is also in the
+file's name, `<table>-<hash>.parquet` in a solo nest. The catalogue describes the set of segments that make up the sealed historical view
 and is itself part of the evidence an operator can inspect.
 
 "Final enough" is decided per chain, in the binary's chain table rather than in the nest's
@@ -43,9 +43,13 @@ sealer cuts a segment once the finalised rows reach 20,000 or 64 MiB, or once th
 chain's seal span (1,800 blocks on mainnet), whichever comes first, because a segment per poll
 would be a catalogue of crumbs. Until a cut, finalised rows stay in the hot store with the
 watermark pinned at a checkpoint, and a finalised range with no rows at all simply advances the
-watermark. A cut that leaves a table with fewer than 1,000 rows writes a segment marked
-provisional, which the table's next seal folds in and replaces; a quiet table is not condemned to a
-thousand tiny files.
+watermark. A cut that leaves a table with fewer than 1,000 rows, under 16 MiB of them, writes a
+segment marked provisional, which the table's next seal folds in and replaces; a quiet table is not
+condemned to a thousand tiny files. A table that has gone quiet altogether would otherwise hold its
+tail provisional for ever, so since 5.7.1 a tail is final once its oldest row is three hours older
+than the newest row of the nest's latest seal, even when that seal brought the table nothing. The age is chain time,
+read from block timestamps rather than the operator's clock, so two operators still seal identical
+files; a table whose rows carry no timestamp has the row and byte rules alone.
 
 The operation is not "move some old rows to a different folder and hope for the best". Each
 segment is written to a temporary name, fsynced, renamed into place and its directory fsynced;
@@ -53,8 +57,11 @@ only then is the catalogue rewritten the same way and swapped in with one rename
 dies at an inconvenient moment, the previous committed catalogue remains coherent and the orphaned
 file is just a file. What this path does not do is read its output back: the hash is computed
 from the bytes in memory before they are written. Verification is a separate job, done at every
-startup, when each catalogued segment is re-hashed and a damaged one quarantined, and on demand by
-`nuthatch doctor`. Recovery may be boring, which is the highest compliment available to storage
+startup, when each catalogued segment is re-hashed and a damaged one of the nest's own is moved to
+`quarantine/`, and on demand by `nuthatch doctor --dir <nest> --catalogue`, which checks without
+moving anything. A damaged segment in a runtime's shared store is reported and left where it is,
+because other datasets may reference the same bytes; which of them to break is the operator's
+decision, not one nest's. Recovery may be boring, which is the highest compliment available to storage
 machinery.
 
 Because segments are immutable and named by their content, a runtime keeps them in one shared
@@ -67,8 +74,13 @@ during upgrades.
 Content addressing is also what lets sealed history leave the machine. `nuthatch publish` mirrors a
 nest's non-provisional segments, schema and catalogue to an object store under its data identity,
 and `nuthatch seed` (4.9.0) fills a nest that has never indexed from such a mirror, checking every
-file against the hash the catalogue names before installing it. The hashes prove the files are
-the ones the catalogue describes. They prove nothing about who wrote the catalogue.
+file against the hash the catalogue names before installing it. A provisional tail is never in the
+published catalogue, since the next seal will replace it, so on its own the mirror would leave a
+seed short of each table's newest rows, and short by a different amount for each table. The
+publisher therefore also writes a small snapshot beside it, `_seed/`, holding each table's current
+tail and an envelope naming the block the whole is complete through. The seed checks the tails as
+it checks the segments and resumes at the block after that one. The hashes prove the files are the
+ones the catalogue and the snapshot describe. They prove nothing about who wrote them.
 
 ## One query surface
 

@@ -28,7 +28,7 @@ would be an expensive ceremony with no new information in it.
 Nuthatch calculates a data identity from the inputs that actually determine decoded event rows: the
 schema version, the registry hash, and the path and digest of every authored file that can change a
 stored byte. What it leaves out is as deliberate as what it takes in. Views, entities and their
-declarations, the named-query allowlist, the semantic description, `llms.txt`, the README, the
+declarations, `maintained.toml`, the named-query allowlist, the semantic description, `llms.txt`, the README, the
 scaffolded agent skill and, since 4.9.0, any hidden file are all part of the NID and none of the
 data identity, because none of them is read on the indexing path. (That last one was learnt the
 hard way: a stray `.cache/` made two copies of one nest compute different identities, so neither
@@ -38,18 +38,25 @@ the exposure annotations do read them.
 On mounting a new identity, or on migration, Nuthatch compares that data identity with the datasets
 it already holds. If one matches, and its store records the same registry hash, it adopts that data
 into the new identity instead of indexing the chain again. On the mount path the adoption is staged:
-the existing dataset's hot store and catalogue are copied into a sibling directory, the new package
-material is laid over them, and the result is renamed into place, with the staging directory removed
-if anything fails before that rename. `nuthatch migrate` does the same copy without the staging
-step. In either case the existing source remains, and in a runtime the copied catalogue points into
+the new dataset directory already holds its own authored files, and only the derived state, the
+existing dataset's hot store and `segments/`, is copied into a sibling staging directory. Each staged
+entry is then renamed into the destination in turn. The copy is the part that can run out of disk,
+and a failure there leaves the destination untouched; if a rename fails, the entries already moved
+are taken out again, and if even that fails the error says the directory must be emptied by hand
+before it will index correctly. `nuthatch migrate` does the same copy without the staging step. In
+either case the existing source remains, and in a runtime the copied catalogue points into
 the shared segment store, so the sealed bytes are not duplicated; only the catalogue and the hot
 store are.
 
 This is not a claim that every update is free. If an ABI, event selection, contract range or decode
-rule changes, the decoded dataset may differ. That is a real data change. `nuthatch migrate` names
-the breaking change and refuses it unless the operator passes `--allow-breaking`, rather than
-presenting an old table with a new label and hoping no one notices. An adoption needs no such
-acknowledgement, because the identity match is the proof that nothing broke.
+rule changes, the decoded dataset may differ. That is a real data change: the data identity moves,
+nothing can be adopted, and the new identity indexes from its start block rather than presenting an
+old table under a new label. A separate question is whether the change breaks the people reading
+it. `nuthatch migrate` compares the old schema with the new and refuses a change that would break
+consumers' queries, a dropped table or column or a changed type, unless the operator passes
+`--allow-breaking`; an added table or column goes through without it. The flag is about queries, not
+bytes, and it says nothing about whether the new data is right. An adoption needs neither question
+asked, because the identity match is the proof that nothing changed.
 
 ### The guarantee has to hold on the ordinary path too
 
@@ -72,8 +79,9 @@ that looks healthy.
 
 A nest now compares the decode identity recorded in its store against the one its configuration
 produces, and refuses to start when they differ, naming both hashes and the remedy. The identity is
-the registry hash folded with the nest's `[[calls]]` and `[[ipfs]]` declarations, because those
-also decide what gets stored. A store written before the check existed has no recorded hash;
+the event registry hash folded with every other declared source of rows: the calldata registry when
+the nest decodes transaction calls, and its `[[ipfs]]` and `[[calls]]` declarations, the pinned
+contract reads, because those also decide what gets stored. A store written before the check existed has no recorded hash;
 refusing those would break every running deployment for a fault it may not have, so it adopts the
 hash and logs that **it was recorded, not verified** - which is a different claim, and says so.
 
