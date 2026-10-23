@@ -2,7 +2,7 @@
 title: Webhooks
 description: POST sealed rows to a URL - an optional delivery stage, past finality, at-least-once. The deposit sweep's webhook is separate, and carries retractions.
 order: 8
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 A webhook pushes rows out to a URL as they're indexed - feed a downstream service, a queue, a Slack
@@ -27,6 +27,10 @@ Repeat `[[webhooks]]` for each destination. A webhook can carry a `where` predic
 the rows you care about. Setting a `secret` signs each POST with an `X-Nuthatch-Signature: sha256=<hex>`
 header, so your receiver can verify it came from this nest.
 
+A webhook that cannot work refuses the nest at start (since 5.11.0): a `table` or `where` that does
+not bind against the nest's schema, or a `since` that is not one of the three forms. The error names
+the webhook and the field. Before 5.11.0 such a webhook was accepted and never fired.
+
 ## Delivered past finality
 
 Webhooks fire on **sealed** rows - past finality, when history is immutable. That's deliberate: a row
@@ -48,7 +52,9 @@ acknowledged seal, so a crash mid-batch doesn't drop rows.
 ## Not in the decode path
 
 The POST is an effect, so it lives **after** sealing, never inside decode or entity derivation. A slow or
-failing endpoint can't stall or corrupt indexing - it only backs up its own delivery queue. This is the
+failing endpoint can't stall or corrupt indexing - it only backs up its own delivery queue. Webhooks
+fill at most half the outbox, so compliance alerts keep room; when that half is full a webhook holds
+its cursor and resumes from it, rather than dropping deliveries (since 5.11.0). This is the
 same purity rule that governs enrichers and alerts (see [Determinism](/docs/concepts/determinism/)).
 
 ## The deposit sweep's webhook is a different one

@@ -2,7 +2,7 @@
 title: The nest registry
 description: Publish and pull nests by name - a filesystem folder or an S3 bucket, with private nests, decoupled and never mandatory.
 order: 9
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be
@@ -48,8 +48,9 @@ nuthatch nest load 9f2c… --registry <path|s3://bucket/prefix>
 ```
 
 A name and a version are labels someone chose and can move; a NID is computed from the nest itself.
-So the registry's NID index is checked rather than trusted: the pulled bundle's own manifest must compute
-to the NID asked for, or it is refused, naming both. For the same reason a nest name shaped like a NID
+So the registry's NID index is checked rather than trusted: the pulled bundle must compute to the NID
+asked for, or it is refused, naming both. Since 5.11.0 that NID is recomputed from the installed
+files, not taken from the manifest, whose name and file order are only its own say-so. For the same reason a nest name shaped like a NID
 (64 hex characters) is refused at publish, so a reference is never ambiguous.
 
 A **runtime** started with `--registry` uses exactly this. A live mount naming a NID the runtime does not

@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
@@ -94,9 +94,8 @@ curl -XDELETE localhost:8288/_admin/nests/usdc
 ```
 
 Started with `--registry`, the runtime fetches a NID it does not hold, verifies it as `nest load` does
-and installs it at `data/<nid>/` first. All of these routes are gated by the admin token whenever it
-is set, and need one off localhost; a token-less localhost runtime answers only requests addressed to
-loopback. `--no-admin` removes them entirely. The full guide, with suspend, move, dry runs and
+and installs it at `data/<nid>/` first. All of these routes need the admin token on every bind: `NUTHATCH_ADMIN_TOKEN`, or on localhost
+without it the one the runtime makes in `<dir>/.admin-token` and prints at startup. `--no-admin` removes them entirely. The full guide, with suspend, move, dry runs and
 reclaiming disk, is [Host nests for others](/docs/operate/hosting-nests/).
 
 What the runtime guarantees:

@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -68,7 +68,7 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nuthatch-org/nuthatch:5.10.0 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.11.0 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`

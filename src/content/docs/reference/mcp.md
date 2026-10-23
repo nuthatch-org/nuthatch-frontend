@@ -2,7 +2,7 @@
 title: "MCP server"
 description: "The built-in MCP surface - schema discovery, SQL, entity lookup, and provenance."
 order: 4
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 The protocol reference for the built-in Model Context Protocol server. For the experience - wiring
@@ -35,7 +35,8 @@ transfer-shaped decoder, and `flags`/`exposure` where compliance is configured.
 - `diff` (`from` + `to`, or `block`, or `tx` with its `block`; `flow`, `top`, `final_only`) - what
   happened in that range as a JSON document of fixed sentences with exact amounts, the same bytes as
   `nuthatch diff --format json` and `GET /diff`. `flow: true` gives the token flow instead;
-  `final_only` refuses a range above the sealed boundary. Since 5.9.0.
+  `final_only` refuses a range above the sealed boundary, and `top` above 1,000 is refused. Since
+  5.9.0.
 - `balance` (`address`) / `top_balances` (`limit`) - derived balances from the IVM view (i128 base
   units as decimal strings).
 - `flags` (`kind`) - threshold or velocity compliance flags (RFC-0008).

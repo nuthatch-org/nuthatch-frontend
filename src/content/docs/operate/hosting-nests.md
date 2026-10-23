@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -89,9 +89,9 @@ nuthatch dev --dir /srv/runtime --listen 0.0.0.0:8288 --registry /srv/registry
   under `data/` can be mounted.
 - **The admin API needs `NUTHATCH_ADMIN_TOKEN` off localhost.** Bound anywhere but localhost without
   it, the runtime serves no admin routes at all, and an empty runtime then refuses to start, since
-  nothing could ever be mounted into it. Once set, the token is required on localhost too, and a
-  token-less localhost runtime answers only requests addressed to loopback, so behind a proxy that
-  forwards a public `Host` it answers `401`. `--no-admin` removes the routes everywhere.
+  nothing could ever be mounted into it. On localhost a token is required too: without the variable
+  the runtime makes one on first start in `<runtime>/.admin-token`, owner-only, and prints the admin
+  URL with it in the startup log (since 5.11.0). `--no-admin` removes the routes everywhere.
 
 Every admin call below takes the token as `Authorization: Bearer <token>` (or `?token=<token>`);
 the examples set it once in a shell alias, with the `Content-Type: application/json` every `POST` needs,

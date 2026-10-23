@@ -2,8 +2,12 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.10.0**, released 2026-10-23, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted
+"Be your own indexer." Status: **v5.11.0**, released 2026-10-23, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.11.0 is a cold audit of 5.10.0 put right, with no storage migration and no NID change; the admin API
+needs a token on every bind (a localhost nest without `NUTHATCH_ADMIN_TOKEN` makes one in
+`<dir>/.admin-token`), `nuthatch control` refuses to start without `NUTHATCH_CONTROL_TOKEN`, a
+symlinked input file or a webhook that cannot work refuses the nest, and `/diff` refuses `top` above
+1,000. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted
 analytical reads read 2,048 rows at a time and treat addresses as 20-byte values inside a plan. 5.9.0 adds `nuthatch diff`: what happened in a block range, a block or a
 transaction, in fixed sentences from the rows a nest already holds; read-only, with no storage
 migration. 5.8.2 keeps a seal-direct backfill on a dense chain inside the per-cursor memory
@@ -142,10 +146,11 @@ operational weight of the tooling, which is an engineering problem.
 10. **Webhooks and the admin UI** (RFC-0010). `[[webhooks]]` POST sealed rows matching a `where`
     predicate to a URL, at least once, HMAC-signed with `X-Nuthatch-Signature` when a `secret` is
     set; they fire past finality, so a delivered row never rolls back. `/_admin/` is an embedded
-    dashboard with no external resources. With `NUTHATCH_ADMIN_TOKEN` set it is required on every
-    bind, localhost included; without one it is not served off localhost, and on localhost answers
-    only requests addressed to loopback (`Host`, and `Origin` if sent), so behind a proxy that
-    forwards a public `Host` it answers `401`. `--no-admin` removes it.
+    dashboard with no external resources. Every request needs a token, on every bind:
+    `NUTHATCH_ADMIN_TOKEN`, or on localhost without it the one the nest makes on first start in
+    `<dir>/.admin-token` (owner-only, printed with the admin URL in the startup log, read by
+    `nuthatch watch --dir`). Off localhost without the variable it is not served. `--no-admin`
+    removes it. A webhook whose `table`, `where` or `since` cannot work refuses the nest at start.
 11. **A built-in MCP server.** `nuthatch mcp` speaks stdio and bridges to a running `dev`
     (`--url`); `nuthatch mcp --print-config` prints a copy-paste `.mcp.json` and the `claude mcp
     add` one-liner. Twelve tools in all: `status`, `schema`, `tables`, `table`, `sql`, `explain`,
@@ -176,7 +181,7 @@ operational weight of the tooling, which is an engineering problem.
     subcommand; it was removed in 2.0, and `nuthatch migrate` moves a pre-2.0 directory across.
 14. **Hosting over the admin API** (3.13.0, run 3.13.1 or later). A runtime may start with chains
     declared and nothing mounted, and takes its nests over HTTP, each call authorised by
-    `NUTHATCH_ADMIN_TOKEN` (required off localhost, and on it once set): `POST /_admin/nests {"name","nid"}` mounts a NID as a job
+    `NUTHATCH_ADMIN_TOKEN` (or on localhost the one in `<dir>/.admin-token`): `POST /_admin/nests {"name","nid"}` mounts a NID as a job
     (`202`, then `GET /_admin/mounts/<name>` through `accepted`, `fetching`, `joining`, `live` or
     `failed`), fetching it from `--registry` when the runtime does not hold it;
     `?dry_run=true` runs the same admission checks and reports the backfill ahead, per-block RPC
@@ -339,8 +344,8 @@ lease per chain cursor, with the fence enforced inside the store's own write tra
 stalled worker that wakes finds its writes refused, and since 4.11.0 a worker that loses a cursor's
 lease stops ingesting it on that tick; `nuthatch serve --hot-store <postgres>` is an
 independently scaled query tier. Workers pull the nests they are assigned from a registry, by
-content address when a `bundle_hash` is pinned. The control plane refuses to start off-localhost
-without `NUTHATCH_CONTROL_TOKEN`. Verified across three real machines: lease handover under
+content address when a `bundle_hash` is pinned. The control plane refuses to start
+without `NUTHATCH_CONTROL_TOKEN`, on any bind. Verified across three real machines: lease handover under
 contention, a 10-minute clock jump moving expiry rather than ownership, and 377 blocks indexed
 through a 90-second control-plane outage. Until 0.9.3 the writer pool did not write; ten checks
 passed because none asserted a row appeared. Scaled mode is younger than embedded mode, which runs
@@ -520,6 +525,15 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.11.0 is a binary swap from 5.10.0 with no storage migration and no NID change. Before upgrading:
+anything that calls `/_admin`, the lifecycle routes or the control plane without a token gets `401`
+(set `NUTHATCH_ADMIN_TOKEN`, or read `<dir>/.admin-token`; set `NUTHATCH_CONTROL_TOKEN` before
+`nuthatch control`); a symlinked input file refuses the nest (a linked `segments/` or
+`nuthatch.redb` is fine); a `[[webhooks]]` entry whose `table`, `where` or `since` cannot work
+refuses the nest, by field; `top` above 1,000 is refused by `nuthatch diff`, `/diff` and the MCP
+tool; and `--seal-direct` now seals `threshold_flag` rows, as the tip path does. `/ready` serves
+`tip` and `lag_blocks` as null until the first poll.
 
 5.8.0 is a binary swap with no storage migration and no NID change, but stricter in five places: a
 set `NUTHATCH_ADMIN_TOKEN` is required on localhost too, and a token-less localhost runtime answers

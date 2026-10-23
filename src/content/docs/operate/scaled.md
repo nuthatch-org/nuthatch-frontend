@@ -2,7 +2,7 @@
 title: "Scaled mode: a fleet"
 description: When one machine is no longer enough - a writer pool, an independently-scaled serving tier, and a control plane.
 order: 11
-checked: 5.10.0 (2026-10-23)
+checked: 5.11.0 (2026-10-23)
 ---
 
 Everything else in these docs is **embedded mode**: one binary, no external services, the thing
@@ -169,8 +169,8 @@ one changes no bundle hash**, so it never invalidates segment reuse or forces a 
 
 ## Exposure
 
-The control plane **refuses to start** off-localhost without `NUTHATCH_CONTROL_TOKEN`. Not a warning - 
-a refusal. It decides what an entire fleet runs, so an unauthenticated one on a public interface is
+The control plane **refuses to start** without `NUTHATCH_CONTROL_TOKEN`, on any bind, localhost
+included (since 5.11.0; before it, only off localhost). Not a warning - a refusal. It decides what an entire fleet runs, so an unauthenticated one on a public interface is
 not a configuration anyone chooses on purpose.
 
 `/health` stays unauthenticated so a load balancer can probe it; it reveals nothing.

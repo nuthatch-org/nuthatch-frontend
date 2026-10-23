@@ -79,7 +79,9 @@ The HTTP API offers conventional endpoints for discovery and tables as well as `
 are a distinct set of routes under `/_admin`, and they may mutate runtime state, such as mounting or
 unmounting a dataset. They are not a separate listener: they sit on the same port as the data API,
 and the binary mounts them only when that port is loopback or an admin token has been set in the
-environment, with `--no-admin` to leave them out altogether. It is important not to describe the
+environment, with `--no-admin` to leave them out altogether. Either way every admin request carries
+a token: on loopback without one in the environment, the binary makes its own and keeps it beside
+the nest. It is important not to describe the
 whole server as "read-only" merely because its data API is. The administrator can make changes, so
 the port that carries the admin routes needs the corresponding protection.
 
