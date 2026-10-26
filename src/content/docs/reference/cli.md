@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.11.0 (2026-10-23)
+checked: 5.12.0 (2026-10-26)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.

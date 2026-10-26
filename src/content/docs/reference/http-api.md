@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.11.0 (2026-10-23)
+checked: 5.12.0 (2026-10-26)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -98,7 +98,9 @@ event nest also answers `GET /api`, but only to say it has no `[address_history]
   - On a loopback bind only, `module=proxy` (`eth_blockNumber`, `eth_getBlockByNumber`,
     `eth_getTransactionByHash`, `eth_getTransactionReceipt`, `eth_call` and similar), `module=logs`
     `getLogs`, and account `balance`/`balancemulti` are forwarded to the nest's own RPC and stored
-    nowhere. Off loopback the operator's RPC is not lent out.
+    nowhere. Off loopback the operator's RPC is not lent out, with two exceptions since 5.12.0:
+    `eth_blockNumber` answers the nest's own finalized head, and `balance`/`balancemulti` are read
+    when every address asked is watched.
 - `GET /api/watch` lists the watched set. `POST /api/watch` and `POST /api/unwatch` take a JSON body
   of `{"address"}`, `{"validator"}` or, to add only, `{"addresses": [...]}`. They change what the nest
   asks its RPC for, so they answer `403` on any bind but loopback.

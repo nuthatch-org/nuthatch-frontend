@@ -2,8 +2,8 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.11.0**, released 2026-10-23, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.11.0 is a cold audit of 5.10.0 put right, with no storage migration and no NID change; the admin API
+"Be your own indexer." Status: **v5.12.0**, released 2026-10-25, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.12.0 widens what an address-history nest answers, off loopback and for an account with code; 5.11.1 makes a running publisher check each mirrored segment once. 5.11.0 is a cold audit of 5.10.0 put right, with no storage migration and no NID change; the admin API
 needs a token on every bind (a localhost nest without `NUTHATCH_ADMIN_TOKEN` makes one in
 `<dir>/.admin-token`), `nuthatch control` refuses to start without `NUTHATCH_CONTROL_TOKEN`, a
 symlinked input file or a webhook that cannot work refuses the nest, and `/diff` refuses `top` above
@@ -525,6 +525,13 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.12.0 is a binary swap from 5.11.1 with no storage migration and no NID change. Off a loopback bind an
+address-history nest now answers `proxy/eth_blockNumber` from its own finalized head and reads `balance` and
+`balancemulti` for watched accounts only; every other `proxy` and `logs` call stays loopback-only. On the
+chains proved by the balance, an account with code is refused for `txlist` and `txlistinternal` from the
+block it gained code, while its token transfers are served and followed to the head. 5.11.1 makes a
+running publisher HEAD each mirrored segment once per process instead of on every pass.
 
 5.11.0 is a binary swap from 5.10.0 with no storage migration and no NID change. Before upgrading:
 anything that calls `/_admin`, the lifecycle routes or the control plane without a token gets `401`
