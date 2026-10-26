@@ -97,6 +97,20 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
         </p>
       </div>
 
+      <!-- Hidden until the script below runs, since without it the box would filter nothing. -->
+      <div class="nest-search" id="nest-search" hidden>
+        <input
+          type="search"
+          id="nest-filter"
+          placeholder="Search nests by name"
+          aria-label="Search nests by name, chain or repository"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <span class="nest-search-count" id="nest-search-count" aria-live="polite"></span>
+      </div>
+      <p class="nest-search-empty" id="nest-search-empty" hidden>No nest matches that name.</p>
+
       <section class="group" id="hosted">
         <div class="group-head">
           <h2>Hosted</h2>
@@ -109,7 +123,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
 
         <ul class="grid">
           {hostedAreas.map((h) => (
-            <li class="nest hosted" id={`hosted-${h.id}`}>
+            <li class="nest hosted" id={`hosted-${h.id}`} data-search={[h.name, ...h.chains].join(' ')}>
               <div class="nest-top">
                 <h3><a href={h.href}>{h.name}</a></h3>
                 <span class="badge status--available">available</span>
@@ -123,13 +137,14 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
           ))}
         </ul>
 
+        <div class="subgroup">
         <h3 class="sub-head" id="public">Public nests</h3>
         <p class="group-blurb">
           Live nests you can query now, each stood up for someone who asked. Read-only: GET only, no admin.
         </p>
         <ul class="grid">
           {publicNests.map((p) => (
-            <li class="nest" id={`public-${p.id}`}>
+            <li class="nest" id={`public-${p.id}`} data-search={[p.name, p.chain, p.for.label].join(' ')}>
               <div class="nest-top">
                 <h3>{p.name}</h3>
                 <span class="badge status--available">live</span>
@@ -144,6 +159,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
             </li>
           ))}
         </ul>
+        </div>
       </section>
 
       {groups.filter((g) => g.items.length > 0).map((g) => (
@@ -156,7 +172,11 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
 
           <ul class="grid">
             {g.items.map((n) => (
-              <li class="nest" id={`nest-${n.id}`}>
+              <li
+                class="nest"
+                id={`nest-${n.id}`}
+                data-search={[n.data.name, n.id, ...n.data.chains, n.data.repo?.replace('https://github.com/', '') ?? ''].join(' ')}
+              >
                 <div class="nest-top">
                   <h3>{n.data.name}</h3>
                   <span class={`badge status--${n.data.status}`}>{statusLabel[n.data.status]}</span>
@@ -197,6 +217,61 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     </div>
   </section>
 </Layout>
+
+<script>
+  const box = document.getElementById('nest-search');
+  const input = document.getElementById('nest-filter') as HTMLInputElement | null;
+  const count = document.getElementById('nest-search-count');
+  const empty = document.getElementById('nest-search-empty');
+  if (box && input && count && empty) {
+    box.hidden = false;
+    const cards = [...document.querySelectorAll<HTMLElement>('li.nest[data-search]')];
+    const fold = (s: string) => s.toLowerCase().replace(/[-_/]+/g, ' ');
+    const index = cards.map((c) => fold(c.dataset.search ?? ''));
+    const apply = () => {
+      const words = fold(input.value).split(/\s+/).filter(Boolean);
+      let shown = 0;
+      cards.forEach((c, i) => {
+        const hit = words.every((w) => index[i].includes(w));
+        c.hidden = !hit;
+        if (hit) shown++;
+      });
+      // A section or sub-list with nothing left to show is hidden whole, heading and all.
+      document.querySelectorAll<HTMLElement>('section.group, .subgroup').forEach((g) => {
+        g.hidden = words.length > 0 && !g.querySelector('li.nest:not([hidden])');
+      });
+      count.textContent = words.length ? `${shown} of ${cards.length}` : '';
+      empty.hidden = !(words.length && shown === 0);
+      const url = new URL(location.href);
+      if (words.length) url.searchParams.set('q', input.value.trim());
+      else url.searchParams.delete('q');
+      history.replaceState(null, '', url);
+    };
+    input.value = new URL(location.href).searchParams.get('q') ?? '';
+    input.addEventListener('input', apply);
+    if (input.value) apply();
+  }
+</script>
+
+<style>
+  .nest-search {
+    display: flex; align-items: center; gap: 0.8rem;
+    margin: -1.5rem 0 1rem;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-elev); padding: 0.2rem 0.9rem;
+  }
+  .nest-search[hidden], .nest-search-empty[hidden] { display: none; }
+  .nest-search:focus-within { border-color: var(--rust); }
+  .nest-search input {
+    flex: 1; min-width: 0; height: 2.6rem; padding: 0;
+    font: inherit; font-size: 1rem; color: var(--text);
+    background: transparent; border: 0; outline: none;
+  }
+  .nest-search input::placeholder { color: var(--text-muted); }
+  .nest-search-count { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; }
+  .nest-search-empty { color: var(--text-muted); margin: 1.5rem 0 0; }
+  li.nest[hidden], section.group[hidden], .subgroup[hidden] { display: none; }
+</style>
 
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
