@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import CopyBlock from '../../components/CopyBlock.astro';
 import { getCollection } from 'astro:content';
 import { stopgaps } from '../../data/stopgaps';
+import { publicNests } from '../../data/public-nests';
 
 const hostedAreas = [
   {
@@ -99,11 +100,11 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
       <section class="group" id="hosted">
         <div class="group-head">
           <h2>Hosted</h2>
-          <span class="count">{hostedAreas.length}</span>
+          <span class="count">{hostedAreas.length + publicNests.length}</span>
         </div>
         <p class="group-blurb">
-          What we run so you do not have to: subgraphs no indexer on the network serves, and the verified data a
-          rotki nest builds on. Each is the stock binary, run as any operator would.
+          What we run so you do not have to: subgraphs no indexer on the network serves, the verified data a
+          rotki nest builds on, and nests anyone can query. Each is the stock binary, run as any operator would.
         </p>
 
         <ul class="grid">
@@ -118,6 +119,28 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
                 {h.chains.map((c) => <span class="chain">{c}</span>)}
               </div>
               <span class="open">{h.open} →</span>
+            </li>
+          ))}
+        </ul>
+
+        <h3 class="sub-head" id="public">Public nests</h3>
+        <p class="group-blurb">
+          Live nests you can query now, each stood up for someone who asked. Read-only: GET only, no admin.
+        </p>
+        <ul class="grid">
+          {publicNests.map((p) => (
+            <li class="nest" id={`public-${p.id}`}>
+              <div class="nest-top">
+                <h3>{p.name}</h3>
+                <span class="badge status--available">live</span>
+              </div>
+              <p class="summary">{p.summary}</p>
+              <div class="chains">
+                <span class="chain">{p.chain}</span>
+              </div>
+              <a class="repolink" href={p.endpoint + '/ready'}>{p.endpoint.replace('https://', '')}</a>
+              <p class="note">For <a href={p.for.href}>{p.for.label}</a></p>
+              <div class="cmd"><CopyBlock command={p.example} /></div>
             </li>
           ))}
         </ul>
@@ -287,6 +310,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
   .repolink:hover { color: var(--accent); }
   /* A hosted card opens its own page: the title link stretches over the whole card. */
   .hosted { position: relative; }
+  .sub-head { margin-top: 2.6rem; font-size: 1.15rem; }
   .nest-top h3 a { color: inherit; text-decoration: none; }
   .nest-top h3 a::after { content: ''; position: absolute; inset: 0; }
   .open {
