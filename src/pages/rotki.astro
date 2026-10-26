@@ -138,8 +138,9 @@ const parity: [string, string][] = [
             RPC must serve <code>debug_traceBlockByNumber</code>. Every traced block must balance to the wei or it is not served.
           </p>
           <p>
-            It proves an ordinary account. A contract, or an account with EIP-7702 delegated code, answers unsupported from the
-            block it gained code, so rotki asks its next indexer. An incoming transaction that moves no value is not listed.
+            It proves an ordinary account. A contract, or an account with EIP-7702 delegated code, answers unsupported for
+            transactions and internal transactions from the block it gained code, so rotki asks its next indexer; its token
+            transfers are still served, since they come from logs and need no proof. An incoming transaction that moves no value is not listed.
             Checked against Blockscout on Optimism, Arbitrum and Gnosis, every field identical.
           </p>
           <p>
