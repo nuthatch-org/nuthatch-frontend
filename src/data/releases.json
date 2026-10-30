@@ -1,4 +1,8 @@
 [
+  {"version":"5.14.0","date":"2026-10-29","headline":"Nuthatch 5.14.0 scales the shared runtime: the first three of GraphOps's follow-up requests in RFC-0076, taken after 5.13.0's shared runtime went in.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.14.0"},
+  {"version":"5.13.0","date":"2026-10-28","headline":"Nuthatch 5.13.0 is the shared runtime: GraphOps's feature requests for hosting many organisations' nests in one runtime, taken one by one in RFC-0073.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.13.0"},
+  {"version":"5.12.2","date":"2026-10-28","headline":"Nuthatch 5.12.2 is a security release.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.12.2"},
+  {"version":"5.12.1","date":"2026-10-28","headline":"Nuthatch 5.12.1 is a security release.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.12.1"},
   {"version":"5.12.0","date":"2026-10-25","headline":"Nuthatch 5.12.0 widens what an address-history nest answers in two places: off a loopback bind, and for an account with code on the chains whose history is proved by the balance.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.12.0"},
   {"version":"5.11.1","date":"2026-10-25","headline":"Nuthatch 5.11.1 stops a running publisher re-checking its whole mirror on every pass, and reads a viem-style event ABI.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.11.1"},
   {"version":"5.11.0","date":"2026-10-23","headline":"Nuthatch 5.11.0 is a cold audit of 5.10.0 put right: 19 defects found by five readers on 2026-10-23, three of them high, every one fixed with a test that fails without it (#2353).","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.11.0"},

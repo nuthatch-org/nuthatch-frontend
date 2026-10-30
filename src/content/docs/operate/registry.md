@@ -2,7 +2,7 @@
 title: The nest registry
 description: Publish and pull nests by name - a filesystem folder or an S3 bucket, with private nests, decoupled and never mandatory.
 order: 9
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be
@@ -38,6 +38,11 @@ bundle computes to it.
 nuthatch nest load horizon@1.2.0 --registry <path|s3://bucket/prefix>
 ```
 
+To see what a bundle is before you install it, `nuthatch nest inspect <bundle> --json` (since 5.13.0)
+verifies it as `nest load` would and prints its NID, chain, contracts, entities, what it needs (cargo
+features, archive or trace RPC) and every endpoint it would reach, with keyed URLs cut to scheme and
+host. It runs nothing and touches no network.
+
 ## Address a nest by its identity
 
 Every published bundle is also indexed by its **NID**, the identity its data is stored under
@@ -60,6 +65,13 @@ removes it again. See [Host nests for others](/docs/operate/hosting-nests/).
 ```sh
 nuthatch dev --dir my-runtime --registry s3://nests/prod
 ```
+
+Since 5.13.0 such a runtime also publishes, inspects and prunes its registry over the admin API
+(`POST /_admin/bundles`), so a host never has to run the binary to manage it; and a mount job that
+fails says why in a `code`: `not_found` (no bundle under that NID), `access_denied` (an S3 `401` or
+`403`, or no credential for a private bucket), or `verification_failed` (the bytes served are not that
+nest). Prune never leaves a ref naming a missing blob, and skips blobs younger than 15 minutes in case
+their publisher has not written its refs yet.
 
 Layout, beside the name index:
 
@@ -85,6 +97,12 @@ env (including `AWS_ENDPOINT` for self-hosted MinIO):
 ```sh
 nuthatch nest publish my.bundle --registry s3://nests/prod --as horizon@1.2.0
 ```
+
+Credentials come only from the environment, through the standard AWS chain: `AWS_*` variables
+(static keys, web identity, container credentials), then instance metadata. They are never read from
+`mounts.toml` or the command line, and named profiles (`AWS_PROFILE`) are not supported. Since 5.13.0
+CI runs the S3 path against a private bucket (versitygw): publishing, mounting by NID over the admin
+API, and each failure code above.
 
 ## Private nests
 

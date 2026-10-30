@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,66 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.14
+
+Replace the binary and restart. A 5.13 store is used as it is: the hot store's tables, the sealed
+segment format and the segment manifest are unchanged, and no NID, registry hash or sealed segment
+changes. A lone nest run over a `nuthatch.toml` is unaffected by everything below. Before upgrading a
+runtime:
+
+- **The buffered cursor is the default for every runtime cursor.** Each nest on a chain is now its own
+  task reading a shared window buffer, and each cursor's admission is charged `window_buffer_mb`
+  (64 MiB at the default ceiling), so a runtime packed within 64 MiB of its ceiling starts its last
+  mount quarantined. `NUTHATCH_CURSOR_BUFFER=0` (or `off`) restores the shared cursor; that switch is
+  kept for 5.14 only.
+- **A cursor may write scratch** under `<runtime>/cursors/<chain>/buffer/`, up to four times
+  `window_buffer_mb`, emptied at the cursor's start.
+- **Tenant reservations follow activity, not mounts.** An idle tenant holds no permit, and a gate
+  keeps a reserve of `max(1, sql_permits / 8)` for tenants holding none. At the default two permits a
+  tenant beside others still uses one, as in 5.13.
+- **`sql_permits` is no longer capped at 16**, and is set by `[runtime] sql_permits` or live, ahead of
+  `NUTHATCH_SQL_MAX_CONCURRENCY`. A `PUT /_admin/runtime` lowering `max_rss_mb` below what the
+  permits' memory split needs is now `409`.
+- **Feed v2 is negotiated.** A 5.14 follower reads v1 from a 5.13 writer, and a 5.13 follower gets v1
+  from a 5.14 writer, so a rolling upgrade from 5.13 works followers first, writer last.
+- **A mirror is unchanged unless `followers = true`.** Turning it on publishes offchain snapshots and
+  deletes folded provisional tails from the mirror.
+- **Requests answer from a published snapshot**, so a long query holds the view versions it pinned,
+  and their bytes count against the cursor's ceiling until it ends.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.14.0) have the rest.
+
+## Upgrading to 5.13
+
+Replace the binary and restart. A 5.12 store is used as it is, with no storage migration and no NID
+change. New settings live in `mounts.toml`. 5.12.1 and 5.12.2, both security releases, are included;
+take them if you stop at 5.12. Before upgrading a runtime that hosts more than one tenant:
+
+- **Two tenants on one chain share its two default SQL permits, one each**, and a tenant at its share
+  gets `429` `tenant_share`, not `503`. (5.14.0 seats only tenants that are querying.)
+- **A `/q` named query whose tip copy exceeds 128 MiB is refused.**
+- **Boot counts the 120 MB runtime base against each cursor**, as live admission always did. A mount
+  that does not fit, or does not build, starts quarantined where the whole boot used to fail;
+  `--fail-fast` restores that.
+- **The follower feed is new.** 5.12 has no feed, so the upgrade to 5.13 cannot be a rolling one.
+- **`string_agg` results are capped at 16 MiB, and computed values count against a statement's
+  memory budget.** A statement whose sort or join keeps large computed values may be refused somewhat
+  earlier than before, never later.
+- **Undecoded logs warn** once per window where they were silent at debug level.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.13.0) have the rest.
+
+## Upgrading a runtime without an outage
+
+A runtime alone is down for the length of a restart, because its listener binds only after every
+mount is built. With [followers](/docs/operate/hosting-nests/#read-replicas-and-upgrades-without-an-outage)
+in front of it (since 5.13.0), roll one process at a time: each follower first, waiting for its
+`/<tenant>/<alias>/ready` to say `"writer": "connected"` and `"lag_generations": 0`, then the writer
+last. While the writer restarts, the followers answer as of the last block it committed and report
+`"writer": "absent"`. `scripts/rolling-upgrade.sh <previous> <current>` in the repository runs exactly
+this with a query every 200 ms and fails if any goes unanswered. The first upgrade this works for is
+5.13 to 5.14.
 
 ## Upgrading to 5.11
 

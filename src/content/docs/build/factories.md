@@ -2,7 +2,7 @@
 title: Factories
 description: Index children a contract spawns at runtime - Uniswap pools, Safe proxies, any factory.
 order: 5
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 Many protocols deploy contracts at runtime: Uniswap's factory spins up a pool per pair, a Safe factory
@@ -64,6 +64,16 @@ addresses, in the default backfill, the tip loop and a runtime's cursor alike. P
 flips to a topic0-only fetch and keeps only the logs a known child emitted, because a very long
 address list is slower than discarding non-children locally. `filter = "topic0"` on a template forces
 the flip from the start. Before 4.11.0 a factory nest fetched by topic0 alone from the first window.
+
+Since 5.13.0 a solo nest's tip fetch and a seal-direct backfill flip per template, and static
+contracts never flip. Before it, past 500 children those paths sent one address-less `eth_getLogs`
+carrying every topic0 in the nest, the static contracts' included; for ENS, whose registrar declares the ERC-721 `Transfer`,
+that asked for every token transfer on mainnet, and the window fell from 25,000 blocks to 25. Now:
+
+- static contracts are always fetched by address;
+- a template with more than 500 children of its own is fetched by its own topic0s alone;
+- when only the nest's total crosses 500, every template that has a child goes wide together, as the
+  whole nest used to.
 
 Public endpoints refuse parts of this, and the fetch adapts rather than failing:
 

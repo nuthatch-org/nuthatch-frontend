@@ -48,7 +48,9 @@ re-indexed forward and put the survivor back. The balance read 3,000,000 afterwa
 ## Shared cursor, many datasets
 
 Now place three nests on the same chain cursor. The cursor detects the hash disagreement once at
-its shared boundary, then fans the rollback out to every live dataset. Each dataset may have a
+its shared boundary, then fans the rollback out to every live dataset. Since 5.14.0 the fan-out is a
+marker: extraction drops the buffered windows above the ancestor and leaves it, and each nest rolls
+back from its own position when it next reads, with the same rollback a lone nest runs. Each dataset may have a
 different sealed watermark because it may have been mounted at a different time or progressed
 differently. A nest already at or below the ancestor does nothing. A nest whose hot range contains
 the discarded blocks retracts them. If one nest cannot roll back, it is quarantined rather than

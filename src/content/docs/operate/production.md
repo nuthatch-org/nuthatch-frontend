@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -183,8 +183,10 @@ Scrape `GET /metrics`. Alert on these and treat everything else as diagnosis mat
 
 A frozen `nuthatch_last_poll_unixtime` means a stalled poller, which is the failure that otherwise
 looks like "the data just stopped being interesting". In a runtime, add `nuthatch_nest_health` and
-`nuthatch_cursor_live`, because a *partly* unwell runtime still answers `/health` on the whole. Full
-list in [metrics](/docs/operate/metrics/).
+`nuthatch_cursor_live`, because a *partly* unwell runtime still answers `/health` on the whole. Since
+5.13.0, `nuthatch_nest_logs_undecoded_total` is the one that fires when a nest keeps running and
+indexes less than it should, usually after a proxy upgrade. Full list in
+[metrics](/docs/operate/metrics/).
 
 `/ready` is the honest liveness signal for a load balancer: it answers *is this nest serving and making
 progress*, and reports `stalled` when every endpoint in the pool is refusing a window. A nest still
@@ -216,7 +218,9 @@ a re-backfill, not data you cannot recover.
 Two different axes, and conflating them is the usual confusion:
 
 - **The binary**: a swap and a restart. A newer release reads an older one's hot store and sealed
-  segments as they are. Back up the old binary first, restart one nest, check it, then the rest.
+  segments as they are. Back up the old binary first, restart one nest, check it, then the rest. A
+  runtime that must keep answering through the restart needs followers in front of it (since 5.13.0);
+  see [upgrading without an outage](/docs/operate/upgrades/#upgrading-a-runtime-without-an-outage).
 - **The nest** (its schema, views or decode): stage the new version and run `nuthatch migrate`. The
   runtime classifies the change itself and **refuses a breaking one by name** until you accept it; a
   cosmetic edit adopts the existing data and re-indexes nothing. See
@@ -261,5 +265,7 @@ remedy. The three that account for most of it:
 - **Tip lag climbing** - the endpoint, nearly always. Re-run `doctor` against it.
 - **A `503` from `/sql`** - a guard did its job. Two queries are already running, or one asked for
   more of the unsealed tip than the budget allows. Retry or narrow the query; do not raise the gate.
+  In a runtime with several tenants, a `429` `tenant_share` is the same guard saying this tenant is at
+  its own share.
 - **A nest quarantined in a runtime** - its siblings are fine by design. `GET /nests` carries the fault
   and the re-admission time.

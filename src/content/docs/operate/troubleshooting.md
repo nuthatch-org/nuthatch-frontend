@@ -2,7 +2,7 @@
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
 order: 13
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
@@ -97,7 +97,8 @@ error rather than a warning.
 
 One block's logs are too large for the provider to return, and a single block can't be split
 further. Use a provider with a higher (or no) result cap. This fails loudly by design rather than
-looping forever.
+looping forever. In a runtime since 5.14.0 such a block is asked for again by each nest's own
+filter, so only a nest still over the cap is quarantined; its siblings carry on.
 
 ## Tip lag
 
@@ -105,6 +106,13 @@ looping forever.
 (`nuthatch_sealed_through` trails further - past finality, by design). Persistent growth means RPC
 throughput, not nuthatch: add endpoints or point at your own node. The adaptive `getLogs` window
 self-tunes for density.
+
+In a runtime, read the per-nest series. Since 5.14.0 each nest on a chain advances on its own: one
+whose `nuthatch_nest_behind_extraction_blocks` grows is slow itself (`nuthatch_nest_window_seconds`
+says how slow), while one waiting on extraction with that gauge at 0 is held up by the RPC. A slow
+nest no longer drags its siblings unless every ingest permit is held by slow nests; raise
+`NUTHATCH_INGEST_CONCURRENCY`, or bound the slow one with `window_deadline_ms` under its
+`[mounts.limits]`.
 
 ## Reorgs
 
@@ -117,6 +125,10 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 
 - **503 "server busy"** - the analytical gate is saturated (2 concurrent, after a 250 ms wait). It's
   node self-protection: retry, don't raise the cap.
+- **429 `tenant_share`** *(a runtime with more than one tenant, since 5.13.0)* - this tenant label is
+  at its own share of the chain's SQL permits, response bytes or hot-tip copies, while others are
+  using theirs. The operator sets shares with `PUT /_admin/tenants/<tenant>`, and the permit count
+  with `[runtime] sql_permits`.
 - **503 naming `sealed_through`** - the unsealed tip is over 2,000,000 rows or 64 MiB of row data
   for one query. This is not load: retrying will not help until the tip seals. Query a block range at
   or below the `sealed_through` the response gives.
@@ -199,6 +211,13 @@ Two things the check will *not* tell you, on purpose. A contract that has emitte
 proves nothing either way, so it stays quiet rather than crying wolf. And one matching log is enough
 to clear it - a contract may legitimately emit events its ABI omits, and only the total mismatch is
 the silent failure.
+
+The same failure can arrive later, when a proxy is upgraded and an event the nest declares changes
+shape. Since 5.13.0 a running nest counts it rather than dropping it unseen: logs whose topic0 a
+declared event claims but which do not decode are counted in
+`nuthatch_nest_logs_undecoded_total{nest,contract,topic0}`, `/ready` and `/nest` carry `undecoded`
+with the largest pairs, and each window with failures logs one warning with the first error. The
+nest keeps answering and stays ready, so alert on the counter.
 
 ## `/_admin` answers 401 after upgrading to 5.11
 

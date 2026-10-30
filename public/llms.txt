@@ -7,7 +7,7 @@
 Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
 process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
 licensed
-MIT OR Apache-2.0. Status: v5.12.0, released 2026-10-25, on the stable 5.x line. 5.12.0 widens what an address-history nest answers: off a loopback bind it answers `eth_blockNumber` from its own head and a watched account's balance, and an account with code keeps its token transfers on the chains proved by the balance. 5.11.1 makes a running publisher check each mirrored segment once, not on every pass. 5.11.0 is a cold audit of 5.10.0 put right and makes several behaviours stricter: the admin API needs a token on every bind (a localhost nest without `NUTHATCH_ADMIN_TOKEN` makes one in `<dir>/.admin-token`), `nuthatch control` refuses to start without `NUTHATCH_CONTROL_TOKEN`, a symlinked input file or a webhook that cannot work refuses the nest, and `/diff` refuses `top` above 1,000. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted analytical reads read 2,048 rows at a time and treat addresses as 20-byte values inside a plan. 5.9.0 adds `nuthatch diff`: what
+MIT OR Apache-2.0. Status: v5.14.0, released 2026-10-29, on the stable 5.x line. 5.14.0 scales the shared runtime (RFC-0076): a chain's SQL gate seats only tenants that are querying, `[runtime] sql_permits` sets its permits live, bounded by memory rather than 16; the nests on one chain progress independently behind one extraction stage, the default cursor for a runtime; and `nuthatch serve --follow` can serve from another host, reading the mirror and the registry. 5.13.0 is the shared runtime (RFC-0073): fair share between tenant labels, per-mount limits, the memory ceiling and chains changed live, fault containment, bundles and seeding over the admin API, per-nest metrics and a `Nuthatch-Cost` report, `POST /sql`, `nuthatch mcp --token-env`, counted undecoded logs, `[runtime] isolation = "strict"` (its guarantee not yet claimed) and read replicas. A lone nest behaves as before, and neither release migrates storage. 5.12.1 and 5.12.2 are security releases for operators who mount other people's nests. 5.12.0 widens what an address-history nest answers: off a loopback bind it answers `eth_blockNumber` from its own head and a watched account's balance, and an account with code keeps its token transfers on the chains proved by the balance. 5.11.1 makes a running publisher check each mirrored segment once, not on every pass. 5.11.0 is a cold audit of 5.10.0 put right and makes several behaviours stricter: the admin API needs a token on every bind (a localhost nest without `NUTHATCH_ADMIN_TOKEN` makes one in `<dir>/.admin-token`), `nuthatch control` refuses to start without `NUTHATCH_CONTROL_TOKEN`, a symlinked input file or a webhook that cannot work refuses the nest, and `/diff` refuses `top` above 1,000. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted analytical reads read 2,048 rows at a time and treat addresses as 20-byte values inside a plan. 5.9.0 adds `nuthatch diff`: what
 happened in a block range, a block or a transaction, in fixed sentences from the rows a nest already
 holds; read-only, with no storage migration. 5.8.2 keeps a seal-direct backfill on a dense chain inside the memory budget. 5.8.1 refuses to reopen a store after an event's indexed parameters have moved. 5.8.0 fixes
 the 107 defects of a cold audit of 5.7.2 and makes several defaults stricter: a set
@@ -64,7 +64,9 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   `[[ipfs]]` block resolves a CID named in a column and refuses any body that does not hash to it.
 - Factories: `[[templates]]` and `[[factories]]` index the children a contract deploys at runtime,
   sharing one table per template, distinguished by `address`. It indexes Uniswap. Since 4.11.0 it
-  asks for logs by factory and child addresses until 500 children, then by topic0, and an endpoint
+  asks for logs by factory and child addresses until 500 children, then by topic0; since 5.13.0 a solo
+  nest's tip fetch and a seal-direct backfill keep static contracts on addresses and flip only
+  templates with children. An endpoint
   that caps the addresses in one `eth_getLogs` has the list halved rather than read as a credentials
   refusal.
 - The compliance pack (opt-in): content-addressed label and list snapshots, threshold and velocity
@@ -89,7 +91,11 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   API: `POST /_admin/nests {name, nid}` mounts a NID as a job, fetching it from `--registry`;
   `?dry_run=true` prices it; suspend, resume, move to a new NID with no gap, and unmount with
   `?reclaim=true` are routes too. A tenant is an opaque label in a mount name (`acme/usdc`); two
-  mounts of one NID share one dataset and it is never indexed twice.
+  mounts of one NID share one dataset and it is never indexed twice. Since 5.13.0 an operator can
+  set each label's share of a chain's SQL permits (`PUT /_admin/tenants/<tenant>`), lower a mount's
+  query limits, change the memory ceiling, SQL permits and chains live, seed a mount from a mirror,
+  and run read replicas with `nuthatch serve --follow <writer>`; nuthatch still authenticates and
+  bills no one.
 - The mirror: `nuthatch publish sync --target <dir | s3://bucket/prefix>` mirrors sealed segments
   and the catalogue, `dev --publish-target` does it as they seal, `publish verify` and `publish
   status` check it, and `publish finalise` (4.8.0) marks a stopped nest's provisional tails final.

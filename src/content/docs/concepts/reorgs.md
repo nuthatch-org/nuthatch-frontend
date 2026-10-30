@@ -2,7 +2,7 @@
 title: Reorgs & finality
 description: Reorgs only ever touch the mutable hot store; sealed segments are append-only past finality.
 order: 4
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 A chain reorg - where the tip you indexed turns out not to be canonical - is the hard part of indexing.
@@ -37,6 +37,11 @@ does, it's telling you the chain did something the finality assumption didn't al
 In a multichain runtime, a reorg on one chain touches only that chain's cursor. Another chain's data is
 left **byte-identical** - a property that's tested, not merely asserted. See
 [Runtimes &amp; cursors](/docs/concepts/runtimes/).
+
+Within one chain, the cursor decides a reorg once for every nest on it. Since 5.14.0, when nests
+advance at their own pace, it drops the windows it has buffered above the common ancestor and leaves a
+marker; each nest rolls back from its own position with the same rollback a lone nest runs, and the
+parity tests store the same rows, row for row, through reorgs on either cursor.
 
 ## Guarantees
 

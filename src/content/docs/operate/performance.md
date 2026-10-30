@@ -2,7 +2,7 @@
 title: "Performance"
 description: What has been measured, what has not, and the three things that actually decide your backfill's wall clock.
 order: 12
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 ## The number
@@ -123,6 +123,15 @@ allocations nest, under its production limits and runs the 74 statements its con
 time as production runs them; 4.4.0 peaked at 1,595 to 1,788 MiB over four runs on Linux, and a peak
 over 2 GiB fails the gate ([release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0)). Most of that is
 analytical SQL, not indexing. The 241 MB in the OBIB run above is a full-throttle backfill.
+
+The dense multi-nest gate runs 20 nests on one cursor. With 5.14.0's buffered cursor as the default it
+peaked at 414 to 427 MB over seven runs on the runner that enforces it, against a 602 MB ceiling and
+an earlier band of 387 to 481 MB. The same release measured what the buffered cursor is for: with one
+nest slowed tenfold, its siblings' p50 tip lag was 8 to 9.5 ms, against 541 to 802 ms on the shared
+cursor, and the tip's after-seen p50 was 28 to 33 ms on either cursor on a laptop
+([RFC-0076](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0076-scaling-the-shared-runtime.md) §9).
+The 2 GB budget is the default ceiling; an operator may set a higher `max_rss_mb` by choice since
+5.13.0, and nothing measures a cursor above it for you.
 
 ## Query speed, and the engine question
 

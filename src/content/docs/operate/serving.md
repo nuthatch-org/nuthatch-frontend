@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -16,8 +16,9 @@ Three kinds of read, one process:
 - **Point-reads** - `/entity/{id}` reads the redb hot store first and, on a miss, falls back to a
   guarded query over the sealed segments under the same permit and deadline as `/sql`.
   `/balance/{address}` reads the in-memory incremental balances view.
-- **Analytical SQL** - `/sql?q=…`: read-only SQL on Burrmill over the live tip ∪ sealed history.
-  Every event is a table named `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/).
+- **Analytical SQL** - `/sql?q=…`, or since 5.13.0 `POST /sql` with the statement in a JSON body:
+  read-only SQL on Burrmill over the live tip ∪ sealed history. Every event is a table named
+  `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/).
 - **Introspection** - `/`, `/tables`, `/schema`, `/nest`, `/metrics`: what this nest is, what it
   holds, and how it's doing.
 
@@ -35,7 +36,9 @@ raise:
   otherwise materialise unbounded Rust-side (outside the engine's memory limit); this keeps a query inside
   the footprint budget. Hitting it flags the result truncated, same as the row cap.
 - **2 concurrent analytical queries.** A third waits up to 250 ms for a permit, then gets a `503` -
-  retry, don't remove the gate.
+  retry, don't remove the gate. In a runtime the gate is per chain cursor, its size is `[runtime]
+  sql_permits` (since 5.14.0), and it is divided between tenant labels, so a tenant past its share
+  is told `429` `tenant_share` instead.
 - **2,000,000 unsealed rows** scanned per query. Every `/sql` call parses the whole unsealed tip into
   memory, so on a deep-finality chain with a busy contract this is the largest RAM risk the process
   carries - and in a runtime it is a co-tenant's problem too, because the budget is per cursor. Past the
@@ -57,6 +60,8 @@ and the engine runs a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so
 [footprint budget](/docs/operate/metrics/).
 A statement that needs more memory than the pool has left is refused with an out-of-memory error, not
 spilled: since 4.1 a hash join or final aggregate cannot spill to disk, though a sort can (4.3.0).
+Since 5.13.0 the values a statement computes count against the pool too, and any one of them is
+capped at 16 MiB.
 
 ## Repeated statements
 

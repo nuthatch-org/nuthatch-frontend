@@ -2,7 +2,7 @@
 title: "Agent-grade MCP"
 description: "Drive nuthatch from an agent - fully offline against the local instance."
 order: 1
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 A nest isn't just queryable by you - it's queryable by your agent, with the same two-minute setup.
@@ -41,6 +41,19 @@ Every client uses the same server entry - only where you put it differs. The ent
 - **Any other MCP client** - point it at the command `nuthatch mcp --url <your nest>`; the transport is plain stdio.
 
 Use the binary's absolute path (what `nuthatch mcp --print-config` emits) if `nuthatch` isn't on the client's `PATH`.
+
+## A nest behind a gateway
+
+A nest you reach through a gateway that wants a bearer token takes one from an environment variable
+(since 5.13.0), so the token never sits in `ps` or in the client's config:
+
+```sh
+export NEST_TOKEN=…        # or set NUTHATCH_MCP_TOKEN, which is read by default
+claude mcp add nuthatch -- nuthatch mcp --url https://nest.example.com --token-env NEST_TOKEN
+```
+
+Every request then carries `Authorization: Bearer <token>`. `--print-config` prints the variable's
+name, never its value, and an error body that echoes the token reaches the agent as `[redacted]`.
 
 ## An honest tool menu
 

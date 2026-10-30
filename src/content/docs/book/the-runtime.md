@@ -17,7 +17,9 @@ data while exposing different aliases or named-query allowlists.
 This is multi-tenancy in the useful, modest sense: multiple independently named datasets in one
 runtime. It is not an identity service, quota system or billing platform. Those require knowing
 who the caller is, and the runtime does not. Put a gateway in front when the deployment needs that
-policy. The node protects its own memory and query capacity regardless of who is asking.
+policy. The node protects its own memory and query capacity regardless of who is asking, and since
+5.13.0 divides that capacity between tenant labels by the shares an operator sets, still without
+knowing who any of them is.
 
 ## One cursor per chain
 
@@ -61,6 +63,16 @@ The shared cursor pays for chain polling once. It does not make storage, decode 
 queries free. The runtime keeps those costs visible so density does not become a pleasant-sounding
 route to an out-of-memory kill.
 
+Sharing the fetch used to mean sharing the pace. Until 5.14 the cursor ran each nest's window in
+turn, so the slowest nest on a chain set every neighbour's tip lag, and a nest re-admitted after a
+fault pulled the cursor back so its siblings fetched again. Since 5.14.0 a runtime's cursor is split
+in two. Extraction still fetches each range once, with the union filter, and still decides each
+reorg once; but it appends windows to a bounded buffer, and each nest is a task of its own reading
+that buffer from its own position. A slow nest delays itself until it falls behind the buffer, and then
+fetches for itself by its own filter until it catches up, without moving extraction back. The chain
+still has one cursor, one finality view and one reorg authority. What the buffer holds is charged to
+the cursor's budget like anything else, so the change buys independence, not free memory.
+
 ## The runtime owns the lifecycle
 
 A runtime that could only be changed by editing a file and restarting would make every change as wide
@@ -71,16 +83,17 @@ bundle's own manifest computes to that NID, installs it, lets it catch up and th
 outside the process has to unpack, verify or arrange anything.
 
 A mount that fetches and backfills can take far longer than a caller will hold an HTTP request open, so
-it is a job rather than a call. The job moves through accepted, fetching, joining and then live or
-failed (or reads suspended while an operator has paused it). Every job short of live, and every
+it is a job rather than a call. The job moves through accepted, fetching, seeding when it was asked
+to fill from a mirror, joining and then live or failed (or reads suspended while an operator has
+paused it). Every job short of live, and every
 failed one, is written to `mount-jobs.json` beside `mounts.toml`, so a restart in the middle picks
 it up again instead of forgetting it; a live job needs no record of its own, because `mounts.toml`
 is that record. The job list is kept beside the runtime's lock rather than behind it: asking how a
 mount is going must never wait for the mount it is asking about.
 
-Joining is the delicate step. A cursor advances from the slowest of its live nests, so a nest spliced in
-far behind would drag every neighbour back through history. The newcomer therefore catches up on its own,
-beside the cursor, and joins at a window boundary once it is level. The first nest on a chain has no
+Joining is the delicate step. A nest spliced in far behind must not drag its neighbours back through
+history, so the newcomer catches up on its own, beside the cursor, and joins at a window boundary once
+it is level. The first nest on a chain has no
 neighbours to spare, so it starts that chain's cursor exactly as boot would. The last nest to leave does
 not stop the cursor; an empty cursor idles, because the next mount onto that chain should find it there.
 

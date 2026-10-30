@@ -2,7 +2,7 @@
 title: "Deploy it"
 description: systemd, Docker, and a reverse proxy - the whole distance from "it works on my laptop" to "it is running on my box".
 order: 2
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one
@@ -60,7 +60,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nuthatch-org/nuthatch:5.12.0
+  ghcr.io/nuthatch-org/nuthatch:5.14.0
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
