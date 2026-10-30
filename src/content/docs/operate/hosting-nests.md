@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -12,13 +12,15 @@ script instead of by editing files and restarting.
 
 The whole contract fits in a sentence: **you hand the runtime a nest identity (NID), and the runtime
 fetches it, verifies it, stores it, indexes it and serves it.** Nothing on your side unpacks bundles,
-runs schema tools or starts processes. Everything below is available since **3.13.0**; run **3.13.1** or later, which fixes restarts
+runs schema tools or starts processes. The lifecycle below is available since **3.13.0**, and what later releases added is marked with its version; run **3.13.1** or later, which fixes restarts
 during moves and suspensions, validates names, and serves `/metrics` at the runtime root.
 
 What stays outside the runtime, by design: who your callers are, what they may do, what they pay, and
 how the process is supervised. nuthatch sees a tenant as an opaque label and knows nothing else about
-it. Sign-in, plans, per-tenant authorisation, quotas and billing belong to a gateway in front of the
-runtime; process supervision belongs to systemd or a container restart policy.
+it. Since **5.13.0** it enforces the shares and limits you configure for a label or a mount
+([step 9](#9-shares-and-limits)), without knowing who is behind either. Sign-in, plans, per-caller
+authorisation and billing belong to a gateway in front of the runtime; process supervision belongs to
+systemd or a container restart policy.
 
 Hosting is for operators, and the nuthatch team is one of them. It
 [offers to host nests](/subgraphs/) for people and teams who ask on the
@@ -56,6 +58,26 @@ nuthatch nest nid --dir ./usdc
 is all a host needs: `nuthatch nest load <nid> --registry /srv/registry` pulls it anywhere, and refuses
 a bundle whose own manifest does not compute to the NID asked for.
 
+`nuthatch nest inspect <bundle|dir> --json` (since 5.13.0) describes a nest without running it or
+touching the network: its NID, chain, contracts, entities, the cargo features and RPC kinds it needs,
+and every endpoint it would reach, keyed URLs cut to scheme and host. Read it before you mount a
+stranger's bundle.
+
+A host that never runs the binary itself can do the same over the admin API (since 5.13.0), sending
+the bundle file as the body with `Content-Type: application/octet-stream`:
+
+```sh
+curl -s -H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN" -H 'Content-Type: application/octet-stream' \
+  --data-binary @usdc-<hash>.bundle 'localhost:8288/_admin/bundles?dry_run=true'
+```
+
+`?dry_run=true` checks the bundle exactly as `nest load` does and answers with the `nest inspect`
+document and the price of mounting it; `?as=usdc@1.0.0` publishes it to the runtime's `--registry`;
+`GET /_admin/bundles/<nid>` reads what the registry holds; and `POST /_admin/bundles/prune` deletes
+what neither a NID in its `keep` list nor any mount of the runtime reaches (`?dry_run=true` lists
+only). A bundle that fails the check is `422` and nothing is written; one over 64 MiB is `413`
+(`--max-bundle-mb` changes it).
+
 ## 2. Start an empty runtime
 
 Declare the chains you will serve, and nothing else:
@@ -82,9 +104,12 @@ export NUTHATCH_ADMIN_TOKEN=$(openssl rand -hex 32)
 nuthatch dev --dir /srv/runtime --listen 0.0.0.0:8288 --registry /srv/registry
 ```
 
-- **Chains are declared at boot**, and only there. A chain's RPC is dialled when the first nest is
-  mounted onto it, so an unused chain, or one whose endpoint is down when the process starts, cannot
-  stop the runtime. Adding a chain means a restart.
+- **Chains are declared here, or later over the API.** A chain's RPC is dialled when the first nest
+  is mounted onto it, so an unused chain, or one whose endpoint is down when the process starts,
+  cannot stop the runtime. Since 5.13.0 `POST /_admin/chains` declares another on a running runtime
+  and `PUT /_admin/chains/<chain>/rpc` replaces a chain's RPC pool, with no restart: both ask every
+  endpoint for `eth_chainId` first, refuse a wrong or silent one, and write `mounts.toml` before
+  taking effect. A runtime started with `--rpc` or `--rpc-fallback` refuses both with `409`.
 - **`--registry`** lets a mount fetch a NID the runtime does not hold. Without it, only NIDs already
   under `data/` can be mounted.
 - **The admin API needs `NUTHATCH_ADMIN_TOKEN` off localhost.** Bound anywhere but localhost without
@@ -150,6 +175,7 @@ nh localhost:8288/_admin/mounts
 |---|---|
 | `accepted` | Recorded, not yet started. |
 | `fetching` | Pulling the bundle from the registry and verifying it. Only when the runtime did not hold it. |
+| `seeding` | Filling the dataset from a mirror, every file checked against its hash. Only for `"seed": true` (since 5.13.0). |
 | `joining` | Catching up beside its chain's cursor before joining it, so co-tenants are never dragged back through history. |
 | `live` | Indexing and serving at `/<name>/`. |
 | `failed` | Refused or broken; `reason` says why. |
@@ -182,6 +208,28 @@ script; a platform should poll.
 On the job route the same refusals end the job `failed` with the same reason. A nest the runtime
 fetched and then refused is removed again: a refusal leaves nothing on disk.
 
+Since 5.13.0 a failed job also carries a `code` for a script to branch on, where `reason` is for a
+person: `not_found` (the registry or mirror holds no such NID or file), `access_denied` (an S3 `401`
+or `403`), `verification_failed` (the bytes served are not that nest, or a segment does not hash to
+its address) and `other`, which covers every refusal above. A retry clears it.
+
+### Rebuilding a runtime from its mirror
+
+Re-indexing every nest over RPC is the slow way back from a lost box. Since 5.13.0 a mount can be
+filled from a mirror first: point `[runtime.publish]` in `mounts.toml` at a bucket the old runtime
+published to (a mount's own `[mounts.publish]`, or a `publish` table in the request, wins), and mount
+each NID with `"seed": true`:
+
+```sh
+nh -XPOST localhost:8288/_admin/nests -d '{"name":"usdc","nid":"9f2c…","seed":true}'
+```
+
+The job reads `seeding` with `seed_progress`, checks every file against its content address exactly
+as `nuthatch seed` does, and then follows the chain from the block after the mirror ends. A corrupt
+segment fails it `verification_failed`; posting the same body again fetches only what is missing. A
+dataset that has already indexed, or that another mount already serves, is not seeded again. S3
+credentials come from the runtime's `AWS_*` environment, never the request.
+
 Once live, the nest's full API is under its name: `/usdc/sql`, `/usdc/tables`, `/usdc/ready`. `GET
 /nests` lists every live mount with its health, and `GET /ready` answers for the whole runtime.
 
@@ -195,7 +243,8 @@ nh -XPOST localhost:8288/_admin/nests -d '{"name":"globex/usdc","nid":"9f2c…"}
 ```
 
 Both mounts serve **one dataset**, indexed once. The tenant is a label nuthatch refcounts and knows
-nothing else about: it never authenticates it, limits it or bills it.
+nothing else about: it never authenticates it or bills it. Since 5.13.0 it does divide query capacity
+between labels, and honours the shares you set for them ([step 9](#9-shares-and-limits)).
 
 **A mount's route depends on its own tenant alone** (3.13.1): the default tenant's mounts serve by
 alias, under `/usdc`, and every other tenant's under `/acme/usdc`. Adding or removing another tenant, and
@@ -267,7 +316,72 @@ was nothing there. Inside a running runtime a reclaim removes the dataset and th
 references. Segments a live nest may still be reading are left for `nuthatch prune`, run offline:
 `prune --yes` refuses while a runtime holds the directory's `runtime.lock`.
 
-## 9. Meter it
+## 9. Shares and limits
+
+Since 5.13.0 (RFC-0073), with 5.14.0's changes (RFC-0076), the runtime divides what its tenants
+share and lets you narrow what each mount may do. All of it is operator configuration, written to
+`mounts.toml` before it takes effect and changed with no restart; none of it touches a NID or
+re-indexes anything.
+
+**Tenant shares.** Each chain's cursor has one SQL gate of `sql_permits` permits (two by default),
+and the process has one budget of response bytes in flight. Both are divided by tenant label. Only a
+tenant with a query queued or running is seated on a gate, so a tenant with a thousand idle mounts
+holds nothing (since 5.14.0; in 5.13 every mounted tenant held one permit). A gate keeps a reserve of
+`max(1, sql_permits / 8)` permits that only a tenant holding none may take, so a newly active tenant
+finds one within the 250 ms admission wait unless more tenants arrive in that wait than the reserve
+holds. A tenant past its share is answered `429` with `"reason": "tenant_share"`; a full gate still
+answers `503` `busy`. A runtime with one tenant, and a lone nest, behave as before.
+
+```sh
+nh -XPUT localhost:8288/_admin/tenants/acme -d '{"weight":2,"max_permits":1,"max_response_mib":32}'
+nh localhost:8288/_admin/tenants
+```
+
+`weight` (1 to 1000, default 1) sets the tenant's fair share, `max_permits` caps the permits it holds
+on any one gate, and `max_response_mib` its response bytes in flight; they persist under
+`[tenants.acme]`. `PUT` with `{}` restores the default. `GET /_admin/tenants` shows each tenant's
+share, what it holds, its waits and its refusals, per chain too.
+
+**The memory ceiling and the permit count.** `PUT /_admin/runtime` changes `max_rss_mb`, each
+cursor's RAM ceiling, and since 5.14.0 `sql_permits`, the size of every cursor's gate:
+
+```sh
+nh -XPUT localhost:8288/_admin/runtime -d '{"max_rss_mb":4096,"sql_permits":6}'
+```
+
+A ceiling below what a cursor already holds is `409`, and so is a permit count, or a ceiling, that
+the cursor's memory split cannot hold. 2,048 MB is the default and the budget nuthatch is designed and
+gated for; above it is your choice, the answer says `"above_default": true`, and nothing measures it
+for you. `GET /_admin/runtime` reports both with what each cursor holds. Without `[runtime]
+sql_permits`, `NUTHATCH_SQL_MAX_CONCURRENCY` sets the count at boot.
+
+**Per-mount limits.** A mount may lower the `/sql` guards for itself, on `POST /_admin/nests` or
+live with `PATCH /_admin/mounts/<name>`:
+
+```sh
+nh -XPATCH localhost:8288/_admin/mounts/acme/usdc -d '{"limits":{"statement_timeout_ms":5000,"max_rows":1000}}'
+```
+
+The fields are `statement_timeout_ms`, `max_rows`, `max_result_bytes`, `max_hot_rows`,
+`max_hot_bytes`, `max_named_scan_bytes`, `analytics_memory_bytes`, `max_queued` and, since 5.14.0,
+`window_deadline_ms`, which is not a query guard but how long one window of indexing may take before
+it is abandoned and asked for again. A limit only lowers: a value above the process's is `400`,
+naming the ceiling. They are kept under `[mounts.limits]`, outside the NID, so two mounts of one
+dataset may carry different ones. `{"limits": {}}` returns a mount to the process values. Requests
+already running finish under the limits they started with. `analytics_memory_bytes` is approximate:
+two mounts of one NID share the dataset's engine pool, so one mount's cap can refuse its query while
+the other is busy.
+
+**Strict isolation.** By default every mount of one dataset shares its SQL session, engine memory
+pool and answer cache, which is right when one operator owns every mount. `[runtime] isolation =
+"strict"` gives each tenant label its own of all three, holds `/sql` and the views it reaches to a
+function allow-list, and runs only `CREATE VIEW` from a nest's `views/*.sql`. **The isolation
+guarantee is not claimed**: the threat model,
+[`docs/security/shared-runtime.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/security/shared-runtime.md),
+says what it is meant to stop and what it does not defend (timing, shared CPU, the engine's own memory
+safety), and it is not a guarantee until an independent review has run against it.
+
+## 10. Meter it
 
 The runtime serves `/metrics` at its root, before anything is mounted, broken down per mount with the
 label `{nest="<name>"}`:
@@ -283,9 +397,29 @@ label `{nest="<name>"}`:
 Segments are content-addressed and shared: a segment two datasets both contain counts under both
 nests. For disk actually used, read the unlabelled `nuthatch_sealed_segments_bytes`, which counts each
 segment store once. A mount that shares another's dataset has no storage series of its own; its bytes
-are reported under the mount that indexes it. See [metrics](/docs/operate/metrics/) for the full list.
+are reported under the mount that indexes it.
 
-## 10. Put a gateway in front
+Since 5.13.0 the serving counters are per mount too, labelled by the name a request arrived through,
+so two aliases of one dataset are counted apart: `nuthatch_nest_http_requests_total`,
+`nuthatch_nest_sql_queries_total`, `nuthatch_nest_sql_rejections_total{nest,reason}` and the
+`nuthatch_nest_sql_duration_seconds` histogram. See [metrics](/docs/operate/metrics/) for the full
+list.
+
+**What one request cost.** A request to `/sql`, `/q/{name}` or a typed route that sends
+`Nuthatch-Cost: 1` is answered with a `Nuthatch-Cost` header:
+
+```text
+Nuthatch-Cost: sealed_bytes=1409; hot_rows=12; engine_us=3793; peak_mem_bytes=0; queue_us=0; result_bytes=219712; sealed_bytes_read=1409; scan_cpu_us=2140
+```
+
+`sealed_bytes` is worked out from segment footers before the statement runs, so the same statement
+over the same segments always reports the same figure, and it is the one to build on.
+`sealed_bytes_read` is what was actually fetched and can vary between runs; `engine_us` is wall time,
+and `scan_cpu_us` the thread CPU spent in segment scans, not in the joins and aggregates above them.
+It is a report, not a price: nuthatch bills nothing, and a request that does not ask computes none of
+it.
+
+## 11. Put a gateway in front
 
 The runtime is the data plane. What it protects is itself: a RAM budget per cursor, query timeouts, a
 bounded SQL surface per mount, and the admin token. What it does not do is know your users. A gateway
@@ -294,13 +428,22 @@ in front should:
 - terminate TLS and authenticate callers;
 - map a caller to the mounts they may read, and route `/<name>/` only for those;
 - hold the admin token and never expose `/_admin/` to callers;
-- meter and bill from the per-nest series above and from its own request log.
+- meter and bill from the per-nest series above, the `Nuthatch-Cost` header and its own request log.
 
 Keep the admin API on a private interface or behind the gateway only. The token is the one thing
 between the network and a mount.
 
-## 11. Restarts and upgrades
+## 12. Faults, restarts and upgrades
 
+- **One nest's fault stays its own.** Since 5.13.0 a panic in a nest's ingest quarantines that nest
+  alone, terminally, with the panic message as its reason; the cursor and its co-tenants carry on,
+  and the nest keeps answering from its last committed window. A nest that fails to build at boot,
+  or no longer fits its cursor's ceiling, boots quarantined and answers `503` with the reason while
+  the rest boot. Boot fails only when every nest does; `--fail-fast` restores the strict behaviour.
+- **A slow nest stays its own too.** Since 5.14.0 a runtime's cursor is an extraction stage feeding a
+  bounded window buffer, with one ingest task per nest reading it from its own position, so a nest
+  whose windows are slow delays only itself; see [Run many nests](/docs/operate/many-nests/).
+  `window_deadline_ms` ([step 9](#9-shares-and-limits)) bounds how long one of its windows may take.
 - **Restart** at any time. Mounts come back from `mounts.toml`, suspended mounts stay suspended,
   unfinished jobs resume, and a fetch a killed process left half-staged is cleared first.
 - **Upgrade the binary** by replacing it and restarting. NIDs are independent of the nuthatch version,
@@ -308,6 +451,45 @@ between the network and a mount.
 - **Supervise** the process with systemd or a container restart policy. A runtime whose every cursor
   has died exits non-zero so the supervisor restarts it; a runtime with nothing mounted, or whose
   nests have all been unmounted, stays up and waits.
+
+### Read replicas, and upgrades without an outage
+
+A runtime alone is unavailable while it restarts: its listener binds only after every mount is
+built. Since 5.13.0 a **follower** serves every mount read-only beside it, from the sealed segments
+and a copy of each hot tip fed by the writer's `GET /_admin/feed`:
+
+```sh
+NUTHATCH_ADMIN_TOKEN=<the writer's token> \
+  nuthatch serve --runtime /srv/runtime --follow http://127.0.0.1:8288 --listen 127.0.0.1:8289
+```
+
+Its answers are the writer's, with the same `as_of`, `sealed_through` and `nid`, so the followers and
+the writer can sit behind one load balancer. Adding one needs no writer restart and re-indexes nothing.
+A mount answers `503` `catching_up` until its snapshot arrives, and `/<tenant>/<alias>/ready` reports
+the writer as `connected` or `absent` and the follower's lag in generations. A follower keeps serving
+through a writer restart. It has no admin surface: mounts, limits and shares go to the writer.
+
+Since 5.14.0 a follower can run on **another host**, sharing no path with the writer:
+
+```sh
+NUTHATCH_ADMIN_TOKEN=<the writer's token> \
+  nuthatch serve --follow https://writer.internal:8288 \
+    --mirror s3://nests/mirror --registry s3://nests/registry \
+    --cache /var/lib/nuthatch/follower --max-rss-mb 2048 --listen 0.0.0.0:8289
+```
+
+It takes sealed segments from the writer's mirror, each checked against the hash its catalogue names,
+and each nest's config from the registry by NID. The mirror must publish for followers, which is off by
+default because it uploads offchain snapshots too and needs delete permission: set `followers = true`
+in `[runtime.publish]` or `[mounts.publish]`, and publish each nest's bundle to the registry. A slow
+mirror shows as lag, never as a short answer. Cross-region latency has not been measured.
+
+To upgrade with no outage, roll the followers first, one at a time, waiting for each to report
+`"writer": "connected"` and `"lag_generations": 0`, then the writer last; while it restarts the
+followers keep answering as of the last block it committed. `scripts/rolling-upgrade.sh` in the
+repository does exactly this. The release gate runs it from the previous release and reports the
+result without blocking the tag; 5.14.0 is the first release it ran across two. 5.12 had no feed, so
+the first rolling upgrade is from 5.13.
 
 ## The whole walkthrough
 

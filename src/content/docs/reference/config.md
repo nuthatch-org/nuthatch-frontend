@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
@@ -342,18 +342,33 @@ differs from the author's, is refused. See
 [runtime]
 name = "my-runtime"
 max_rss_mb = 2048             # optional per-cursor RAM ceiling (default 2048)
+sql_permits = 2               # optional: SQL permits on each cursor's gate (5.14.0)
+isolation = "shared"          # optional: "strict" separates tenants (5.13.0)
 suspended = ["usdc"]          # runtime state: mounts suspended over the admin API (3.13.0)
+
+[runtime.publish]             # optional: the runtime's mirror, and where "seed" reads (5.13.0)
+target = "s3://nests/mirror"
+followers = false             # true also publishes for followers on other hosts (5.14.0)
 
 [[chains]]
 chain = "mainnet"
 chain_id = 1
 rpc_urls = ["https://…"]
 
+[tenants.acme]                # optional: a tenant label's share (5.13.0)
+weight = 2
+max_permits = 1
+max_response_mib = 32
+
 [[mounts]]
 tenant = "default"            # optional; defaults to "default"
 alias = "usdc"                # served at /usdc/ in a single-tenant runtime
 nid = "<64-hex-nest-identity>"
 sql = "allowlist"              # open | deny | allowlist
+
+[mounts.limits]               # optional: lower this mount's query guards (5.13.0)
+statement_timeout_ms = 5000
+max_rows = 1000
 ```
 
 `[runtime]` and `[[chains]]` are authored: with no `[[mounts]]` at all they are a valid runtime that
@@ -364,6 +379,40 @@ suspended mount keeps its record and data but is neither indexed nor served (it 
 resumed. A `nid` is written in lower case: since 5.8.0 an upper-case one refuses to load, because on
 Linux it names a different directory under `data/`. See [Run a runtime](/docs/operate/many-nests/)
 for the full multichain shape and the named-query allowlist.
+
+The rest is operator configuration, and the admin API also writes it, before each change takes
+effect, so what runs is what the next start runs:
+
+- **`max_rss_mb`** is each chain cursor's RAM ceiling. 2048 is the default and the budget nuthatch is
+  gated for; since 5.13.0 it may be set higher, up to 1 TiB, as the operator's choice. `PUT
+  /_admin/runtime` changes it live.
+- **`sql_permits`** (5.14.0) is how many analytical statements each cursor's gate runs at once. Absent,
+  `NUTHATCH_SQL_MAX_CONCURRENCY` sets it, and absent too it is 2. It is held to the cursor's memory
+  split rather than a fixed ceiling, and `PUT /_admin/runtime` changes it live.
+- **`isolation`** (5.13.0) is `shared` (the default) or `strict`, which gives each tenant label its
+  own SQL sessions, engine pools and memo, and holds `/sql` to a function allow-list. Its isolation
+  guarantee is not claimed until an independent review has run; see
+  [Security](/docs/operate/security/#tenants-who-do-not-trust-each-other).
+- **`default_tenant`** names the tenant a mount belongs to when it names none, `"default"` if absent.
+- **`[runtime.publish]`** (5.13.0) mirrors every dataset whose mounts name no `[mounts.publish]` of
+  their own, and is where a mount with `"seed": true` reads from. It takes `target`, `interval`
+  (default `60s`) and `parallelism`, and since 5.14.0 `followers`, off by default, which also publishes
+  provisional tails, offchain snapshots and a marker for followers on other hosts, and deletes the
+  tails a fold replaced. A mount's own `[mounts.publish]` takes the same keys.
+- **`[[chains]]`** may also carry `finality_depth` and `log_window` (5.13.0), for a chain the
+  built-in registry does not know. `POST /_admin/chains` adds one live (5.13.0).
+- **`[tenants.<tenant>]`** (5.13.0) is a tenant label's `weight` (1 to 1000, default 1),
+  `max_permits` on any one gate and `max_response_mib` in flight. `PUT /_admin/tenants/<tenant>`
+  writes it.
+- **`[mounts.limits]`** (5.13.0) lowers this mount's query guards: `statement_timeout_ms`,
+  `max_rows`, `max_result_bytes`, `max_hot_rows`, `max_hot_bytes`, `max_named_scan_bytes`,
+  `analytics_memory_bytes`, `max_queued`, and since 5.14.0 `window_deadline_ms`, how long one window
+  of indexing may take before it is abandoned and retried. A value above the process's own is refused
+  over the API, never clamped; one the process has since been lowered past is held to the process
+  value at boot, with a warning. It sits outside the NID, so changing it re-indexes nothing. `PATCH
+  /_admin/mounts/<name>` writes it.
+
+See [Host nests for others](/docs/operate/hosting-nests/#9-shares-and-limits) for how each behaves.
 
 ## A note on `nest.star`
 

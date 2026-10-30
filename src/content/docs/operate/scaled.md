@@ -2,7 +2,7 @@
 title: "Scaled mode: a fleet"
 description: When one machine is no longer enough - a writer pool, an independently-scaled serving tier, and a control plane.
 order: 11
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 Everything else in these docs is **embedded mode**: one binary, no external services, the thing
@@ -20,12 +20,15 @@ it. Each release also ships the scaled build as a separate `nuthatch-scaled-*` t
 Two reasons, and neither of them is "it sounds more serious":
 
 - **A single box can no longer hold your cursors** inside its RAM budget. A runtime is bounded per
-  cursor at 2 GB, and Σ cursors has to fit the machine.
+  cursor at 2 GB by default, and Σ cursors has to fit the machine.
 - **Serving load and ingestion load want different dials.** A backfill that saturates a writer
   shouldn't slow queries, and a traffic spike shouldn't slow indexing.
 
 If neither applies, a [runtime](/docs/operate/many-nests/) on one machine is simpler, and that simplicity is
-the point of the embedded path. Scaled mode is not an upgrade; it is a trade.
+the point of the embedded path. Scaled mode is not an upgrade; it is a trade. If what you need is only
+more query capacity, or a runtime that keeps answering while it is upgraded, an embedded runtime's
+[followers](/docs/operate/hosting-nests/#read-replicas-and-upgrades-without-an-outage) (since 5.13.0,
+and on other hosts since 5.14.0) give you that without Postgres.
 
 ## The three roles
 
@@ -177,11 +180,13 @@ not a configuration anyone chooses on purpose.
 
 ## What scaled mode is not
 
-Per-tenant billing, metering, quotas, or authz between mutually-untrusting **paying** customers. Those
-belong to a gateway in front of nuthatch and are deliberately out of scope.
+Authentication, accounts, identity or billing for anyone's tenants. Those belong to a gateway in front
+of nuthatch and are deliberately out of scope.
 
-The line: *multi-nest co-tenancy* and *distributed self-hosted* mode are both in scope - one operator's
-cooperating nests. Charging strangers for isolated access is a different product.
+The line is what nuthatch does about tenants, not who they are: it sees a tenant as a string,
+refcounts it, and in an embedded runtime since 5.13.0 enforces the shares and limits an operator sets
+for it ([Host nests for others](/docs/operate/hosting-nests/#9-shares-and-limits)). An operator's tenants
+may well be paying customers; nuthatch has no concept of it.
 
 ## Where nests come from
 

@@ -2,14 +2,16 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
 registered as one table per event in the query engine,
 [Burrmill](https://github.com/nuthatch-org/burrmill) on DataFusion. You never think about the seam - a query over `usdc__transfer` sees every
 row from deployment to the block indexed a moment ago. Reach it via `nuthatch sql` (a REPL when
-called with no query), `GET /sql`, or the MCP `sql` tool.
+called with no query), `GET /sql`, `POST /sql` with `{"q": "…"}` as its body (since 5.13.0, so the
+statement stays out of proxy logs; the answer is byte for byte the `GET` answer), or the MCP `sql`
+tool.
 
 ## Naming
 
@@ -65,7 +67,10 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
 - **Deterministic and finality-aware.** Sealed segments are immutable; only the hot tip can change
   under a reorg, and the union converges with it.
 - **Guarded:** a 30-second timeout, a 50,000-row cap, a 64 MiB result-byte ceiling, 2 concurrent
-  analytical queries, and a 16 KiB limit on the query text itself. On `/sql` a query cut off by the
+  analytical queries per chain by default (`[runtime] sql_permits` in a runtime), and a 16 KiB limit
+  on the query text itself. Since 5.13.0 a statement's computed values count against its memory
+  budget, and any one value, a scalar function's result, `||` or `string_agg`, is capped at 16 MiB,
+  refused as `out_of_memory`. On `/sql` a query cut off by the
   timeout is answered with 504 (400 before 3.12.1). A rejection is the node protecting itself - narrow the query
   rather than fighting the guard. Validate cheaply first with `explain`.
   Input bounds can refuse a query before it runs. The unsealed rows a query copies from the hot
@@ -85,6 +90,13 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   the tip answers a repeat from the cache; a committed row, a newly sealed segment or an edited view
   does, and the next request computes. A degraded answer is never remembered. It is bounded by
   `NUTHATCH_SQL_MEMO_BYTES` (64 MiB by default, `0` turns it off) and cleared by a restart.
+- **One snapshot per request.** Since 5.14.0 every request answers from the snapshot it pinned at its
+  start: one window's hot rows and every derived view together, so a statement never sees a window's rows
+  without the entity built from them, or the reverse.
+- **What it cost, on request.** Send `Nuthatch-Cost: 1` and the answer carries a `Nuthatch-Cost`
+  header: the sealed bytes the statement selects, hot rows read, engine time, peak memory, queue
+  time, result bytes, sealed bytes actually read and scan CPU (since 5.13.0). See the
+  [HTTP API](/docs/reference/http-api/).
 
 ```sql
 -- the shape of a typical answer (block_timestamp is epoch seconds; to_timestamp() makes it a time)

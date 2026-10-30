@@ -2,8 +2,13 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.12.0**, released 2026-10-25, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.12.0 widens what an address-history nest answers, off loopback and for an account with code; 5.11.1 makes a running publisher check each mirrored segment once. 5.11.0 is a cold audit of 5.10.0 put right, with no storage migration and no NID change; the admin API
+"Be your own indexer." Status: **v5.14.0**, released 2026-10-29, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.14.0 scales the shared runtime (RFC-0076): idle tenants hold no SQL permit, the
+permit count is runtime configuration bounded by memory, the nests on one chain progress
+independently behind one extraction stage, and a follower can serve from another host. 5.13.0 is the
+shared runtime (RFC-0073), operator configuration and operability for hosting many organisations'
+nests in one runtime; neither migrates storage or changes a NID, and a lone nest behaves as before.
+5.12.1 and 5.12.2 are security releases for operators who mount other people's nests. 5.12.0 widens what an address-history nest answers, off loopback and for an account with code; 5.11.1 makes a running publisher check each mirrored segment once. 5.11.0 is a cold audit of 5.10.0 put right, with no storage migration and no NID change; the admin API
 needs a token on every bind (a localhost nest without `NUTHATCH_ADMIN_TOKEN` makes one in
 `<dir>/.admin-token`), `nuthatch control` refuses to start without `NUTHATCH_CONTROL_TOKEN`, a
 symlinked input file or a webhook that cannot work refuses the nest, and `/diff` refuses `top` above
@@ -21,7 +26,9 @@ from what is designed and not built. Do not present a design target as a present
 and do not infer customers, star counts or testimonials from it. It was rewritten from the
 documentation read against 4.11.0, and every command it contained then was run against the released
 4.11.0 binary. On 2026-10-23 its counts, the worked example and the sections on address history,
-maintained views, the diff, hosting and the roadmap were checked against 5.9.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+maintained views, the diff, hosting and the roadmap were checked against 5.9.0. On 2026-10-30 the
+status, factories, the runtime and hosting, the query guards, security, the roadmap and the upgrade
+notes were checked against 5.14.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -131,7 +138,9 @@ operational weight of the tooling, which is an engineering problem.
    runtime, tip and backfill and reorg-safe. All children of a template share its tables,
    distinguished by the `address` column; `events` on a template chooses what is decoded. It indexes
    Uniswap. Since 4.11.0 logs are asked for by the factory and child addresses until 500 children,
-   in the backfill, the tip loop and a runtime's cursor alike, then by topic0; an endpoint that
+   in the backfill, the tip loop and a runtime's cursor alike, then by topic0. Since 5.13.0 a solo nest's tip
+   fetch and a seal-direct backfill flip per template: static contracts are always fetched by address, a template with more than 500 children of its own by its
+   own topic0s, and when only the total crosses 500 every template with a child goes wide; an endpoint that
    refuses a topic0-only fetch keeps the cursor on addresses. An endpoint that refuses too many
    addresses in one `eth_getLogs` (publicnode on BSC: ten or more) has the list halved until it
    accepts, rather than being read as a credentials refusal.
@@ -175,9 +184,14 @@ operational weight of the tooling, which is an engineering problem.
     and one `getLogs` per window; a runtime spanning chains runs one isolated cursor per chain, each
     with its own tip, finality and reorg boundary, and a cursor is never multiplexed across two
     chains. Data is keyed by NID and sealed segments are shared by content hash. A mount is admitted
-    only if it fits the cursor's RAM ceiling (`max_rss_mb`, default 2048), refused with `507`
-    otherwise; a faulting nest is quarantined and its siblings keep serving, visible at `GET
-    /nests`, `GET /<name>/ready` and the `nuthatch_nest_health` series. There is no `roost`
+    only if it fits the cursor's RAM ceiling (`max_rss_mb`, default 2048, which an operator may
+    raise), refused with `507` otherwise; a faulting nest is quarantined and its siblings keep
+    serving, visible at `GET /nests`, `GET /<name>/ready` and the `nuthatch_nest_health` series.
+    Since 5.13.0 a panic in one nest's ingest, or a nest that fails to build at boot, quarantines that
+    nest alone. Since 5.14.0 a runtime's cursor is an extraction stage feeding a bounded window
+    buffer, with one ingest task per nest reading it from its own position, so a slow nest delays
+    only itself; the chain still has one cursor, one finality view and one reorg authority, and
+    `NUTHATCH_CURSOR_BUFFER=0` restores the shared cursor for 5.14 only. There is no `roost`
     subcommand; it was removed in 2.0, and `nuthatch migrate` moves a pre-2.0 directory across.
 14. **Hosting over the admin API** (3.13.0, run 3.13.1 or later). A runtime may start with chains
     declared and nothing mounted, and takes its nests over HTTP, each call authorised by
@@ -192,7 +206,19 @@ operational weight of the tooling, which is an engineering problem.
     equal to a default-tenant alias; a NID is lower-cased by the API and must be lower case in
     `mounts.toml`; a tenant is an opaque label nuthatch refcounts and knows
     nothing else about, and two mounts of one NID share one dataset. `/metrics` reports storage per
-    nest. Sign-in, quotas and billing belong to a gateway in front.
+    nest. Since 5.13.0 (RFC-0073): `PUT /_admin/tenants/<tenant>` sets a label's `weight`,
+    `max_permits` and `max_response_mib`, and a label past its share is answered `429`
+    `tenant_share`; `PATCH /_admin/mounts/<name>` lowers a mount's query limits; `PUT
+    /_admin/runtime` changes `max_rss_mb` and (5.14.0) `sql_permits`; `POST /_admin/chains` and
+    `PUT /_admin/chains/<chain>/rpc` declare a chain and replace its RPC pool; `POST /_admin/bundles`
+    checks, publishes and prunes bundles; `"seed": true` on a mount fills it from a mirror; a job
+    carries a `code` (`not_found`, `access_denied`, `verification_failed`, `other`); and a request
+    sending `Nuthatch-Cost: 1` gets a `Nuthatch-Cost` header reporting what it read and held. `nuthatch
+    serve --runtime <dir> --follow <writer>` serves every mount read-only from the writer's feed, and
+    since 5.14.0 `--mirror`, `--registry` and `--cache` run one on another host. `[runtime]
+    isolation = "strict"` gives each label its own SQL sessions, memory pools and memo; its isolation
+    guarantee is not claimed until an independent review has run. Sign-in, accounts and billing
+    belong to a gateway in front.
 15. **The mirror and seeding** (RFC-0052, 3.7.0; 4.8.0; 4.9.0). `nuthatch publish sync --target
     <dir | s3://bucket/prefix> --dir <nest>` mirrors every non-provisional sealed segment, the
     schema and the catalogue to `<target>/<data identity>/`; `dev --publish-target` and `serve
@@ -283,13 +309,16 @@ refused before anything runs. File-reading functions are refused by a denylist t
 quotes are normalised and by an allowlist over the engine's own parse, and each Burrmill session
 opens empty and registers only the tables nuthatch binds. Resource guards, all defaults: 30 s
 timeout (answered 504), 50,000-row cap (`max_rows` asks for less), 64 MiB result ceiling, two
-concurrent statements (a third waits 250 ms, then 503), 16 KiB of query text, two million unsealed
+concurrent statements per chain gate by default (a third waits 250 ms, then 503; `[runtime]
+sql_permits` changes the count in a runtime), 16 KiB of query text, two million unsealed
 tip rows per query (refused with 503 naming `sealed_through`, never answered from sealed data alone),
 and a 2 GB analytics spill cap (507). The engine runs each session under a memory limit
 (`NUTHATCH_ANALYTICS_MEMORY_LIMIT`, 512 MB by default) and a bounded thread count
 (`NUTHATCH_ANALYTICS_THREADS`, 2); since 4.4.0 every session over one nest draws on one pool
 (`NUTHATCH_BURRMILL_MEMORY_LIMIT`), and a statement that needs more is refused rather than spilled.
-A damaged sealed segment reduces its own table and the response says so (`degraded`,
+Since 5.13.0 a statement's computed values count against its memory budget, every scalar function
+result is bounded at 16 MiB, and `POST /sql` takes `{"q": …}` as a body and answers exactly as `GET`
+does. A damaged sealed segment reduces its own table and the response says so (`degraded`,
 `degraded_tables`). `nuthatch_sql_rejections_total` counts refusals. A repeated statement is
 answered from a process-local cache (`"cached": true`), keyed since 4.11.0 on the rows and segments
 it reads, so a cursor poll that commits nothing leaves the entry valid; `NUTHATCH_SQL_MEMO_BYTES`
@@ -362,7 +391,11 @@ published as `docs/security-audit-2026-07-31.md`. `nest load` warns about every 
 endpoint a bundle declares and logs cloud-metadata addresses at `error`; `nest bundle` refuses a
 `nuthatch.toml` that holds a credential (`--allow-secrets` overrides). Pass private endpoints at run
 time with `--rpc` and `--state-rpc` rather than writing them into `rpc_urls`. Token comparison is
-constant-time. Report privately through the Security tab.
+constant-time. 5.12.1 (GHSA-w9wm-2c89-4cxw) stopped an offchain manifest naming a file outside its
+nest, and 5.12.2 (GHSA-mqw2-cc6q-mpw6) stopped a bundle installing anything but its own regular
+files; both matter to an operator who mounts nests written by someone else. Security fixes go to the
+latest minor and, for 30 days after the next ships, the previous one. Report privately through the
+Security tab.
 
 ## Determinism and verifiability
 
@@ -457,6 +490,7 @@ promised; order is.
 - Shipped: everything in "What it does today", plus a published stability contract, a `cargo-deny`
   gate, the CI footprint job and the release gate.
 - Shipped in 5.10.0: the `watch` subcommand (RFC-0069), a read-only terminal view of a running nest.
+- Shipped in 5.13.0 and 5.14.0: the shared runtime (RFC-0073, RFC-0076), above under hosting.
 - In progress: of the reth ExEx groundwork (RFC-0003), the `Source` trait and
   the library split are in; 5.0.0 removed the `exex` stub, and the ExEx is designed, not built.
 - Planned: a Homebrew tap (RFC-0005's last open piece); reth ExEx tip mode and then firehose-class
@@ -468,7 +502,9 @@ promised; order is.
   then parked on 2026-09-26. Accepted since 2026-10-07: RFC-0062 (maintained views, shipped in 4.14.0,
   stopped after S2), RFC-0063 and RFC-0064 (address history and the deposit sweep, shipped
   5.1.0 to 5.7.0), RFC-0065 and RFC-0066 (the tab and the nest builder, live at /play), RFC-0068
-  (postcards, live), RFC-0071 (the diff, 5.9.0) and RFC-0069 (the engine room, in progress).
+  (postcards, live), RFC-0071 (the diff, 5.9.0), RFC-0069 (the engine room, 5.10.0), RFC-0073 and
+  RFC-0076 (the shared runtime, 5.13.0 and 5.14.0; 0076's FR20, several writers per chain, is
+  direction only) and RFC-0075 (the whole nest in a tab, live at /play/live since 2026-10-30).
   RFC-0070 (time-lapse) and RFC-0072 (chain weather) were parked on 2026-10-22.
 - Not planned: a token or decentralised-network features; telemetry beyond the opt-in head count; a
   Kubernetes-first deployment; any gateway, auth or metering layer in the core.
@@ -493,11 +529,11 @@ with no prebuilt binary the script stops and prints the source-build command. Ea
 stops an attestation from any repository being accepted). The Linux binaries are dynamically linked,
 needs glibc 2.35 or newer from 4.1.0 (Debian 12 and Ubuntu 22.04 qualify; RHEL 9 and Amazon Linux
 2023 ship 2.34 and need the source build) and no C++ runtime. Container images:
-`ghcr.io/nuthatch-org/nuthatch:5.9.0` (embedded) and `:5.9.0-scaled`, `linux/amd64` only, the
+`ghcr.io/nuthatch-org/nuthatch:5.14.0` (embedded) and `:5.14.0-scaled`, `linux/amd64` only, the
 same binary as the release; no image carries the graph build.
 
 ```sh
-docker run --rm ghcr.io/nuthatch-org/nuthatch:5.9.0 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.14.0 --version
 rustup toolchain install 1.95.0
 cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch
 ```
@@ -525,6 +561,21 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.14.0 is a binary swap from 5.13.0 with no storage migration and no NID change. Before upgrading a
+runtime: the buffered cursor is its default (`NUTHATCH_CURSOR_BUFFER=0` restores the shared cursor,
+for 5.14 only), each cursor's admission is charged `window_buffer_mb` (64 MiB at the default
+ceiling) and it may write scratch under `<runtime>/cursors/<chain>/buffer/`; an idle tenant holds no
+SQL permit; `sql_permits` is no longer capped at 16; a 5.14 follower asks a writer for feed v2 and
+reads v1 from a 5.13 writer, so upgrade followers first. A lone nest is unaffected.
+
+5.13.0 is a binary swap from 5.12 with no storage migration and no NID change. Before upgrading a
+runtime with more than one tenant: two tenants on one chain share its two default SQL permits, one
+each, and a tenant at its share gets `429` `tenant_share`, not `503`; a `/q` named query whose tip
+copy exceeds 128 MiB is refused; boot counts the 120 MB runtime base against each cursor and
+quarantines a mount that does not fit, or does not build, where boot used to fail (`--fail-fast`
+restores that); `string_agg` results are capped at 16 MiB; and undecoded logs warn once per window.
+5.12 has no follower feed, so the upgrade to 5.13 cannot be a rolling one.
 
 5.12.0 is a binary swap from 5.11.1 with no storage migration and no NID change. Off a loopback bind an
 address-history nest now answers `proxy/eth_blockNumber` from its own finalized head and reads `balance` and
@@ -569,8 +620,9 @@ swap with no storage migration, config change, NID change or re-index.
 ## Scope
 
 In scope: EVM chains; embedded mode (the product) and scaled mode (built, opt-in at build time);
-multi-nest tenancy in the runtime, where a tenant is an opaque label with no identity,
-authentication, quotas or metering; mirrors and seeding. Out of scope: any gateway, auth, metering
+multi-nest tenancy in the runtime, where a tenant is an opaque label with no identity or
+authentication, to which an operator may give a share and caps of query execution (RFC-0073), and
+which nuthatch never bills; mirrors and seeding. Out of scope: any gateway, auth, metering
 or billing layer in the core; a hosted platform run by Nuthatch (the public offer to host a nest is
 the stock binary run as an operator would, with no billing, no accounts and nothing in the tree built
 for it); any token, staking or

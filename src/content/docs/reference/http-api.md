@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -14,9 +14,9 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 - `GET /` - the index summary: contract(s), chain, rows indexed, last and sealed block.
 - `GET /health` - liveness; returns `ok`.
-- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that. `tip` and `lag_blocks` are `null` until the cursor first polls (since 5.11.0), never `0`, which would read as "at the tip".
+- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that. `tip` and `lag_blocks` are `null` until the cursor first polls (since 5.11.0), never `0`, which would read as "at the tip". Since 5.13.0 it carries `undecoded`, `{"total", "top"}`: logs a declared event claimed that did not decode against its ABI, `top` the five largest `{"contract", "topic0", "logs"}` pairs. A nest whose ABI no longer fits keeps answering and stays ready.
 - `GET /metrics` - Prometheus text. See [Metrics & footprint](/docs/operate/metrics/).
-- `GET /nest` - the nest's identity: name, chain, content-addressed registry hash.
+- `GET /nest` - the nest's identity: name, chain, content-addressed registry hash, and the same `undecoded` block.
 - `GET /shape` - which capabilities this nest can actually answer for (balances, flags, exposure,
   …). The MCP bridge reads it to advertise only live tools; it fails open if the probe fails.
 - `GET /tables` - every decoded table with its columns, Solidity types, and topic0.
@@ -37,14 +37,16 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   carry a **provenance stamp**: `as_of`, `sealed_through`, `source`, `nid` and `registry_hash`,
   so a figure can be cited against a fixed watermark. It does not list the segments read. See
   [The SQL surface](/docs/reference/sql/).
-- `GET /explain?q=…` - validate a query **without executing it**: binds every table, column, and
+- `POST /sql` *(since 5.13.0)* - the same, with `{"q": "…", "max_rows": n}` as a JSON body, so the
+  statement need not sit in proxy and CDN logs. The answer is byte for byte the `GET` answer.
+- `GET /explain?q=…`, `POST /explain` - validate a query **without executing it**: binds every table, column, and
   type and returns `{valid: true}` or an error with a fix hint. Cheaper than `/sql`; agents use it
   to check shape before spending a query.
 - `GET /queries` - the mount's sanctioned query surface: `sql` (`open` | `deny` | `allowlist`),
   `free_form`, and each named query with its parameters and path. On an `open` mount this simply
   reports that free-form SQL is available.
-- `GET /q/{name}?<params>` - run a **named, parameterised** query by name, passing its declared
-  arguments as the query string. The caller never supplies SQL. Available on any mount that declares
+- `GET /q/{name}?<params>`, `POST /q/{name}` - run a **named, parameterised** query by name, passing its declared
+  arguments as the query string, or since 5.13.0 as a JSON object in a `POST` body. The caller never supplies SQL. Available on any mount that declares
   queries, and the *only* SQL route on an `sql = "allowlist"` mount - where `/sql` and `/explain` are
   refused with the list of names you may ask for instead. See
   [Bounding what a mount will answer](/docs/operate/security/#bounding-what-a-mount-will-answer).
@@ -56,6 +58,20 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   provisional; `format` is `json` (default), `text`, `markdown`, and for a flow `dot` or `mermaid`. It runs under the same permit, 30 s budget and hot-tip bounds as
   `/sql` (`504` past the budget), and refuses rather than truncates past 2,000,000 flow rows or
   500,000 distinct edges. A mount bounded to named queries refuses it, since a diff reads every table.
+
+**The cost header** *(since 5.13.0)*. A request to `/sql`, `/q/{name}`, GraphQL or a typed route
+(`/table/{name}`, `/entities`, `/entity/{id}`, the `/derived` routes, `/balances`,
+`/balance/{address}`, `/exposure/{address}`, `/flags`) that sends `Nuthatch-Cost: 1` is answered with
+a `Nuthatch-Cost` header of eight integer fields, always in this order: `sealed_bytes; hot_rows;
+engine_us; peak_mem_bytes; queue_us; result_bytes; sealed_bytes_read; scan_cpu_us`. A new field is
+only ever added at the end. `sealed_bytes` is decided from segment footers before the statement runs,
+so it is the same for the same statement over the same segments; `sealed_bytes_read` is what was
+fetched, and varies. Without the request header nothing is computed or sent. `--cors` exposes the
+header to a page. It is a report, not a price.
+
+**Refusals in a runtime.** With more than one tenant mounted, a tenant past its share of a chain's SQL
+gate or of the response bytes is answered `429` with `"reason": "tenant_share"`; a saturated gate is
+still `503` `busy`. A lone nest and a one-tenant runtime are only ever told `busy`.
 
 ## Derived & compliance
 
@@ -145,9 +161,11 @@ See [Build a subgraph fallback](/docs/build/subgraph-fallback/).
 - The **runtime lifecycle routes** below mutate runtime state: they follow the same token rule and
   disappear with `--no-admin`.
 - `GET /nests` *(runtime only)* - the roster of mounted nests: name, chain, registry hash, table
-  count, footprint, plus each nest's **live health** (`indexing` or `quarantined`, with the reason
-  and the next re-admission attempt). The health half is merged per request, not cached at boot, so
-  a quarantined nest reports what is true now.
+  count, footprint, plus each nest's **live health** (`indexing`, `quarantined` or `suspended`). A
+  quarantined one carries a `quarantine` object: `kind` (`nest`, or `cursor` when the chain's cursor
+  died), `class` (`retryable` or `terminal`), `reason`, `attempts` and `next_retry_unixtime`. The
+  health half is merged per request, not cached at boot, so a quarantined nest reports what is true
+  now.
 - `GET /ready` *(runtime root)* - runtime-wide readiness, for a supervisor to poll. Each nest also
   answers its own `GET /<name>/ready`, so one sick nest is diagnosable without guessing.
 
@@ -170,14 +188,30 @@ route key: `usdc` for the default tenant, `acme/usdc` for any other, fixed for t
 | `POST /_admin/move/<name>` `{"nid"}` | Switch a live name to a new NID in one step, as a job (`?wait=true` accepted) | `202`; `400` for a malformed NID; `409` while a job for the name is running |
 | `DELETE /_admin/nests/<name>` | Unmount (drain, then remove routes); `?reclaim=true` also frees the dataset | `200` `{"unmounted", "reclaim"?}` |
 | `DELETE /_admin/datasets/<nid>` | Free a dataset unmounted earlier | `200` reclaimed, `409` kept, `404` absent |
+| `POST /_admin/nests` `{"name", "nid", "seed": true}` | Mount it filled from a mirror first (5.13.0): the request's `publish`, else `[mounts.publish]`, else `[runtime.publish]` | `202` and the job; `400` with `?wait=true` |
+| `PATCH /_admin/mounts/<name>` `{"sql"?, "queries"?, "limits"?}` | Change a live mount's SQL surface or per-mount limits (5.13.0); each field given replaces the record's | `200` and the record; `400` for a limit above the process value; `409` while it is mounting or moving |
+| `GET /_admin/runtime` | The memory ceiling, SQL permits, window buffer and what each cursor holds (5.13.0; permits 5.14.0) | `200` |
+| `PUT /_admin/runtime` `{"max_rss_mb"?, "sql_permits"?}` | Change either live, written to `mounts.toml` first | `200`; `409` below what a cursor holds or past what its memory split fits; `400` past 1 TiB or 1,024 permits |
+| `GET /_admin/tenants` | Each tenant's share, holdings, waits and refusals, per chain gate too (5.13.0) | `200` |
+| `PUT /_admin/tenants/<tenant>` `{"weight"?, "max_permits"?, "max_response_mib"?}` | Set a tenant's share; `{}` restores the default | `200`; `400` bad value; `422` unknown field |
+| `GET /_admin/chains` | The declared chains, RPC URLs cut to scheme and host (5.13.0) | `200` |
+| `POST /_admin/chains` `{"chain", "chain_id", "rpc_urls"}` | Declare a chain on a running runtime, dormant until a nest mounts on it | `201`; `200` if the same declaration stands; `409` under `--rpc` or `--rpc-fallback`; `422` an endpoint on another chain; `502` none answered |
+| `PUT /_admin/chains/<chain>/rpc` `{"rpc_urls"}` | Replace a chain's RPC pool; calls in flight finish on the old one | `200`; `404` undeclared chain |
+| `POST /_admin/bundles?dry_run=true` | Check a bundle (the request body) as `nest load` does and price its mount (5.13.0) | `200` and a report; `422` a bundle that fails; `413` over `--max-bundle-mb` |
+| `POST /_admin/bundles?as=<name>@<version>` | Publish the bundle to `--registry` | `200` `{"nid", "blob_hash", "name", "version"}`; `409` without `--registry`; `403` a registry that refuses the write |
+| `GET /_admin/bundles/<nid>` | What the registry holds for a NID | `200` `"held": true`, or `404` |
+| `POST /_admin/bundles/prune` `{"keep": [...]}` | Delete what neither `keep` nor a mount of this runtime reaches; `?dry_run=true` lists only | `200` and what was deleted |
+| `GET /_admin/feed` | The hot-state feed a follower reads (5.13.0); not meant for a person | a stream |
 
-A job is `{"name", "nid"?, "phase", "reason"?, "since_unixtime", "generation", "is_move"?}`.
+A job is `{"name", "nid"?, "phase", "reason"?, "code"?, "since_unixtime", "generation", "is_move"?}`.
 `generation` counts claims on the name, so a forgotten worker cannot mount over a newer one;
 `is_move: true` marks a move, so a restart resumes it as one. `phase` is one of `accepted`,
-`fetching`, `joining`, `live`, `failed`, or `suspended` while paused. Reading a job never waits on a mount in progress; unfinished
+`fetching`, `seeding` (5.13.0), `joining`, `live`, `failed`, or `suspended` while paused. Reading a job never waits on a mount in progress; unfinished
 jobs resume after a restart. Mount refusals: `400` malformed NID or a name boot would refuse, `404` NID not held and no
 `--registry`, `409` name taken, chain not declared or its cursor dead, `507` over the cursor's RAM
-ceiling. On the job route each ends the job `failed` with the same reason.
+ceiling or its authored-entity cap. On the job route each ends the job `failed` with the same reason.
+Since 5.13.0 a failed job also carries `code`, one of `not_found`, `access_denied`,
+`verification_failed` or `other`, for a caller to branch on; a retry clears it.
 
 The normal operator upgrade path is [staging a successor and running `nuthatch migrate`](/docs/operate/upgrades/).
 It classifies schema compatibility before changing a mount; it does not silently put a second public

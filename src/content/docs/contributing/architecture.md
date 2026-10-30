@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -30,7 +30,9 @@ The load-bearing properties:
 - **Determinism in the core.** Decode, reorg handling, and anything feeding stored state is
   deterministic and re-executable - same inputs, same bytes. LLMs may generate code and tests;
   LLM output never sits in the runtime data path.
-- **Single cursor.** Exactly one ingestion task per chain advances that chain's state. Other tasks do
+- **Single cursor.** Exactly one cursor per chain decides that chain's position, finality and reorgs.
+  In a runtime since 5.14.0 it is one extraction stage feeding a window buffer, read by one ingest
+  task per nest, each the only writer of its own dataset; a lone nest runs one loop. Other tasks do
   write redb (the alert worker drains the outbox; the IPFS resolver stores a document only while the
   row that named it is still there), but none of them advances the chain. Queries only read: the
   analytical engine reads the sealed segments and the hot rows, and only ingestion writes segments.
@@ -45,18 +47,26 @@ The crate is a library (`lib.rs`) so a second front-end - notably a colocated re
 (RFC-0003) - can reuse the same core rather than fork it; the `nuthatch` binary is one front-end,
 and both drive the pipeline through the `Source` trait (`source.rs`).
 
+- **The core crate**: `core/` (`nuthatch-core`, since 5.14.0, RFC-0075) holds a nest's window path,
+  reorg rollback, the redb hot store, the DBSP circuits (`views`, `exposure`, `velocity`, `flags`,
+  `labels`, the `entity_*` modules) and the bodies of the query routes, over traits a node and a
+  browser tab both implement. The binary re-exports what it uses from it.
 - **Ingest & decode**: `rpc` (batched extraction, failover, the adaptive getLogs window), `chunker`,
   `abi`, `chains`, `factory` (dynamic child discovery), `registry` (the decode registry, re-exported
-  from the `nuthatch-decode` crate in `decode/`), `indexer` (the loop), `progress`.
-- **Storage**: `store` (redb hot store), `seal` (Parquet segments), `blob` + `distribution`
-  (content-addressed bundles and the nest registry), `publish` + `seed` (mirroring sealed segments to
-  a bucket, and filling a nest from one).
-- **Derivation & query**: `views` (the DBSP IVM core, e.g. balances), `entities` (authored
-  incremental entities), `recipes`, `analytics` (read-only SQL over hot ∪ sealed, and authored SQL
-  views), `sqlmemo` (the `/sql` answer cache, keyed on the rows and segments a statement reads),
-  `engine` + `engine_burrmill` (the engine trait, with Burrmill behind it), `serve` (the HTTP
-  surface), `admin_token` (the admin credential a localhost nest makes for itself, since 5.11.0),
-  `sql_errors` (errors-as-prompts).
+  from the `nuthatch-decode` crate in `decode/`), `indexer` (the loop; `indexer/buffered` is a
+  runtime's buffered cursor, since 5.14.0), `progress`.
+- **Storage**: `store` (the node's redb hot store, the core's store with the follower feed behind
+  it), `seal` (Parquet segments), `blob` + `distribution` (content-addressed bundles and the nest
+  registry), `publish` + `seed` (mirroring sealed segments to a bucket, and filling a nest from one).
+- **Derivation & query**: `entities` (authored incremental entities), `recipes`, `analytics`
+  (read-only SQL over hot ∪ sealed, and authored SQL views), `sqlmemo` (the `/sql` answer cache, keyed
+  on the rows and segments a statement reads), `engine` + `engine_burrmill` (the engine trait, with
+  Burrmill behind it), `serve` (the HTTP surface), `cost` (the `Nuthatch-Cost` report), `limits`
+  (per-mount query limits), `isolation` (strict tenant isolation), `admin_token` (the admin credential
+  a localhost nest makes for itself, since 5.11.0), `sql_errors` (errors-as-prompts).
+- **Followers**: `feed` and `feed_http` (the writer's hot-state feed and the follower that reads it,
+  since 5.13.0); since 5.14.0 `feed_wire` (feed v2, Arrow IPC frames), `feed_metrics` (visibility lag
+  and feed cost) and `remote_follow` (a follower on another host, from the mirror and the registry).
 - **Subgraph porting**: `subgraph_import` (`init --from-subgraph`), `port_emit` + `port_report` (the
   per-field coverage report), `graph_schema` + `graph_query` (the Graph-dialect GraphQL read surface,
   routed only in a `--features graph` build, which each release ships as `nuthatch-graph-<target>`).

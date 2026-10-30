@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -31,10 +31,21 @@ Line counts are given as a sense of weight, not a metric. The crate's `src/` alo
 The whole design turns on one split: **the hot store is mutable and the cold store is not.** Every
 other guarantee is downstream of it.
 
+Since 5.14.0 the stateful middle of that picture lives in its own workspace crate, `nuthatch-core`
+(`core/`, RFC-0075): a nest's window path, reorg detection and rollback (`cursor.rs`), the redb hot
+store (`redb_store.rs`), the DBSP circuits (`views.rs`, `exposure.rs`, `velocity.rs`, `flags.rs`, the
+`entity_*` modules) and the bodies of the query routes (`answer.rs`), over traits that a node and a
+browser tab both implement. The binary calls it, and also builds it for `wasm32` to run a whole nest
+in a tab at [/play/live](/play/live/). For a binary user nothing changed: the routes answer byte for
+byte as before, and the segment-hash pins and reorg suites pass with their bodies untouched. The
+file names below are the binary's where it still owns the code, and `core/src/` where it moved.
+
 ## Ingest - `rpc.rs`, `indexer.rs`
 
 `indexer.rs` is the loop that makes it alive: poll logs, decode, store, and serve concurrently. One
-ingestion loop per chain cursor, each its own observable failure boundary; a runtime can run several.
+cursor per chain, each its own observable failure boundary; a runtime can run several. A lone nest
+runs one loop; a runtime's cursor, since 5.14.0, is an extraction stage and one ingest task per nest
+(below, under the runtime).
 
 `rpc.rs` is a deliberately thin JSON-RPC client - `eth_blockNumber`, `eth_getLogs`, block headers,
 and `eth_call` - with round-robin failover across the configured endpoints and per-endpoint health
@@ -80,7 +91,7 @@ byte-identical segments, and a query result can be traced to the exact decode th
 Decodings are **versioned, never retroactive**. When an ABI improves, history is not silently
 re-decoded - that would change answers under consumers who already have them.
 
-## The hot store - `store.rs`
+## The hot store - `core/src/redb_store.rs`
 
 redb, embedded, holding the mutable tip. Four tables: `entities`, `meta`, `blocks`, `outbox`. A
 `--features graph` build adds a fifth, `checkpoint_hashes`, a reverse index over the checkpoints; a
@@ -121,7 +132,7 @@ design is wrong and we go back rather than add a mutation path.
 All tables in a nest seal together per finalized range, so `sealed_through` stays a single global
 watermark - which is what lets hot and cold be unioned without deduplication.
 
-## Reorgs - `store.rs::rollback_to`
+## Reorgs - `core/src/cursor.rs`, `redb_store.rs::rollback_to`
 
 A reorg only ever touches the hot store. Detection asks whether the last block we committed against
 is **still canonical** - the `blocks` table stores each block's hash, so `detect_reorg` re-checks that
@@ -141,7 +152,7 @@ stored checkpoint instead.
 
 Random reorg depths are property-tested to converge on canonical chain state.
 
-## Derived state - `views.rs`, `exposure.rs` (DBSP)
+## Derived state - `core/src/views.rs`, `exposure.rs` (DBSP)
 
 The differentiator, and it is real rather than aspirational: derived entities are **incremental views
 maintained by DBSP circuits**, not hand-written update logic.
@@ -209,7 +220,9 @@ runtime's cursor alike, until 500 children have been discovered. Past that the f
 topic0-only and discards non-children locally, so N children cost roughly one child's RPC budget
 rather than N. A chain whose shipped endpoint refuses address-less `eth_getLogs` (BSC) keeps asking by
 address past 500, and an endpoint that refuses a topic0-only fetch at runtime switches the cursor to
-addresses.
+addresses. Since 5.13.0 a solo nest's tip fetch and a seal-direct backfill flip per template:
+static contracts are never fetched without an address, a template past 500 children of its own is fetched by its own topic0s, and many small
+templates that cross 500 together all go wide.
 
 ## Packaging - `blob.rs`, `distribution.rs`
 
@@ -231,6 +244,16 @@ One runtime, many nests, **one isolated cursor per distinct chain**. Nests on th
 cursor and one `getLogs` per window - N nests for roughly one nest's RPC cost - with per-nest
 namespaced stores.
 
+Since 5.14.0 a runtime's cursor is the buffered cursor (`indexer/buffered.rs`, RFC-0076): an
+extraction stage fetches each range once with the union filter, reads the header that ends the
+window, decides any reorg, and appends the window to a bounded buffer that spills to
+`<runtime>/cursors/<chain>/buffer/`; one ingest task per nest reads the buffer from its own position
+and is the only writer of its dataset. A nest behind the buffer, or back from quarantine, fetches for
+itself by its own filter until it reaches the buffer, so extraction never moves back. A reorg drops
+the buffered windows above the ancestor and leaves a marker; each nest rolls back from its own
+position with the same `rollback_reorg`, and a nest's position counts toward extraction's floor only
+once it has applied every marker issued. A lone nest outside a runtime keeps its own loop.
+
 The law: **a cursor is always single-chain, single-writer, one observable failure boundary.** Two
 chains are never multiplexed behind one cursor. A second chain means a second cursor.
 
@@ -240,7 +263,16 @@ quietly exceeded is not a budget.
 
 A faulting nest is **quarantined**, not fatal: its healthy siblings keep indexing and serving, and it
 is re-admitted on a backoff if the fault was retryable. Blast radius is bounded in both directions - 
-a nest's error no longer kills its cursor, a cursor's death no longer kills the runtime.
+a nest's error no longer kills its cursor, a cursor's death no longer kills the runtime. Since 5.13.0
+that includes a panic in one nest's window, prepare, reorg rollback or rejoin, which quarantines that
+nest terminally while the cursor carries on, and a nest that fails to build at boot, which boots
+quarantined rather than failing the runtime.
+
+A window is split at its commit (5.14.0): the part that decodes, reads, checks and binds has no side
+effect a retry would see, and the commit, once begun, always finishes, so the views it feeds and its
+rows land together or not at all. That split is what lets `window_deadline_ms` abandon a slow window
+safely, and what lets each request answer from one published snapshot: a hot-store read transaction
+and one immutable version of each view.
 
 ## What changes in scaled mode - `pgstore.rs`, `worker.rs`, `scheduler.rs`, `controlplane.rs`
 
@@ -272,6 +304,6 @@ v0.9.3 the writer pool took leases and ran no indexing at all; see
 
 ## Where to start reading
 
-`indexer.rs` for the loop, `registry.rs` for what makes it deterministic, `store.rs` and `seal.rs` for
+`indexer.rs` for the loop, `registry.rs` for what makes it deterministic, `core/src/redb_store.rs` and `seal.rs` for
 why a reorg cannot corrupt history. The design record is in the
 [RFCs](/docs/contributing/rfcs/) - numbered, and honest about what was wrong.

@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -117,7 +117,8 @@ are cited, and targets are labeled as targets, never as results.
 - **0042 Rust-native without DuckDB** *(Parked; decided 2026-08-30, keep DuckDB)* - the removal
   investigation, run to slice 6. Reversed by the Burrmill decision above, which shipped in 4.1.0.
 - **0043 Lessons from Amp** / **0049 Hardening lessons from an audited pipeline** *(Reference and
-  analysis)* - read against our own RFCs; neither is a decision.
+  analysis)* - read against our own RFCs; neither is a decision. 0049 §2, counting the logs a
+  decoder drops, was built by RFC-0073 in 5.13.0.
 - **0044 The subgraph port skill** *(Implemented in part)* - one subgraph, one nest; S1, S2 and S5
   shipped, S3 and S4 closed.
 - **0045 Offchain data** *(Stage 1 implemented)* - the file drop, `nuthatch offchain`.
@@ -159,14 +160,31 @@ are cited, and targets are labeled as targets, never as results.
   binary change: they are [/play](/play/) and [/play/build](/play/build/).
 - **0068 Nest postcards** *(Accepted 2026-10-21, live in /play)* - a link that opens a published nest,
   pinned to its segments by hash, from any static host.
-- **0069 The engine room** *(Accepted 2026-10-21, all six slices built)* - `nuthatch watch`, a
-  read-only terminal view of a running nest. On main, not in a release yet.
+- **0069 The engine room** *(Accepted 2026-10-21, shipped in 5.10.0)* - `nuthatch watch`, a
+  read-only terminal view of a running nest.
 - **0070 Time-lapse** *(Parked 2026-10-22, after S2)* - a contract's sealed history replayed at speed.
   The tab player is at [/play/timelapse/](/play/timelapse/); nothing further is started.
 - **0071 The diff** *(Accepted 2026-10-21, shipped in 5.9.0)* - `nuthatch diff`, a route and an MCP
   tool: a block, transaction or range told in fixed sentences, with no model.
 - **0072 Chain weather** *(Parked 2026-10-22, after S0)* - a daily report a nest writes about itself.
   Not built.
+- **0073 The shared runtime** *(Accepted 2026-10-27, shipped in 5.13.0)* - all sixteen of GraphOps's
+  requests for hosting many organisations' nests in one runtime: fair share by tenant label,
+  per-mount limits, per-nest metrics and a cost report, live memory and chain changes, fault
+  containment, a hardened SQL surface for tenants who do not trust each other (`isolation =
+  "strict"`, its guarantee not claimed until an independent review has run), bundles and seeding over
+  the admin API, `POST /sql`, MCP bearer tokens, decode-gap counters, verified S3 fetch, and read
+  replicas for upgrades without an outage. Nuthatch still sees a tenant as a string.
+- **0075 The whole nest in a tab** *(Accepted 2026-10-28; S0 to S6 built)* - ingest, the redb hot
+  store, reorgs, entities and the HTTP API compiled to WebAssembly and run in a browser, live at
+  [/play/live](/play/live/) since 2026-10-30. The binary's window path, hot store and route bodies
+  moved into a `nuthatch-core` crate in 5.14.0 so a tab and a node run the same code; the binary
+  answers byte for byte as before, and the tab is not part of the release.
+- **0076 Scaling the shared runtime** *(Accepted 2026-10-29; FR17 to FR19 shipped in 5.14.0, FR20 as
+  direction only)* - permits held only by tenants that are querying, the cursor split into one
+  extraction stage and one ingest task per nest, and followers on other hosts from the mirror and the
+  registry. FR20, several writers per chain, would need the single-cursor law amended, and is to be
+  built only when a chain is shown to exceed one machine.
 
 ## Conventions
 

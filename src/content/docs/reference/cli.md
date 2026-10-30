@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -48,14 +48,22 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
 - **`nuthatch schema`** - regenerate the derived artifacts (`schema.json`, `llms.txt`, the
   `semantic.toml` footguns) after hand-editing `nuthatch.toml`.
 - **`nuthatch mcp`** - serve MCP over stdio, bridging to a running `dev` (`--url`).
-  `--print-config` prints a copy-paste client config instead. See [MCP](/docs/ai/mcp/).
+  `--print-config` prints a copy-paste client config instead. `--token-env <VAR>` (since 5.13.0)
+  names an environment variable whose value is sent as a bearer token on every request, for a nest
+  behind a gateway; `NUTHATCH_MCP_TOKEN` is read when it is not given. See [MCP](/docs/ai/mcp/).
 - **`nuthatch check [name]`** - run the nest's invariant/parity checks (`checks/*.sql`) against
   recorded expected results; `--update` records current results as the fixtures.
 - **`nuthatch doctor`** - probe an RPC endpoint before trusting a backfill to it: widest `eth_getLogs`
   range, batch limit, archive depth, and the largest safe `--window`. `--catalogue` checks the sealed
   segment catalogue instead.
 - **`nuthatch serve`** - serve a nest without indexing it; `--hot-store` reads a Postgres hot store in
-  a scaled-mode build.
+  a scaled-mode build. Since 5.13.0, `--runtime <dir> --follow <writer-url>` is a follower: it serves
+  every mount of a runtime read-only from the sealed segments in that directory and the writer's
+  hot-state feed, never opening redb. Since 5.14.0, `--follow` with `--mirror`, `--registry`,
+  `--cache` and `--max-rss-mb` runs one on another host, taking segments from the writer's mirror and
+  each nest from the registry. Its admin token comes from `NUTHATCH_ADMIN_TOKEN` (or, beside the
+  writer, the runtime's `.admin-token`), never the command line. See
+  [Host nests for others](/docs/operate/hosting-nests/#read-replicas-and-upgrades-without-an-outage).
 - **`nuthatch diff --from A --to B`** - what happened in a block range, told in fixed sentences from
   the rows the nest already holds (RFC-0071, since 5.9.0). `--block` or `--tx` narrows it to one block
   or transaction; `--since-last` runs on from the previous diff. `--flow` draws the token flow
@@ -96,6 +104,11 @@ entity circuit.
   bundle must compute to that NID.
 - **`nuthatch nest publish <bundle> --registry <store>`** - publish under `name@version`, advancing
   `latest`, and index it by NID; prints the hash and the NID.
+- **`nuthatch nest inspect <bundle|dir>`** - *since 5.13.0.* Describe a bundle, an unpacked bundle or
+  a nest directory without running it, reading only local files: its NID, data identity, chain,
+  contracts, templates, factories and entities, the cargo features and RPC kinds it needs, and every
+  endpoint it would reach, with keyed URLs cut to scheme and host. A bundle is verified as `nest load`
+  verifies it. `--json` prints the versioned form (`"schema": "nuthatch.nest-inspect/1"`).
 - **`nuthatch nest rename-alias <old> <new>`** - re-key a contract alias in `nuthatch.toml`, the ABI
   file and `semantic.toml`.
 - **`nuthatch seed --from <mirror>`** - fill a nest that has not indexed from a published mirror (a
@@ -118,7 +131,8 @@ entity circuit.
 
 - **`nuthatch dev`** - run many nests behind one listener; `--fail-fast` exits on the first
   fault instead of quarantining it (RFC-0026); `--registry <store>` lets a live mount fetch a NID the
-  runtime does not hold. `--ipfs` and `--state-rpc` reach every nest it runs; `--state-rpc` is
+  runtime does not hold, and `--max-bundle-mb` (since 5.13.0) caps the bundles `POST /_admin/bundles`
+  accepts, 64 MiB by default. `--ipfs` and `--state-rpc` reach every nest it runs; `--state-rpc` is
   refused when the runtime declares more than one chain. See [Run a runtime](/docs/operate/many-nests/) and
   [Host nests for others](/docs/operate/hosting-nests/).
 

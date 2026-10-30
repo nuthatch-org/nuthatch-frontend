@@ -2,7 +2,7 @@
 title: Runtimes & cursors
 description: One runtime, many nests, across one or more chains, with one isolated cursor per chain.
 order: 2
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 A **runtime** is one process hosting one nest or many. A **cursor** is a single chain's follow
@@ -27,6 +27,13 @@ Nests on the **same chain** co-located in one runtime share **one cursor**: a si
 fanned out to the owning nests. So N nests cost roughly one nest's worth of RPC chatter - the density
 win. Per-nest tables stay byte-identical to running each nest solo, because the same per-window code
 runs either way.
+
+Sharing the fetch no longer means sharing the pace. Since 5.14.0 a runtime's cursor is an extraction
+stage that fetches each window once and appends it to a bounded buffer, and each nest is its own task
+reading that buffer from its own position. A slow nest delays only itself; one that falls behind the
+buffer fetches for itself until it catches up, and extraction never moves back for it. The cursor is
+still one fetch position, one finality view and one reorg authority, which decides each reorg once.
+See [Run many nests](/docs/operate/many-nests/#how-a-chains-nests-advance).
 
 Isolation is by construction: each nest keeps its own dataset directory (`data/<nid>/` - its own hot
 store and views), so one nest's bad view or runaway factory can't touch another's data. Sealed
@@ -73,8 +80,12 @@ rpc_urls = ["https://arb-rpc"]
 
 The footprint budget is **per active-chain cursor: ≤2 GB RAM**. A single-chain runtime is one cursor
 (≤2 GB); a multichain runtime's total is the sum of its cursors. Each chain's cursor is held to the budget
-independently - a cursor whose *projected* footprint would exceed it is refused before it starts. Density
+independently - a mount that would take a cursor's *projected* footprint past it is refused. Density
 is RAM-bounded, not free.
+
+2 GB is the default ceiling and the budget nuthatch's own design is gated to in CI. Since 5.13.0 an
+operator may give a cursor more with `max_rss_mb`, in `mounts.toml` or live over the admin API, as a
+choice nothing in nuthatch requires.
 
 ## When a cursor starts and stops
 

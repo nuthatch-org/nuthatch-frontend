@@ -2,7 +2,7 @@
 title: "MCP server"
 description: "The built-in MCP surface - schema discovery, SQL, entity lookup, and provenance."
 order: 4
-checked: 5.12.0 (2026-10-26)
+checked: 5.14.0 (2026-10-30)
 ---
 
 The protocol reference for the built-in Model Context Protocol server. For the experience - wiring
@@ -14,7 +14,10 @@ an agent up in one step and what it can do - see [AI-native → Agent-grade MCP]
 default `http://127.0.0.1:8288`). The bridge is a thin client of the same guarded endpoints
 described in the [HTTP API reference](/docs/reference/http-api/) - an agent gets no capability a
 `curl` doesn't have. `nuthatch mcp --print-config` prints a copy-paste client config (a Claude Code
-`.mcp.json` plus the `claude mcp add` one-liner) and exits.
+`.mcp.json` plus the `claude mcp add` one-liner) and exits. `--token-env <VAR>` (since 5.13.0) sends
+the value of that environment variable as `Authorization: Bearer` on every request, for a nest behind
+a gateway; without it, `NUTHATCH_MCP_TOKEN` is used when set. The token is never printed, and a
+response that echoes it is redacted before the model sees it.
 
 ## Tools
 
