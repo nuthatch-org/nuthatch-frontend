@@ -1,0 +1,113 @@
+---
+import Layout from '../../layouts/Layout.astro';
+// The page is the site's; live.js, the nest worker, the Service Worker and the wasm module come from
+// the nuthatch-play project, which vercel.json proxies under /play/. The Service Worker's scope is
+// /play/live/, so the node's routes answer under that prefix and nowhere else on the site.
+---
+<Layout
+  path="/play/live/"
+  title="The whole nest in a tab - Nuthatch"
+  description="Follow an ERC-20 at the chain's tip in your browser tab, with nuthatch's own cursor, reorg rollback, incremental entities and HTTP API compiled to WebAssembly."
+>
+  <section class="page live">
+    <div class="wrap pg-wide">
+      <p class="section-label">Play</p>
+      <h1>The whole nest in your tab</h1>
+      <p class="lede">This tab runs a nest, not only its queries: nuthatch's cursor follows a token at the chain's tip, keeps its hot store in redb in this browser, rolls back what a reorg takes away, maintains two incremental entities, and answers the node's HTTP API under this page's address. All of it is nuthatch's own code compiled to WebAssembly (<a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0075-the-whole-nest-in-a-tab.md">RFC-0075</a>). To query a published nest instead, <a href="/play/">open the playground</a>.</p>
+
+      <form id="form" class="bar">
+        <label class="faint" for="contract">ERC-20 on Ethereum</label>
+        <input id="contract" name="contract" spellcheck="false" autocomplete="off" size="44">
+        <label class="faint" for="back">from</label>
+        <input id="back" name="back" type="number" min="1" max="5000" inputmode="numeric" class="short">
+        <span class="faint">blocks back</span>
+        <input id="rpc" type="url" spellcheck="false" placeholder="RPC URL (kept in this browser)" aria-label="RPC URL">
+        <button class="quiet">Follow</button>
+      </form>
+      <p id="trust" class="note"></p>
+      <p id="ceiling" class="note"></p>
+      <div id="status">Loading…</div>
+
+      <div class="cursor">
+        <div class="stat"><div class="v" id="c-last">-</div><div class="k">last block indexed</div></div>
+        <div class="stat"><div class="v" id="c-tip">-</div><div class="k">tip <span id="c-lag"></span></div></div>
+        <div class="stat"><div class="v" id="c-rows">-</div><div class="k">hot rows</div></div>
+        <div class="stat"><div class="v" id="c-holders">-</div><div class="k">holders</div></div>
+        <div class="stat"><div class="v" id="c-sealed">-</div><div class="k">sealed through</div></div>
+        <div class="stat"><div class="v" id="c-reorgs">0</div><div class="k">reorgs rolled back</div></div>
+        <div class="stat"><div class="v" id="c-store">-</div><div class="k">hot store</div></div>
+      </div>
+      <p id="cursor-err" class="err"></p>
+      <ul id="reorgs" class="hint"></ul>
+
+      <h2>Ask it</h2>
+      <p class="hint">Every request here is a plain <code>fetch</code> to this page's own address, answered by a Service Worker from the nest in this tab with the node's status and bytes. The browser console can do the same: <code>await (await fetch('/play/live/sql?q=SELECT%20count(*)%20FROM%20tab__transfer')).json()</code>, or <code>await nest.sql('...')</code>. Nothing outside this browser can reach it.</p>
+      <textarea id="sql" spellcheck="false" aria-label="SQL"></textarea>
+      <div id="examples"></div>
+      <div class="actions">
+        <button id="run" disabled>Run /sql</button>
+        <input id="entity" spellcheck="false" placeholder="block-logindex, e.g. 000023000000-000012" aria-label="entity id">
+        <button id="entity-go" class="quiet" disabled>/entity</button>
+        <button class="quiet" data-get="derived" disabled>/derived</button>
+        <button class="quiet" data-get="derived/received?limit=10" disabled>/derived/received</button>
+        <button class="quiet" data-get="balances?limit=10" disabled>/balances</button>
+        <button class="quiet" data-get="ready" disabled>/ready</button>
+      </div>
+      <div id="req" class="hint mono"></div>
+      <div class="scroll"><table id="table"></table></div>
+      <details>
+        <summary>The answer, as the node sends it</summary>
+        <pre id="raw"></pre>
+      </details>
+      <details>
+        <summary>The nest's entities and views</summary>
+        <pre id="files"></pre>
+      </details>
+      <p class="hint note">The data is what this tab indexed since it opened: nothing comes from a mirror, and each visit starts a fresh store. Blocks seal to Parquet segments past finality, by the node's own rules; newer ones stay in the hot store, where a reorg can still reach them. Source: <a href="https://github.com/nuthatch-org/nuthatch/tree/main/spike/dbsp-wasm">spike/dbsp-wasm</a>.</p>
+    </div>
+  </section>
+  <script is:inline type="module" src="/play/live/live.js"></script>
+</Layout>
+<style is:global>
+  /* Global under .live: live.js builds the table and lists, which scoped styles cannot reach. */
+  .live { --panel: var(--bg-elev); --ink: var(--text); --faint: var(--text-muted); --line: var(--border-hi); --code: var(--bg-inset); --err: #f08a7e; --accent: #c8693a; --accent-ink: #fff; }
+  :root[data-theme='light'] .live { --err: #a3271b; --accent: #a8481f; }
+  .live.page { padding-block: 2rem 4rem; }
+  .live .pg-wide { max-width: 80rem; }
+  .live h1 { margin: 0.2rem 0 0.4rem; }
+  .live h2 { margin: 2rem 0 0.4rem; font-size: 1.2rem; }
+  .live .lede { color: var(--faint); margin: 0 0 20px; max-width: 75ch; }
+  .live a { color: var(--accent); }
+  .live .faint, .live .hint { color: var(--faint); font-size: 0.85rem; }
+  .live .note { color: var(--faint); font-size: 0.85rem; margin: 6px 0; max-width: 90ch; }
+  .live .bar, .live .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .live .actions { margin: 8px 0; }
+  .live input, .live button, .live textarea { font: inherit; color: inherit; }
+  .live input { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-width: 0; max-width: 100%; }
+  .live input.short { width: 6rem; }
+  .live #rpc { flex: 1 1 16rem; }
+  .live #entity { flex: 0 1 18rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+  .live #status { margin: 10px 0; color: var(--faint); font-size: 0.9rem; }
+  .live #status.err, .live .err { color: var(--err); font-size: 0.85rem; }
+  .live .cursor { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 10px; }
+  .live .stat { padding: 12px; border-radius: 8px; background: var(--code); min-width: 0; }
+  .live .stat .v { font-size: 1.3rem; font-weight: 650; overflow-wrap: anywhere; }
+  .live .stat .k { color: var(--faint); font-size: 0.78rem; }
+  .live #reorgs { margin: 6px 0; padding-left: 1.1rem; }
+  .live textarea { width: 100%; min-height: 80px; resize: vertical; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88rem; }
+  .live #examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .live .example { background: var(--code); border: 0; border-radius: 999px; padding: 3px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live #run { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 6px; padding: 7px 16px; font-weight: 600; cursor: pointer; }
+  .live button:disabled { opacity: 0.5; cursor: progress; }
+  .live .quiet { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; color: var(--faint); }
+  .live .mono, .live #req { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; min-height: 1.4em; }
+  .live .scroll { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin: 6px 0; }
+  .live .scroll:has(table:empty) { display: none; }
+  .live table { border-collapse: collapse; font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .live th, .live td { padding: 4px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: left; }
+  .live th { position: sticky; top: 0; background: var(--code); font-weight: 600; }
+  .live details { margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  .live details summary { cursor: pointer; padding: 8px 12px; color: var(--faint); font-size: 0.85rem; }
+  .live pre { margin: 0; padding: 0 12px 12px; overflow: auto; max-height: 40vh; font-size: 0.8rem; }
+  .live code { background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 0.85em; overflow-wrap: anywhere; }
+</style>
