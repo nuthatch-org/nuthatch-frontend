@@ -2,7 +2,7 @@
 title: Reorgs & finality
 description: Reorgs only ever touch the mutable hot store; sealed segments are append-only past finality.
 order: 4
-checked: 5.14.1 (2026-10-31)
+checked: 5.15.0 (2026-10-31)
 ---
 
 A chain reorg - where the tip you indexed turns out not to be canonical - is the hard part of indexing.

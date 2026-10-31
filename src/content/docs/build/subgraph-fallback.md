@@ -2,7 +2,7 @@
 title: "Build a subgraph fallback"
 description: "Keep the event-derived part of a GraphQL data path available when a subgraph is unavailable."
 order: 6
-checked: 5.14.1 (2026-10-31)
+checked: 5.15.0 (2026-10-31)
 ---
 
 Nuthatch is not automatically a drop-in GraphQL replacement. It indexes deterministic on-chain event

@@ -2,7 +2,7 @@
 title: Contract calls and IPFS documents
 description: Pin a contract read to a block, or resolve and verify an IPFS document, without giving up determinism.
 order: 9
-checked: 5.14.1 (2026-10-31)
+checked: 5.15.0 (2026-10-31)
 ---
 
 Two things a subgraph could do and a nest could not, until v2.6.0. Both are opt-in: a nest that
