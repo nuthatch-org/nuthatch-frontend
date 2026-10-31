@@ -1,4 +1,5 @@
 [
+  {"version":"5.14.1","date":"2026-10-30","headline":"Nuthatch 5.14.1 corrects how a remote follower's visibility lag is measured, contains a panic while a nest joins a running runtime, and stops a refusing RPC endpoint from flooding the log.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.14.1"},
   {"version":"5.14.0","date":"2026-10-29","headline":"Nuthatch 5.14.0 scales the shared runtime: the first three of GraphOps's follow-up requests in RFC-0076, taken after 5.13.0's shared runtime went in.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.14.0"},
   {"version":"5.13.0","date":"2026-10-28","headline":"Nuthatch 5.13.0 is the shared runtime: GraphOps's feature requests for hosting many organisations' nests in one runtime, taken one by one in RFC-0073.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.13.0"},
   {"version":"5.12.2","date":"2026-10-28","headline":"Nuthatch 5.12.2 is a security release.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.12.2"},
