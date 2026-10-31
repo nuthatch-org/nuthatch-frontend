@@ -11,6 +11,10 @@ tags: ["nuthatch", "webassembly", "wasmtime", "component-model", "determinism", 
 > component and wasmtime with them. No production nest used it. Nuthatch now runs no WebAssembly at
 > all. Kept as written, because a project that quietly edits its old positions is harder to trust
 > than one that dates them.
+>
+> **And again, 2026-10-31.** The binary still runs no WebAssembly, but nuthatch's core now also builds
+> as a WebAssembly module that other programs embed: nuthatch as the guest rather than the host. See
+> [Nuthatch, embedded: the indexer as a wasm blob](/blog/nuthatch-as-a-wasm-blob/).
 
 *The obvious guess is wrong, so it is worth stating plainly at the top: Nuthatch runs no mapping
 WASM at all.*
