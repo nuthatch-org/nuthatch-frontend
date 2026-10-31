@@ -234,8 +234,9 @@ Three things on `/profile` it cannot compute, and the page names them instead of
 - **The address build for rotki is not on main.** It works on its branch and has been parked since 28
   October; extracting it into the shared crate needs decisions RFC-0074 left open. rotki will get it when
   rotki asks.
-- **Lodestar's switch is not deployed.** The pull request is open and the gate above is from a local
-  build of it.
+- **The gate above ran on a local build of Lodestar.** The switch went live on
+  [`/profile`](https://www.lodestar-dashboard.com/profile) the same day, and has not yet been run by a
+  stranger's wallet.
 - **The wasmtime host cannot open a mirrored nest.** Only the browser and Node hosts answer mirror
   fetches today.
 
