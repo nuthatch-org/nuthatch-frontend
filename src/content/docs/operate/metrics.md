@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 5.14.0 (2026-10-30)
+checked: 5.14.1 (2026-10-31)
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -132,7 +132,8 @@ less the mirror's highest block, which read millions on a quiet nest whose mirro
 A runtime with [followers](/docs/operate/hosting-nests/#read-replicas-and-upgrades-without-an-outage)
 (since 5.13.0) adds, since 5.14.0, on the writer, `nuthatch_feed_visibility_seconds{dataset,kind}`, a histogram of
 the time from a commit to a follower being able to answer from it, on the writer's clock, with `kind`
-`tip` or `seal`; `nuthatch_feed_delta_bytes{encoding}`, `nuthatch_feed_encode_seconds{encoding}` and
+`tip` or `seal` (figures taken on 5.14.0 overstate it, most for a writer with several mounts; 5.14.1
+corrects the measurement); `nuthatch_feed_delta_bytes{encoding}`, `nuthatch_feed_encode_seconds{encoding}` and
 `nuthatch_feed_connection_queue_bytes{conn}`. A follower serves its own
 `nuthatch_follower_apply_seconds`, `nuthatch_follower_seal_wait_seconds` and, on another host,
 `nuthatch_follower_mirror_{files,bytes,refused,missing}_total`.

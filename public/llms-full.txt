@@ -2,8 +2,10 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.14.0**, released 2026-10-29, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.14.0 scales the shared runtime (RFC-0076): idle tenants hold no SQL permit, the
+"Be your own indexer." Status: **v5.14.1**, released 2026-10-30, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.14.1 corrects how a remote follower's visibility lag is measured, contains a
+panic while a nest joins a running runtime, and stops a refusing RPC endpoint from flooding the log.
+5.14.0 scales the shared runtime (RFC-0076): idle tenants hold no SQL permit, the
 permit count is runtime configuration bounded by memory, the nests on one chain progress
 independently behind one extraction stage, and a follower can serve from another host. 5.13.0 is the
 shared runtime (RFC-0073), operator configuration and operability for hosting many organisations'
@@ -28,7 +30,7 @@ documentation read against 4.11.0, and every command it contained then was run a
 4.11.0 binary. On 2026-10-23 its counts, the worked example and the sections on address history,
 maintained views, the diff, hosting and the roadmap were checked against 5.9.0. On 2026-10-30 the
 status, factories, the runtime and hosting, the query guards, security, the roadmap and the upgrade
-notes were checked against 5.14.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+notes were checked against 5.14.1. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 

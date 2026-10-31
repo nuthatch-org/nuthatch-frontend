@@ -2,7 +2,7 @@
 title: "What it costs to run"
 description: "RPC requests are the bill RAM doesn't show - what following tip costs, what block_timestamps adds, and how to measure the number for your own nest."
 order: 6
-checked: 5.14.0 (2026-10-30)
+checked: 5.14.1 (2026-10-31)
 ---
 
 [Metrics & footprint](/docs/operate/metrics/) covers RAM. This page covers a different bill: **RPC
