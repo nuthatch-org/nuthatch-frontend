@@ -242,6 +242,8 @@ Three things on `/profile` it cannot compute, and the page names them instead of
 
 ## Further reading
 
+- [`nuthatch-events.wasm` on the v5.15.0 release](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.15.0),
+  with its SHA-256 and build attestation, gated in the release job before it is attached
 - [RFC-0077, the embeddable engine](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0077-the-embeddable-engine.md),
   with every slice's measured outcome in §12 to §18
 - [`embed/README.md`](https://github.com/nuthatch-org/nuthatch/blob/main/embed/README.md), the version 1
