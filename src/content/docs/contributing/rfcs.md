@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -185,6 +185,11 @@ are cited, and targets are labeled as targets, never as results.
   extraction stage and one ingest task per nest, and followers on other hosts from the mirror and the
   registry. FR20, several writers per chain, would need the single-cursor law amended, and is to be
   built only when a chain is shown to exceed one machine.
+- **0078 Writer failover** *(Accepted 2026-10-30, shipped in 5.16.0)* - a standby on another host
+  that takes over a dataset when its writer dies, through a lease held in the operator's mirror and
+  a fence the mirror and the followers enforce. One writer per chain at any moment, so the
+  single-cursor law stands; opt-in, and embedded mode is unchanged. See
+  [writer failover](/docs/operate/hosting-nests/#writer-failover).
 
 ## Conventions
 

@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,26 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.16
+
+Replace the binary and restart. A 5.15 store is used as it is, with no storage migration, and no NID,
+registry hash or sealed segment changes. 5.16.0 adds [writer failover](/docs/operate/hosting-nests/#writer-failover)
+(RFC-0078), off unless a publish table carries `[runtime.publish.failover]` or
+`[mounts.publish.failover]`; a runtime without it is the runtime 5.15.0 was, except for these:
+
+- **Upgrade followers before writers.** A 5.16 writer sends two new feed ops, `outbox` and
+  `unoutbox`, whenever an alert is enqueued or delivered, and a 5.15 follower cannot read them. A 5.16
+  follower reads a 5.15 writer. This is the order the
+  [rolling upgrade](#upgrading-a-runtime-without-an-outage) already takes.
+- **A store whose ownership another holder has claimed is a terminal fault** for the nest on it,
+  quarantined until restart, where it used to be retried on a backoff that failed the same way each
+  time. This reaches scaled mode's workers too.
+- **Followers hold the alert outbox.** Snapshots carry it and the feed carries its changes, so a
+  follower holds it beside the rows and is charged for it.
+
+5.15.0 changed nothing for a binary user: it added the embeddable engine, a separate opt-in artefact.
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.16.0) have the rest.
 
 ## Upgrading to 5.14
 
@@ -90,7 +110,8 @@ in front of it (since 5.13.0), roll one process at a time: each follower first, 
 last. While the writer restarts, the followers answer as of the last block it committed and report
 `"writer": "absent"`. `scripts/rolling-upgrade.sh <previous> <current>` in the repository runs exactly
 this with a query every 200 ms and fails if any goes unanswered. The first upgrade this works for is
-5.13 to 5.14.
+5.13 to 5.14. From 5.15 to 5.16 the order is required, not only convenient: a 5.15 follower cannot
+read the feed a 5.16 writer sends.
 
 ## Upgrading to 5.11
 

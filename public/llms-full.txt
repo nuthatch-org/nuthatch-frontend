@@ -2,8 +2,11 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.15.0**, released 2026-10-31, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.15.0 adds the embeddable engine (RFC-0077): nuthatch's core as a WebAssembly
+"Be your own indexer." Status: **v5.16.0**, released 2026-10-31, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.16.0 adds writer failover (RFC-0078): a standby on another host takes over a
+dataset when its writer dies, through a lease held in the operator's mirror; it is off unless a
+mount's publish configuration asks for it, there is no storage migration, and followers must be
+upgraded before writers. 5.15.0 adds the embeddable engine (RFC-0077): nuthatch's core as a WebAssembly
 module (`nuthatch-events.wasm`, interface `abi: 1`), a separate opt-in artefact on the release; for a
 binary user nothing changes, and there is no storage migration. 5.14.1 corrects how a remote follower's visibility lag is measured, contains a
 panic while a nest joins a running runtime, and stops a refusing RPC endpoint from flooding the log.
@@ -32,7 +35,8 @@ documentation read against 4.11.0, and every command it contained then was run a
 4.11.0 binary. On 2026-10-23 its counts, the worked example and the sections on address history,
 maintained views, the diff, hosting and the roadmap were checked against 5.9.0. On 2026-10-30 the
 status, factories, the runtime and hosting, the query guards, security, the roadmap and the upgrade
-notes were checked against 5.15.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+notes were checked against 5.15.0. On 2026-11-01 the status, the runtime and hosting and the upgrade
+notes were checked against 5.16.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -219,7 +223,12 @@ operational weight of the tooling, which is an engineering problem.
     carries a `code` (`not_found`, `access_denied`, `verification_failed`, `other`); and a request
     sending `Nuthatch-Cost: 1` gets a `Nuthatch-Cost` header reporting what it read and held. `nuthatch
     serve --runtime <dir> --follow <writer>` serves every mount read-only from the writer's feed, and
-    since 5.14.0 `--mirror`, `--registry` and `--cache` run one on another host. `[runtime]
+    since 5.14.0 `--mirror`, `--registry` and `--cache` run one on another host. Since 5.16.0
+    `[runtime.publish.failover]` (`term`, `standby`, `follow`, `registry`) has the writer hold a lease
+    in the mirror, and a standby running `nuthatch dev` over the same `mounts.toml` takes it when the
+    writer stops renewing; a writer that loses it stops committing, and `POST
+    /_admin/failover/handover` moves it on purpose. The mirror must refuse a stale conditional
+    write, and a waiting standby serves nothing. `[runtime]
     isolation = "strict"` gives each label its own SQL sessions, memory pools and memo; its isolation
     guarantee is not claimed until an independent review has run. Sign-in, accounts and billing
     belong to a gateway in front.
@@ -565,6 +574,12 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.16.0 is a binary swap from 5.15.0 with no storage migration and no NID, registry hash or sealed
+segment change. Upgrade followers before writers: a 5.16 writer sends feed ops (`outbox`,
+`unoutbox`) a 5.15 follower cannot read, and a 5.16 follower reads a 5.15 writer. A store whose
+ownership another holder has claimed is now a terminal fault for its nest, quarantined until
+restart, in scaled mode too. Writer failover is off unless configured.
 
 5.14.0 is a binary swap from 5.13.0 with no storage migration and no NID change. Before upgrading a
 runtime: the buffered cursor is its default (`NUTHATCH_CURSOR_BUFFER=0` restores the shared cursor,

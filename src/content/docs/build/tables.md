@@ -2,7 +2,7 @@
 title: ABIs, events & tables
 description: How decoded events become SQL tables - one table per event, with implicit columns.
 order: 2
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 Nuthatch is a log indexer: it turns a contract's **events** into **SQL tables**. This page explains the

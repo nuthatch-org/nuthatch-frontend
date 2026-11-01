@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -202,6 +202,7 @@ route key: `usdc` for the default tenant, `acme/usdc` for any other, fixed for t
 | `GET /_admin/bundles/<nid>` | What the registry holds for a NID | `200` `"held": true`, or `404` |
 | `POST /_admin/bundles/prune` `{"keep": [...]}` | Delete what neither `keep` nor a mount of this runtime reaches; `?dry_run=true` lists only | `200` and what was deleted |
 | `GET /_admin/feed` | The hot-state feed a follower reads (5.13.0); not meant for a person | a stream |
+| `POST /_admin/failover/handover` | Hand every writer lease this runtime holds to a standby (5.16.0): stop committing, wait up to a minute for the mirror, release; see [writer failover](/docs/operate/hosting-nests/#writer-failover) | `200` `{"<route>": {"released_at_fence"}}`; `404` no lease held; `409` a holder had already stopped |
 
 A job is `{"name", "nid"?, "phase", "reason"?, "code"?, "since_unixtime", "generation", "is_move"?}`.
 `generation` counts claims on the name, so a forgotten worker cannot mount over a newer one;
