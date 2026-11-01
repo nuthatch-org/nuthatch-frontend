@@ -2,7 +2,7 @@
 title: "Scaled mode: a fleet"
 description: When one machine is no longer enough - a writer pool, an independently-scaled serving tier, and a control plane.
 order: 11
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 Everything else in these docs is **embedded mode**: one binary, no external services, the thing
@@ -96,7 +96,9 @@ check and the write; this cannot.
 
 The worker stops on its own as well. Since 4.11.0, a worker whose tick finds a cursor's lease held by
 another worker aborts that cursor's ingestion on the same tick and keeps running the cursors it still
-holds. Before, it carried on fetching and only the fence refused its writes.
+holds. Before, it carried on fetching and only the fence refused its writes. Since 5.16.0 a
+nest whose store reports its ownership claimed by another holder is quarantined until restart, where it
+was retried on a backoff that failed the same way each time.
 
 That is why `--scale writer=N` is safe.
 

@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -266,7 +266,8 @@ is re-admitted on a backoff if the fault was retryable. Blast radius is bounded 
 a nest's error no longer kills its cursor, a cursor's death no longer kills the runtime. Since 5.13.0
 that includes a panic in one nest's window, prepare, reorg rollback or rejoin, which quarantines that
 nest terminally while the cursor carries on, and a nest that fails to build at boot, which boots
-quarantined rather than failing the runtime.
+quarantined rather than failing the runtime. Since 5.16.0 a store whose ownership another holder
+has claimed (`LostOwnership`) is a terminal fault for the nest on it, not a retryable one.
 
 A window is split at its commit (5.14.0): the part that decodes, reads, checks and binds has no side
 effect a retry would see, and the commit, once begun, always finishes, so the views it feeds and its

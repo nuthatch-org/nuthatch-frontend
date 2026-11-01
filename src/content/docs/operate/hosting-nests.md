@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -489,7 +489,82 @@ To upgrade with no outage, roll the followers first, one at a time, waiting for 
 followers keep answering as of the last block it committed. `scripts/rolling-upgrade.sh` in the
 repository does exactly this. The release gate runs it from the previous release and reports the
 result without blocking the tag; 5.14.0 is the first release it ran across two. 5.12 had no feed, so
-the first rolling upgrade is from 5.13.
+the first rolling upgrade is from 5.13. The order matters from 5.15 to 5.16 as well: a 5.16 writer
+sends two feed ops a 5.15 follower cannot read, while a 5.16 follower reads a 5.15 writer.
+
+### Writer failover
+
+Followers keep answering when the writer stops, but at the `as_of` they last saw: nothing indexes
+until a writer runs again. Since 5.16.0 that can be automatic (RFC-0078). Every host runs `nuthatch
+dev` over the same `mounts.toml`, publishing to one mirror, and holds the dataset's **writer lease**
+in that mirror before it writes. The first host to boot takes it and writes; the others wait as
+standbys and take it when it lapses. It is off unless the publish table asks for it:
+
+```toml
+[runtime.publish]
+target = "s3://bucket/prefix"
+followers = true                          # what a following standby reads
+
+[runtime.publish.failover]
+term = "10s"                              # default 10s, at least 3s
+standby = true                            # wait for a held lease rather than refuse to start
+follow = "http://writer.internal:8288"    # optional: follow the writer while waiting
+registry = "s3://bucket/registry"         # needed with follow
+```
+
+A mount's own `[mounts.publish.failover]` takes the same keys. On a host that follows,
+`NUTHATCH_ADMIN_TOKEN` must be the writer's.
+
+- **The lease** is `<data_identity>/lease.json` in the mirror. The writer renews it a third of a term
+  at a time, and every change to it is a conditional put on the bytes last seen, so two hosts racing
+  for one lease produce one holder. A host that cannot take it and is not a standby does not start.
+- **A standby takes it** once it has gone unrenewed for the term and half again, counted on the
+  standby's own clock. No two hosts' clocks are compared. A holder that cannot renew within the term
+  stops committing, which is always before a standby may take the lease.
+- **A writer that loses its lease stops.** Its store is fenced off, so its next commit fails; the nest
+  is quarantined with the reason on `/<tenant>/<alias>/ready`; its publisher stops; and the catalogue
+  is not moved while the mirror's lease names another fence. A follower that has followed the new
+  writer refuses the old one. The old writer keeps answering at its last `as_of`.
+- **Taking over, cold.** A standby with no copy seeds an empty dataset from the mirror's seed snapshot
+  and replays the unsealed gap from the chain.
+- **Taking over, warm.** A standby with `follow` follows the writer while it waits and, on taking the
+  lease, installs that copy as its store: rows, catalogue and verified segments from one generation.
+  It resumes from the next block with nothing to replay. Either way the rows are the same; the copy is
+  faster.
+- **A writer that took over from behind** holds its catalogue until every table is sealed through the
+  mirror's, so the mirror's history never goes backwards.
+- **Webhooks** survive a takeover: the alert outbox travels on the feed, so a promoted standby
+  delivers what the old writer had not. Delivery across a takeover is at least once, so a receiver
+  should treat a repeat as harmless.
+- **A planned move** is `POST /_admin/failover/handover` on the writer. Each lease it holds is fenced
+  off, it waits up to a minute for the mirror to hold what it sealed, and releases the lease, which a
+  standby takes at once. The answer names the fence each route released at,
+  `{"<route>": {"released_at_fence": 4}}`; `404` when the runtime holds no lease, `409` when a holder
+  had already stopped. The old writer keeps answering at its last `as_of`; restart it as a standby to
+  have it take part again.
+- **Watching.** `nuthatch_lease_held` is the series to alert on; see
+  [metrics](/docs/operate/metrics/). A follower started with `nuthatch serve --follow ... --mirror
+  ... --standby` reports each dataset's lease on `/ready`, and takes nothing.
+
+Measured by `scripts/failover-gate.sh` on a MacBook at a 3-second term: 5 to 6 s from `SIGKILL` of the
+writer to the standby's first full answer cold, 5 s warm, and 1 to 2 s for a planned handover. At
+the default 10-second term a crash costs about 16 s. A writer frozen with `SIGSTOP` is taken over and,
+on waking, stops by itself.
+
+The limits:
+
+- **The mirror must refuse a stale conditional write**, or there is no lease. versitygw, which CI
+  runs, does; Garage and Zenko CloudServer accept one. Run
+  `tests/e2e_minio_publish.rs::the_store_enforces_conditional_writes` from the repository against
+  your store first.
+- **A waiting standby serves nothing**: its listener starts when it takes the lease, so a load
+  balancer sees it as down until then. Put followers behind the load balancer for reads.
+- **Failover is taken at boot.** A mount made over the admin API whose mirror asks for failover is
+  refused with "restart the runtime"; put it in `mounts.toml` and restart.
+- The parity run covers an ERC-20 nest at three chosen points. A factory nest's child registry is
+  rebuilt from stored events on promotion, which is reasoned and not yet run.
+
+Failover keeps one writer per chain at any moment; it is not several writers sharing a chain.
 
 ## The whole walkthrough
 

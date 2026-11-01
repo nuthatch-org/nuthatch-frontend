@@ -2,7 +2,7 @@
 title: "Performance"
 description: What has been measured, what has not, and the three things that actually decide your backfill's wall clock.
 order: 12
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 ## The number

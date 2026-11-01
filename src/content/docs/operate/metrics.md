@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -137,6 +137,18 @@ corrects the measurement); `nuthatch_feed_delta_bytes{encoding}`, `nuthatch_feed
 `nuthatch_feed_connection_queue_bytes{conn}`. A follower serves its own
 `nuthatch_follower_apply_seconds`, `nuthatch_follower_seal_wait_seconds` and, on another host,
 `nuthatch_follower_mirror_{files,bytes,refused,missing}_total`.
+
+A writer with [failover](/docs/operate/hosting-nests/#writer-failover) on (since 5.16.0) adds, per
+nest holding a lease and labelled by nest:
+
+| Series | Meaning |
+|---|---|
+| `nuthatch_lease_held` | `1` while this writer holds the lease, `0` once it is lost, lapsed or handed over. The one to alert on. |
+| `nuthatch_lease_fence` | The fence of the writer lease this nest's store was taken at. |
+| `nuthatch_lease_renewals_total` | Lease renewals that succeeded. |
+| `nuthatch_lease_renew_failures_total` | Renewals that could not reach the mirror without losing the lease. A rising count is a writer about to fence itself off. |
+
+A waiting standby serves nothing, these series included, until it takes the lease.
 
 ## The footprint budget
 

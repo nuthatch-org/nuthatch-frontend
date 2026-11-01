@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
@@ -350,6 +350,10 @@ suspended = ["usdc"]          # runtime state: mounts suspended over the admin A
 target = "s3://nests/mirror"
 followers = false             # true also publishes for followers on other hosts (5.14.0)
 
+[runtime.publish.failover]    # optional: hold the writer lease in the mirror (5.16.0)
+term = "10s"
+standby = true
+
 [[chains]]
 chain = "mainnet"
 chain_id = 1
@@ -399,6 +403,14 @@ effect, so what runs is what the next start runs:
   (default `60s`) and `parallelism`, and since 5.14.0 `followers`, off by default, which also publishes
   provisional tails, offchain snapshots and a marker for followers on other hosts, and deletes the
   tails a fold replaced. A mount's own `[mounts.publish]` takes the same keys.
+- **`[runtime.publish.failover]`** (5.16.0, RFC-0078) makes the dataset's writer hold a lease in that
+  mirror, so a standby on another host takes over when it dies. `term` (default `10s`, at least `3s`)
+  is how long a lease lasts unrenewed; a standby takes it after the term and half again. `standby =
+  true` waits for a lease another host holds rather than refusing to start. `follow` names the writer
+  to follow while waiting, so a takeover starts from its hot state rather than the mirror's last seal,
+  and needs `registry`, the registry the writer's nests are published to, and the writer's `followers
+  = true`. A mount's own `[mounts.publish.failover]` takes the same keys. It is read at boot only. See
+  [writer failover](/docs/operate/hosting-nests/#writer-failover).
 - **`[[chains]]`** may also carry `finality_depth` and `log_window` (5.13.0), for a chain the
   built-in registry does not know. `POST /_admin/chains` adds one live (5.13.0).
 - **`[tenants.<tenant>]`** (5.13.0) is a tenant label's `weight` (1 to 1000, default 1),

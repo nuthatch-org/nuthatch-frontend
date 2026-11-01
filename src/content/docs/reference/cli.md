@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -61,7 +61,8 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   every mount of a runtime read-only from the sealed segments in that directory and the writer's
   hot-state feed, never opening redb. Since 5.14.0, `--follow` with `--mirror`, `--registry`,
   `--cache` and `--max-rss-mb` runs one on another host, taking segments from the writer's mirror and
-  each nest from the registry. Its admin token comes from `NUTHATCH_ADMIN_TOKEN` (or, beside the
+  each nest from the registry. Since 5.16.0, `--standby` with `--mirror` reports each dataset's
+  writer lease on `/ready`, and whether it has lapsed; it takes nothing. Its admin token comes from `NUTHATCH_ADMIN_TOKEN` (or, beside the
   writer, the runtime's `.admin-token`), never the command line. See
   [Host nests for others](/docs/operate/hosting-nests/#read-replicas-and-upgrades-without-an-outage).
 - **`nuthatch diff --from A --to B`** - what happened in a block range, told in fixed sentences from

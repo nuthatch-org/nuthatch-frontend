@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
@@ -158,7 +158,8 @@ before.
 A runtime survives its sick nests (RFC-0026). A nest that faults is **quarantined**, not fatal: its
 healthy siblings keep indexing and serving, and it is re-admitted on a backoff if the fault was
 retryable. A terminal fault (a corrupt registry, a config that can't load) stays quarantined until
-you fix it. The blast radius is bounded in both directions - a nest's error doesn't kill its cursor,
+you fix it, and since 5.16.0 so does a store whose ownership another holder has claimed, until
+restart. The blast radius is bounded in both directions - a nest's error doesn't kill its cursor,
 and a cursor's death doesn't kill the runtime.
 
 Since 5.13.0 that covers a panic too: a panic in one nest's window, reorg rollback or rejoin

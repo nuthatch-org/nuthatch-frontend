@@ -2,7 +2,7 @@
 title: "llms.txt"
 description: "The machine-readable index scaffolded projects ship for coding agents."
 order: 2
-checked: 5.15.0 (2026-10-31)
+checked: 5.16.0 (2026-11-01)
 ---
 
 Every nest `init` scaffolds includes an `llms.txt` - a one-page, plain-text index of the project
