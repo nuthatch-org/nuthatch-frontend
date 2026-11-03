@@ -1,0 +1,283 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const REPO = 'https://github.com/nuthatch-org/nuthatch';
+
+// Every competitor cell comes from that project's own docs or repo, read on 2026-11-03; the sources
+// are listed under the table. Change a cell only with a source for it.
+const cols = ['Ponder', 'rindexer', 'Envio HyperIndex', 'The Graph', 'Nuthatch'];
+const rows: { p: string; c: string[] }[] = [
+  { p: 'Licence', c: ['MIT', 'MIT', 'Envio EULA, not OSI-approved; forking and modifying not allowed', 'MIT and Apache-2.0 (graph-node)', 'MIT OR Apache-2.0'] },
+  { p: 'What you run', c: ['a Node.js 22.12+ project', 'a Rust binary', 'a Node.js 22.15+ project; Docker for local development', 'graph-node, Postgres and IPFS', 'one binary'] },
+  { p: 'Database in production', c: ['Postgres (PGlite for development only)', 'optional: Postgres, ClickHouse or CSV', 'Postgres, with Hasura by default; ClickHouse per entity in v3', 'Postgres', 'none: embedded store and Parquet; Postgres in scaled mode'] },
+  { p: 'Indexing logic', c: ['TypeScript functions', 'YAML with no code, or Rust handlers', 'TypeScript or ReScript handlers', 'AssemblyScript mappings', 'none: tables come from the ABI; SQL views and declared entities on top'] },
+  { p: 'Arbitrary per-event code', c: ['yes', 'yes, in Rust', 'yes', 'yes', 'no'] },
+  { p: 'Data comes from', c: ['your RPC', 'your RPC; HyperSync or a Reth ExEx optional', 'HyperSync by default, an Envio service needing an API token; your RPC optional', 'your node or a provider', 'your RPC'] },
+  { p: 'Query with', c: ['GraphQL, SQL over HTTP, Postgres', 'GraphQL (with Postgres), SQL on the database', 'GraphQL via Hasura, SQL on the database', 'GraphQL; SQL is experimental', 'SQL over HTTP and the CLI, MCP; GraphQL only partial, in a separate build'] },
+  { p: 'Chains', c: ['any EVM chain', 'any EVM chain', 'EVM chains, Fuel and Solana', 'EVM and NEAR in graph-node; more through Substreams', 'any EVM chain; none other built today'] },
+  { p: 'Reorgs', c: ['rolled back within a window; errors if one crosses finality', 'a safe distance from the tip; advanced live reorgs are on its backlog', 'rolled back up to 200 blocks on most chains', 'handled up to a threshold, 250 blocks by default', 'only the hot store changes; history is sealed past finality'] },
+  { p: 'Hosted by its makers', c: ['no; a Railway guide', 'no', 'Envio Cloud: $0 development, $70 to $800 a month production', 'Subgraph Studio and the network: 100,000 queries a month free, then $2 per 100,000', 'no; we host a nest on request, unbilled'] },
+  { p: 'For coding agents', c: ['llms.txt', 'llms.txt', 'llms.txt, a docs MCP server, skills from init', 'a Subgraph MCP server over the network, skills', 'an MCP server over your own nest, a skill and llms.txt from init'] },
+  { p: 'GitHub stars, 3 Nov 2026', c: ['1,152', '761', '571', '3,157 (graph-node)', '7'] },
+];
+
+const sources: { name: string; links: [string, string][] }[] = [
+  {
+    name: 'Ponder',
+    links: [
+      ['https://github.com/ponder-sh/ponder/blob/main/LICENSE', 'licence'],
+      ['https://ponder.sh/docs/requirements', 'requirements: Node.js and Postgres versions'],
+      ['https://ponder.sh/docs/database', 'database: PGlite for development, Postgres required for production'],
+      ['https://ponder.sh/docs/get-started', 'GraphQL, SQL over HTTP, Postgres'],
+      ['https://ponder.sh/docs/config/chains', 'reorg window'],
+      ['https://ponder.sh/docs/indexing/overview', 'reorgs past finality are an error'],
+      ['https://github.com/ponder-sh/ponder', 'README: TypeScript indexing functions, any EVM chain, deployment'],
+      ['https://ponder.sh/llms.txt', 'llms.txt'],
+    ],
+  },
+  {
+    name: 'rindexer',
+    links: [
+      ['https://github.com/joshstevens19/rindexer/blob/master/LICENSE', 'licence'],
+      ['https://github.com/joshstevens19/rindexer', 'README: Rust CLI, no-code YAML, Rust projects, any EVM chain'],
+      ['https://rindexer.xyz/docs/start-building/yaml-config/storage', 'storage providers'],
+      ['https://rindexer.xyz/docs/start-building/yaml-config/networks', 'networks: optional HyperSync, RPC still required'],
+      ['https://rindexer.xyz/docs/start-building/yaml-config/contracts', 'reorg_safe_distance and the reorg backlog'],
+      ['https://rindexer.xyz/docs/start-building/running', 'GraphQL needs Postgres'],
+      ['https://rindexer.xyz/llms.txt', 'llms.txt; "not a company or a business"'],
+    ],
+  },
+  {
+    name: 'Envio HyperIndex',
+    links: [
+      ['https://github.com/enviodev/hyperindex/tree/main/licenses', 'licences: EULA, not OSI-recognised'],
+      ['https://github.com/enviodev/hyperindex', 'README: Node.js, handlers, chains, HyperSync on by default'],
+      ['https://docs.envio.dev/docs/HyperIndex/self-hosting', 'self-hosting: Postgres, Hasura, API token'],
+      ['https://docs.envio.dev/docs/HyperIndex/migrate-to-v3', 'v3: ClickHouse per entity'],
+      ['https://docs.envio.dev/docs/HyperSync/api-tokens', 'API tokens'],
+      ['https://docs.envio.dev/docs/HyperIndex/rpc-sync', 'syncing from your RPC'],
+      ['https://docs.envio.dev/docs/HyperIndex/reorgs-support', 'reorgs'],
+      ['https://envio.dev/pricing/hosting', 'hosting prices'],
+      ['https://docs.envio.dev/llms.txt', 'llms.txt, docs MCP server'],
+    ],
+  },
+  {
+    name: 'The Graph',
+    links: [
+      ['https://github.com/graphprotocol/graph-node', 'graph-node README: licence, Postgres, IPFS, your own node'],
+      ['https://thegraph.com/docs/en/subgraphs/developing/creating/assemblyscript-mappings/', 'AssemblyScript mappings'],
+      ['https://github.com/graphprotocol/graph-node/blob/master/docs/implementation/sql-interface.md', 'experimental SQL interface'],
+      ['https://github.com/graphprotocol/graph-node/blob/master/docs/environment-variables.md', 'ETHEREUM_REORG_THRESHOLD'],
+      ['https://thegraph.com/docs/en/supported-networks/', 'supported networks'],
+      ['https://thegraph.com/studio-pricing/', 'Studio pricing'],
+      ['https://thegraph.com/docs/en/ai-overview/', 'Subgraph MCP server and skills'],
+    ],
+  },
+  {
+    name: 'Nuthatch',
+    links: [
+      [REPO, 'README: one binary, licence, chains, no telemetry'],
+      ['/docs/contributing/architecture/', 'architecture: one cursor per chain, sealing past finality'],
+      ['/docs/operate/scaled/', 'scaled mode on Postgres'],
+      ['/migrate', 'the partial GraphQL surface'],
+      ['/agents', 'the MCP server, checked against 5.16.0'],
+      ['/blog/one-engine', 'where Burrmill is slower than DuckDB'],
+    ],
+  },
+];
+---
+<Layout
+  path="/compare"
+  title="Nuthatch compared - Nuthatch"
+  description="Nuthatch beside Ponder, rindexer, Envio HyperIndex and The Graph, with every competitor fact taken from its own docs and linked. Including the rows Nuthatch loses: no handler code, EVM only, a young SQL engine and a small user base."
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">Compare</p>
+      <h1>Five indexers, honestly.</h1>
+      <p class="lede">
+        Ponder, rindexer, Envio HyperIndex and The Graph all index EVM contracts, and each makes a different bet
+        about what you write and what you run. Nuthatch bets that for your own contracts you should write nothing
+        and run one binary. That bet loses some rows, and they are in the table. Every cell about another project
+        comes from its own docs or repository, read on 3 November 2026, and is linked below the table.
+      </p>
+
+      <div class="table-scroll">
+        <table class="ctable">
+          <thead>
+            <tr>
+              <th scope="col" class="ct-feature"></th>
+              {cols.map((c, i) => <th scope="col" class={i === cols.length - 1 ? 'ct-us' : ''}>{c}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr>
+                <th scope="row" class="ct-feature">{r.p}</th>
+                {r.c.map((cell, i) => <td class={i === r.c.length - 1 ? 'ct-us' : ''}>{cell}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        Prices are as each vendor's own page states them, not a quote. Vendor speed figures are left out: we have
+        not measured any of these projects against Nuthatch, and a benchmark one side publishes about itself is not
+        a comparison.
+      </p>
+
+      <section class="block">
+        <p class="section-label">Where Nuthatch loses</p>
+        <h2>The rows that go the other way.</h2>
+        <div class="losses">
+          <div class="card loss">
+            <h3>You cannot write a handler.</h3>
+            <p>
+              Every other project here runs code you wrote for each event: TypeScript, AssemblyScript, ReScript or Rust.
+              Nuthatch runs none. Tables come from the ABI, and anything derived is an SQL view, a declared entity or a
+              built-in. If your index needs ordered, stateful logic, a price carried from one swap to the next, Nuthatch
+              cannot express it, and that is a design decision rather than a gap in the backlog.
+            </p>
+          </div>
+          <div class="card loss">
+            <h3>EVM only.</h3>
+            <p>
+              Envio indexes Fuel and Solana, and The Graph serves non-EVM networks through Substreams. Nuthatch indexes
+              any EVM chain with a JSON-RPC endpoint, nine of them built in, and no other kind today. A non-EVM chain is
+              added when a named user asks for one.
+            </p>
+          </div>
+          <div class="card loss">
+            <h3>A young SQL engine.</h3>
+            <p>
+              Burrmill, the engine on DataFusion that replaced DuckDB in 4.1, is slower than DuckDB was. On one
+              production nest each statement took about 2.5 times DuckDB's time with eight times the memory, and a date
+              range arriving through a join is not pushed down to the scan.
+              <a href="/blog/one-engine">The figures, and what came of them</a>.
+            </p>
+          </div>
+          <div class="card loss">
+            <h3>Few users.</h3>
+            <p>
+              The repository has 7 stars against Ponder's 1,152 and graph-node's 3,157. Fewer people have hit the bugs
+              before you, there are fewer answers to search for, and the project depends on a small team. The
+              <a href="/count">head count</a> publishes how many people said yes to being counted, as a floor.
+            </p>
+          </div>
+          <div class="card loss">
+            <h3>GraphQL is partial.</h3>
+            <p>
+              Ponder, Envio and The Graph serve GraphQL as a matter of course. Nuthatch's default binary has none, and the
+              separate graph build answers a subgraph's event-shaped fields only. A client cannot switch to it by
+              changing a URL. <a href="/migrate">What moves and what does not</a>.
+            </p>
+          </div>
+          <div class="card loss">
+            <h3>Backfill is as fast as your RPC.</h3>
+            <p>
+              Envio reads history from HyperSync by default, a service it runs for exactly that, and rindexer can use it
+              too. Nuthatch reads only from the endpoints you give it, which keeps your data path your own and makes a
+              long history wait on your provider. We have not benchmarked the two against each other.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div class="scope">
+        <section>
+          <p class="cap cap-in">Choose Nuthatch when</p>
+          <ul>
+            <li>the contracts are yours, or their events are what you want, and you would rather write nothing;</li>
+            <li>you want one process on your own machine, with no database to run and no account or token to hold;</li>
+            <li>you want to ask in SQL, or let a coding agent ask over MCP;</li>
+            <li>you need sealed history you can check by hash and re-derive from the chain.</li>
+          </ul>
+        </section>
+        <section>
+          <p class="cap cap-out">Choose another when</p>
+          <ul>
+            <li>your index needs logic per event, prices and running state above all: Ponder, Envio or a subgraph;</li>
+            <li>your chain is not EVM: Envio or The Graph's Substreams;</li>
+            <li>your clients already speak GraphQL and must not change;</li>
+            <li>you want to buy indexed data rather than produce it: The Graph's network or Envio Cloud.</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="block">
+        <p class="section-label">Sources</p>
+        <h2>Where each cell comes from.</h2>
+        <div class="sources">
+          {sources.map((s) => (
+            <div>
+              <h3>{s.name}</h3>
+              <ul>
+                {s.links.map(([href, text]) => (
+                  <li><a href={href} rel={href.startsWith('http') ? 'noopener' : undefined}>{text}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p class="table-note">
+          GitHub stars were read from the GitHub API on 3 November 2026, for ponder-sh/ponder, joshstevens19/rindexer,
+          enviodev/hyperindex, graphprotocol/graph-node and nuthatch-org/nuthatch. Something here out of date or wrong?
+          Say so on <a href={REPO + '/discussions'} rel="noopener">GitHub Discussions</a> and we will correct it.
+        </p>
+      </section>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  .page section { padding-block: 0; }
+  h1 { margin-bottom: 0.8rem; }
+  .lede {
+    color: var(--text-muted); font-size: 1.08rem; line-height: 1.7;
+    margin-bottom: 2.2rem; max-width: 62ch;
+  }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+  .ctable { width: 100%; border-collapse: collapse; min-width: 60rem; font-size: 0.86rem; }
+  .ctable th, .ctable td { text-align: left; padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); line-height: 1.5; }
+  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
+  .ctable tbody tr:last-child th, .ctable tbody tr:last-child td { border-bottom: 0; }
+  .ct-feature { font-weight: 500; width: 13%; color: var(--text-muted) !important; }
+  .ct-us { background: var(--pale-blue-bg); }
+  thead .ct-us { color: var(--accent-ink); font-weight: 600; }
+  .table-note { margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); max-width: 72ch; line-height: 1.6; }
+
+  .block { margin-top: 4rem; }
+  .block > .section-label { color: var(--rust); }
+  .block h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); margin-bottom: 1.4rem; }
+
+  .losses { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); }
+  .loss { padding: 1.3rem 1.4rem; transition: border-color 0.18s var(--ease), transform 0.18s var(--ease); }
+  .loss:hover { border-color: var(--border-hi); transform: translateY(-3px); }
+  .loss h3 { margin-bottom: 0.5rem; }
+  .loss p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.62; }
+
+  .scope {
+    margin-top: 3.5rem; display: grid; gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  }
+  .scope section { border-top: 1px solid var(--border); padding-top: 1rem; }
+  .cap {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 0.7rem;
+  }
+  .cap-in { color: var(--ok); }
+  .cap-out { color: var(--rust); }
+  .scope ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.5rem; }
+  .scope li { color: var(--text-muted); font-size: 0.93rem; line-height: 1.6; }
+  .scope li::marker { color: var(--rust); }
+
+  .sources { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
+  .sources h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .sources ul { margin: 0; padding-left: 1rem; display: grid; gap: 0.3rem; }
+  .sources li { font-size: 0.86rem; line-height: 1.5; }
+  .sources li::marker { color: var(--rust); }
+
+  @media (prefers-reduced-motion: reduce) { .loss, .loss:hover { transition: none; transform: none; } }
+</style>
