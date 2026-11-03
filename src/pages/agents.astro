@@ -1,0 +1,183 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CopyBlock from '../components/CopyBlock.astro';
+import CodeCard from '../components/CodeCard.astro';
+
+const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+
+// Trimmed from a real run of 5.16.0 on 2026-11-03: the two upgrade warnings init prints for USDC are cut.
+const initOut = `$ nuthatch init ${USDC} --chain mainnet
+→ resolving ABI for 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 on mainnet…
+  · proxy → implementation 0x43506849d7c04f9138d1a2050bbf3a0c054402dd
+  ✓ ABI resolved via Sourcify
+  · alias fiat_token_v2_2
+  ✓ deployed at block 6082465
+✓ scaffolded nest 'usdc' (1 contract(s), 17 table(s)) in .
+    nuthatch.toml              config
+    abis/                      resolved ABIs
+    schema.json                decoded tables + columns
+    semantic.toml              what the data means (edit freely)
+    views/                     authored SQL derivations (a commented starter to uncomment)
+    llms.txt                   how an AI agent queries this index
+    .claude/skills/nuthatch/   Claude Code skill (offline, no phone-home)`;
+
+const mcpJson = `{
+  "mcpServers": {
+    "nuthatch": { "command": "nuthatch", "args": ["mcp", "--url", "http://127.0.0.1:8288"] }
+  }
+}`;
+
+// The tools/list answer of that USDC nest, in the order the server lists them.
+const tools: [string, string][] = [
+  ['status', 'contract, chain, last and sealed block'],
+  ['schema', 'the data model and what each table means; read it first'],
+  ['tables', 'the exact tables and columns'],
+  ['table', 'recent rows of one table'],
+  ['sql', 'read-only SQL over the tip and sealed history, with provenance'],
+  ['explain', 'checks a query binds before it runs'],
+  ['entity', 'one entity by id'],
+  ['diff', 'what happened in a block range, in fixed sentences'],
+  ['balance', 'one holder, on a token nest'],
+  ['top_balances', 'the largest holders, on a token nest'],
+];
+---
+<Layout
+  path="/agents"
+  title="Nuthatch for coding agents - Nuthatch"
+  description="Use Nuthatch from Claude Code or Cursor: install, init a contract, run the nest, and connect the built-in MCP server. The scaffolded skill and llms.txt come with every nest. Every command checked against 5.16.0."
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">Agents</p>
+      <h1>A contract's history, in your agent, in about a minute.</h1>
+      <p class="lede">
+        Nuthatch ships the agent surface in the binary: an MCP server, and a skill and an <code>llms.txt</code>
+        written into every nest <code>init</code> scaffolds. Four commands take Claude Code or Cursor from nothing
+        to asking questions of a contract's events on your own machine. There is no account, no API key and no
+        hosted service in the loop. Every command below was run against Nuthatch 5.16.0 on 3 November 2026.
+      </p>
+
+      <ol class="steps">
+        <li>
+          <span class="cap">1 · install</span>
+          <p>The installer fetches the release binary for your platform, checks its SHA-256 and puts it in <code>~/.local/bin</code>. A fresh macOS shell lacks that directory on its <code>PATH</code>, hence the second line. <a href="/install">Other routes</a>.</p>
+          <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" />
+          <CopyBlock command={'export PATH="$HOME/.local/bin:$PATH"'} />
+        </li>
+        <li>
+          <span class="cap">2 · init</span>
+          <p>Point it at a contract. It resolves the ABI, makes one table per event, and writes the files an agent reads. This one took 5 seconds.</p>
+          <CopyBlock command={`nuthatch init ${USDC} --chain mainnet`} />
+        </li>
+        <li>
+          <span class="cap">3 · run</span>
+          <p><code>--backfill 300</code> starts 300 blocks behind the tip, so there are rows within seconds. The API listens on <code>127.0.0.1:8288</code>.</p>
+          <CopyBlock command="nuthatch dev --backfill 300" />
+        </li>
+        <li>
+          <span class="cap">4 · connect</span>
+          <p>In a second terminal, register the MCP server with Claude Code. It speaks stdio and bridges to the running nest.</p>
+          <CopyBlock command="claude mcp add nuthatch -- nuthatch mcp --url http://127.0.0.1:8288" />
+        </li>
+      </ol>
+
+      <div class="cards">
+        <CodeCard code={initOut} lang="bash" label="init, 5.16.0, trimmed" />
+      </div>
+
+      <div class="notes">
+        <section>
+          <h2>Cursor and the others</h2>
+          <p>
+            Every MCP client takes the same entry; only the file differs. For Cursor it goes in
+            <code>.cursor/mcp.json</code> in the project, or <code>~/.cursor/mcp.json</code> for every project.
+            Claude Code also reads it from <code>.mcp.json</code> at the project root. If <code>nuthatch</code> is not
+            on the client's <code>PATH</code>, use the absolute path, which
+            <code>nuthatch mcp --print-config</code> prints for you along with the <code>claude mcp add</code> line.
+          </p>
+          <CodeCard code={mcpJson} lang="json" label=".cursor/mcp.json or .mcp.json" />
+        </section>
+        <section>
+          <h2>What the agent gets</h2>
+          <p>
+            The tool menu follows what the nest holds. The USDC nest above answered <code>tools/list</code> with ten
+            tools; a nest that is not a token has no <code>balance</code> or <code>top_balances</code>, so the agent is
+            never offered a tool that can only return nothing. A failed query comes back with a fix hint drawn from the
+            real schema, and a <code>sql</code> answer ends with the block it is current to.
+          </p>
+          <dl class="figures">
+            {tools.map(([name, what]) => (
+              <div><dt>{name}</dt><dd>{what}</dd></div>
+            ))}
+          </dl>
+        </section>
+        <section>
+          <h2>The skill and llms.txt</h2>
+          <p>
+            <code>init</code> writes <code>.claude/skills/nuthatch/SKILL.md</code> and <code>llms.txt</code> into the
+            nest. Both are generated from the decode registry, so they name the tables and columns this nest
+            actually has, and both tell the agent to use the MCP tools when they are there and the HTTP API when they
+            are not. <code>nuthatch schema</code> regenerates them after you edit the config by hand.
+            Open the agent in the nest's directory and it finds them without being told.
+          </p>
+          <p>
+            Building nests, rather than querying one, is a different job with its own skill:
+            <a href="/docs/ai/builder-skill/">the builder skill</a> teaches an agent to drive the CLI, and its flag
+            reference is generated from the binary and checked in CI.
+          </p>
+        </section>
+        <section>
+          <h2>What it does not do</h2>
+          <p>
+            The MCP server runs no model and holds no data of its own: it is a bridge to a running
+            <code>nuthatch dev</code>, so with no nest running every tool fails. The agent writes queries; nothing it
+            says is stored, because no model output sits in the data path. With <code>--backfill 300</code> the nest
+            holds 300 blocks, so a balance it reports is the net flow over those blocks, not a holder's balance. For
+            whole history, drop the flag and give it your own RPC with <code>--rpc</code>.
+          </p>
+          <p>
+            Claude Code 2.1.317 registered the server with the line in step 4. The Cursor entry follows the format
+            the <a href="/docs/ai/mcp/">MCP docs</a> give; we have not run it in Cursor for this page.
+          </p>
+        </section>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.8rem; max-width: 18ch; }
+  .lede {
+    color: var(--text-muted); font-size: 1.08rem; line-height: 1.7;
+    margin-bottom: 2.2rem; max-width: 62ch;
+  }
+  .steps {
+    list-style: none; margin: 0 0 2rem; padding: 1.4rem 1.5rem;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
+    display: grid; gap: 1.6rem; grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  }
+  .steps li { min-width: 0; }
+  .steps p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0 0 0.7rem; }
+  .steps :global(.copyblock) { margin-bottom: 0.5rem; }
+  .cap {
+    display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--rust); margin-bottom: 0.5rem;
+  }
+  .cards { display: grid; gap: 1rem; min-width: 0; }
+  .notes {
+    margin-top: 3rem; display: grid; gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  }
+  .notes section { padding: 0; min-width: 0; }
+  .notes h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
+  .notes p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0 0 1rem; }
+  .figures { margin: 0; display: grid; gap: 0.35rem; }
+  .figures div { display: flex; gap: 0.8rem; font-size: 0.86rem; }
+  .figures dt {
+    width: 7.5rem; flex-shrink: 0; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; color: var(--accent); padding-top: 0.1rem;
+  }
+  .figures dd { margin: 0; color: var(--text-muted); font-size: 0.86rem; }
+</style>

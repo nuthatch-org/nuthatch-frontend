@@ -1,0 +1,239 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CodeCard from '../components/CodeCard.astro';
+
+const REPO = 'https://github.com/nuthatch-org/nuthatch';
+const RFC = REPO + '/blob/main/docs/rfcs/0053-graph-subgraph-compatibility.md#measured-outcome';
+const WHAT_IT_IS = REPO + '/blob/main/docs/graph-compatibility-what-it-is.md';
+const DIALECT = REPO + '/blob/main/docs/graph-query-dialect-accepted.md';
+const SKILL = REPO + '/tree/main/skills/nuthatch-subgraph-port';
+const BETSWIRL = REPO + '/blob/main/docs/stopgap/betswirl-bnb.md';
+
+const port = `# 1. Report first. Nothing is written.
+nuthatch port-report --dir path/to/subgraph > port-report.md
+
+# 2. Scaffold from the manifest, then overlay views, calls and checks.
+nuthatch init --from-subgraph <deployment CID> --dir nest
+nuthatch port-emit --dir path/to/subgraph --out nest`;
+
+const fromAddress = `nuthatch init 0xYourContract --chain arbitrum-one
+nuthatch dev
+nuthatch sql "SELECT count(*) FROM <alias>__<event>"`;
+
+const answers: [string, string][] = [
+  ['ids, timestamps, block numbers, log indices', 'prices, and anything derived from one'],
+  ['addresses, token ids, transaction hashes', 'priced totals: volume in USD, fees, TVL'],
+  ["values taken straight from an event's parameters", 'values from ordered, stateful mapping code'],
+  ['sums and counts over events, where a view reproduces them', 'day and hour aggregate entities'],
+  ['@derivedFrom relations between the above', ''],
+];
+---
+<Layout
+  path="/migrate"
+  title="Move a subgraph to Nuthatch - Nuthatch"
+  description="What carries over when a subgraph moves to a nest, and what does not. The Graph-dialect read surface is exact for event-shaped fields and refuses the rest by name; it is not a drop-in replacement. Or start from the contract address instead."
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">Migrate</p>
+      <h1>Moving a subgraph to a nest.</h1>
+      <p class="lede">
+        A nest can answer part of a subgraph's GraphQL, exactly, and refuse the rest by name. It is not a drop-in
+        replacement, and most clients cannot adopt it by changing a URL. Before you move anything, find out which
+        of your queries fall inside the part it answers. This page is how.
+      </p>
+
+      <section class="block">
+        <p class="section-label">The boundary</p>
+        <h2>Event-shaped fields answer. Mapping-computed ones do not.</h2>
+        <p>
+          A nest is a compiler over decoded chain events, not a second indexer. It does not run AssemblyScript.
+          Whatever a subgraph takes straight from events, it reproduces exactly; whatever a mapping computes in order,
+          carrying state from one event to the next, it refuses. Every field either answers exactly or is refused with
+          a reason. There is no third behaviour: no default, no stale value, no empty list in place of an answer.
+        </p>
+        <div class="table-scroll">
+          <table class="ctable">
+            <thead>
+              <tr><th scope="col" class="ct-us">Answers exactly</th><th scope="col">Refused by name</th></tr>
+            </thead>
+            <tbody>
+              {answers.map(([yes, no]) => (
+                <tr><td class="ct-us">{yes}</td><td>{no}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="foot">
+          From <a href={WHAT_IT_IS} rel="noopener">what the compatibility surface is, and what it is not</a>.
+        </p>
+      </section>
+
+      <section class="block">
+        <p class="section-label">Measured</p>
+        <h2>Why most clients cannot switch by changing a URL.</h2>
+        <p>
+          GraphQL has no partial answer. A query that names one field a nest cannot answer is refused whole, and the
+          client gets an error rather than the other fields. So field coverage is an upper bound on query coverage,
+          and a loose one.
+        </p>
+        <dl class="stats">
+          <div><dt>70 <span>of 184</span></dt><dd>fields classed exact that a nest answered on the pinned Uniswap V4 port (38%)</dd></div>
+          <div><dt>41 <span>of 93</span></dt><dd>on Carbon, the second pinned target (44%), which has no priced fields</dd></div>
+          <div><dt>0 <span>of 4</span></dt><dd>fields answered in <code>pools(orderBy: totalValueLockedUSD)</code> with volume and token symbol</dd></div>
+        </dl>
+        <p>
+          All three were measured on 12 September 2026 and are recorded in
+          <a href={RFC} rel="noopener">RFC-0053's measured outcome</a>. For a Uniswap-shaped analytics client, the
+          honest summary is that a nest answers nothing it would ask for. For a bot, a reconciliation job or an audit
+          trail asking for every Swap on a pool since some block, with sender, transaction hash and log index, it
+          answers exactly over the whole history. The shape of the subgraph decides the outcome far more than
+          anything left to build. The programme is parked: what shipped is supported, and nothing further is being
+          added to it.
+        </p>
+      </section>
+
+      <div class="routes">
+        <section class="card route">
+          <p class="section-label">Route one</p>
+          <h2>Port the subgraph, and read the report first.</h2>
+          <p>
+            <code>port-report</code> classifies every entity field against the mappings and writes nothing.
+            <code>init --from-subgraph</code> takes the manifest's data sources, ABIs and start blocks, and
+            <code>port-emit</code> overlays the views and prints a coverage line naming every field it cannot answer.
+            <code>port-emit</code> needs the subgraph's source, its <code>schema.graphql</code> and mappings, because
+            a deployment CID holds only compiled WASM. Check your own queries' fields against that list.
+          </p>
+          <CodeCard code={port} lang="bash" label="shell" />
+          <p>
+            The default binary has no GraphQL route: <code>POST /graphql</code> answers 404. Serving the Graph dialect
+            needs the separate <code>nuthatch-graph</code> download attached to every release since 4.11.0, described
+            under <a href="/install#graph-build">the graph build</a>. The
+            <a href={SKILL} rel="noopener">subgraph port skill</a> walks a coding agent through the same steps.
+          </p>
+        </section>
+        <section class="card route">
+          <p class="section-label">Route two</p>
+          <h2>Start from the contract address instead.</h2>
+          <p>
+            If you own the client, it is often simpler to leave GraphQL behind. Give <code>init</code> the contracts
+            the subgraph indexed and it makes one table per event from the ABI, with no mappings and no schema to
+            write. Then ask in SQL, over HTTP at <code>/sql</code> or from an agent over MCP. Counts, sums and joins
+            over events are a view in <code>views/*.sql</code>, or a maintained entity when it must be fast.
+          </p>
+          <CodeCard code={fromAddress} lang="bash" label="shell" />
+          <p>
+            Prices are the same problem by this route: nothing derives a USD value for you. The
+            <a href="/example">worked example</a> goes from address to view to entity, and
+            <a href="/agents">the agents page</a> connects the result to Claude Code or Cursor.
+          </p>
+        </section>
+      </div>
+
+      <div class="scope">
+        <section>
+          <p class="cap cap-in">What carries over</p>
+          <ul>
+            <li>Data sources, ABIs and start blocks, read from the manifest by <code>init --from-subgraph</code>.</li>
+            <li>Factory templates, where a parameter names the template; the rest are listed for you to resolve.</li>
+            <li>Introspection, filters, ordering, pagination and <code>_meta</code>, in the graph build.</li>
+            <li>Event-shaped fields, exactly, over the hot store and sealed history alike.</li>
+            <li>Queries at <code>/graphql</code> and <code>/subgraphs/id/&lt;deployment&gt;</code>.</li>
+          </ul>
+        </section>
+        <section>
+          <p class="cap cap-out">What does not</p>
+          <ul>
+            <li>Mapping code. AssemblyScript is never run, in indexing or anywhere else.</li>
+            <li>Prices and priced totals such as <code>derivedETH</code> and <code>totalValueLockedUSD</code>. By design, not by backlog.</li>
+            <li>Day and hour aggregate entities, which have no table.</li>
+            <li>A query that names any refused field: it fails whole.</li>
+            <li>The GraphQL route in the default binary, and any shape not on <a href={DIALECT} rel="noopener">the accepted dialect</a>.</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="notes">
+        <section>
+          <h2>We can host the port</h2>
+          <p>
+            We port a subgraph that is no longer live on the network to a nest and run it on our servers, with no
+            billing and no accounts. Its event-derived fields answer exactly and the rest are refused by name, so check
+            your app's queries against the port before switching. <a href="/subgraphs">The hosting offer</a> has the
+            terms, and the <a href={BETSWIRL} rel="noopener">BetSwirl BNB Chain handback</a> shows one port end to end:
+            its client's own queries answered exactly.
+          </p>
+        </section>
+        <section>
+          <h2>Beside the network, not instead of it</h2>
+          <p>
+            A subgraph that the network still serves is usually best left there. A nest is for the case where a
+            subgraph has stopped, or where you would rather hold your own contracts' history on your own machine.
+            <a href="/the-graph">Nuthatch and The Graph</a> sets out how the two sit together, and
+            <a href="/compare">the comparison</a> puts Nuthatch beside The Graph, Ponder, rindexer and Envio.
+          </p>
+        </section>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  .page section { padding-block: 0; }
+  h1 { margin-bottom: 0.8rem; }
+  .lede {
+    color: var(--text-muted); font-size: 1.08rem; line-height: 1.7;
+    margin-bottom: 1rem; max-width: 62ch;
+  }
+  .block { margin-top: 3.5rem; }
+  .block h2, .route h2 { font-size: clamp(1.25rem, 2.6vw, 1.6rem); margin-bottom: 0.9rem; max-width: 30ch; }
+  .block p, .route p, .notes p { color: var(--text-muted); font-size: 0.97rem; line-height: 1.68; margin: 0 0 1rem; max-width: 72ch; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); margin: 1.4rem 0 0.8rem; }
+  .ctable { width: 100%; border-collapse: collapse; min-width: 32rem; font-size: 0.9rem; }
+  .ctable th, .ctable td { text-align: left; padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; width: 50%; color: var(--text); }
+  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+  .ctable tbody tr:last-child td { border-bottom: 0; }
+  .ct-us { background: var(--pale-blue-bg); }
+  thead .ct-us { color: var(--accent-ink); font-weight: 600; }
+  .block p.foot { font-size: 0.85rem; color: var(--text-muted); }
+
+  .stats {
+    margin: 1.6rem 0; display: grid; gap: 1px;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  .stats div { background: var(--bg-elev); padding: 1.2rem 1.3rem; }
+  .stats dt { font-size: clamp(2rem, 4vw, 2.6rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+  .stats dt span { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; letter-spacing: 0.02em; color: var(--rust); font-weight: 500; }
+  .stats dd { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; }
+
+  .routes {
+    margin-top: 3.5rem; display: grid; gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));
+  }
+  .route { min-width: 0; }
+  .route .section-label { color: var(--rust); }
+
+  .scope {
+    margin-top: 3rem; display: grid; gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  }
+  .scope section { border-top: 1px solid var(--border); padding-top: 1rem; }
+  .cap {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 0.7rem;
+  }
+  .cap-in { color: var(--ok); }
+  .cap-out { color: var(--rust); }
+  .scope ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.5rem; }
+  .scope li { color: var(--text-muted); font-size: 0.93rem; line-height: 1.6; }
+  .scope li::marker { color: var(--rust); }
+
+  .notes {
+    margin-top: 3.5rem; display: grid; gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  }
+  .notes h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
+</style>

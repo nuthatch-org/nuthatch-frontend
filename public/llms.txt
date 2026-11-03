@@ -255,6 +255,9 @@ function name the guard did not match) and v0.6.2 fixed an arbitrary file write 
 - Who runs it: https://www.nuthatch-indexer.com/stories
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Nuthatch and The Graph: https://www.nuthatch-indexer.com/the-graph
+- Compared with Ponder, rindexer, Envio and The Graph: https://www.nuthatch-indexer.com/compare
+- Moving a subgraph to a nest: https://www.nuthatch-indexer.com/migrate
+- Using it from Claude Code or Cursor: https://www.nuthatch-indexer.com/agents
 - Source and release notes: https://github.com/nuthatch-org/nuthatch
 - Full description for models: https://www.nuthatch-indexer.com/llms-full.txt
 - Licence: MIT OR Apache-2.0

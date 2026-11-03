@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://nuthatch-indexer.com/</loc></url>
+  <url><loc>https://nuthatch-indexer.com/agents</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/a-deposit-watcher-in-a-day</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/a-nest-in-your-browser</loc></url>
@@ -32,6 +33,7 @@
   <url><loc>https://nuthatch-indexer.com/blog/why-i-built-nuthatch</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/why-nuthatch-makes-no-eth-calls</loc></url>
   <url><loc>https://nuthatch-indexer.com/changelog</loc></url>
+  <url><loc>https://nuthatch-indexer.com/compare</loc></url>
   <url><loc>https://nuthatch-indexer.com/count</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/ai/builder-skill</loc></url>
@@ -95,6 +97,7 @@
   <url><loc>https://nuthatch-indexer.com/example</loc></url>
   <url><loc>https://nuthatch-indexer.com/install</loc></url>
   <url><loc>https://nuthatch-indexer.com/manifesto</loc></url>
+  <url><loc>https://nuthatch-indexer.com/migrate</loc></url>
   <url><loc>https://nuthatch-indexer.com/mirror</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/hosted/ethereum-address-history</loc></url>
