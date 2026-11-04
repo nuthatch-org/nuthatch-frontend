@@ -6,6 +6,13 @@ author: "cargopete"
 tags: ["nuthatch", "webassembly", "embedding", "verification", "lodestar", "the-graph", "rust"]
 ---
 
+> **Update, 4 November, later the same day.** Lodestar can now be verified. Its nest's exact files are
+> published as the [`production` branch](https://github.com/nuthatch-org/graph-allocations-nest/tree/production)
+> of graph-allocations-nest, and they compute the NID its answers name. Its SQL route now screens
+> statements with the same DuckDB dialect the node parses, so the lambdas are no longer refused. All four
+> portfolio statements answer through it, and `verify` with those files found 38 of 38 columns equal
+> against the production node. The post below is kept as written.
+
 The [last post](/blog/nuthatch-as-a-wasm-blob/) ended with a list of what the embeddable engine did not
 do yet, and a table whose slowest row read **1,995 seconds**. That row was a wallet with shares in one
 of The Graph's largest delegation pools, opened from cold on a free public RPC. Thirty-three minutes is
