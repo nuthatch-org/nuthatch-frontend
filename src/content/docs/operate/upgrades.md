@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,40 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.17
+
+Replace the binary and restart. A 5.16 store is used as it is, with no storage migration, and no NID,
+registry hash or sealed segment changes: 5.17 seals the same bytes as 5.16. It adds
+[answers in Arrow](/docs/reference/http-api/#answers-in-arrow) beside JSON, which stays the default.
+Things to know:
+
+- **A failover deployment: upgrade the writers first, then replace and restart each follower.** This
+  is the opposite of 5.16's order, and it is only for writers with `[runtime.publish.failover]` or
+  `[mounts.publish.failover]`. A 5.17 writer puts its lease fence in the feed's `fence` field where
+  5.16 put a local claim count, and a follower refuses any fence below the highest it has seen since it
+  started. A follower that followed a writer before that writer's upgrade may therefore refuse it until
+  the follower restarts, and restarting it on 5.17 also gives it the corrected check. Writers without
+  failover send no fence and are unaffected.
+- **A failover writer started while another still renews the lease exits after about 17 seconds**
+  at the defaults, naming the holder. Before 5.17 the first writer's lease could lapse while it booted,
+  so the second often won the race instead. A host meant to wait and take over sets `standby = true`.
+- **Re-index a runtime nest that 5.14.0 to 5.16.0 may have left with missing rows.** On the buffered
+  cursor, the default for runtimes since 5.14.0, a nest that was quarantined and re-admitted, or mounted
+  on a running runtime, could commit windows fetched while it was absent as empty, and report
+  `last_block` at the tip with rows missing and no error. A runtime with more than one nest on a chain
+  is the case; a nest that only ever started with its runtime was not affected.
+- **Deduplicate webhooks on the nest and `X-Nuthatch-Delivery` together.** The id is per nest, and the
+  header is not covered by the signature, which is over the body.
+- **A nest that leaves out `rpc_urls`** loads on 5.17, when the run supplies the RPC, and is refused by
+  5.16. Do not write one until every host that loads it runs 5.17.
+- **A client asking for Arrow from a 5.16 node gets JSON.** Read `Content-Type` before decoding.
+- **A directory holding a leftover `.admin-token.<pid>`**, from a `dev` killed on its first start, had
+  that file in its NID. It no longer does, so such a directory's NID returns to a clean one's.
+- **An `ORDER BY ... LIMIT` over a `UNION ALL` of literal-tagged arms** returned the wrong rows; its
+  answers may change, to the correct ones.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.17.0) have the rest.
 
 ## Upgrading to 5.16
 

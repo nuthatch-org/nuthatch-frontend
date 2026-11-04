@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -190,6 +190,17 @@ are cited, and targets are labeled as targets, never as results.
   a fence the mirror and the followers enforce. One writer per chain at any moment, so the
   single-cursor law stands; opt-in, and embedded mode is unchanged. See
   [writer failover](/docs/operate/hosting-nests/#writer-failover).
+- **0079 Arrow results** *(Accepted 2026-10-30, shipped in 5.17.0)* - `/sql` and `/q/{name}` answer as
+  an Arrow IPC stream when asked, in the default binary with no new dependency, and Arrow Flight SQL in
+  a separate build behind the off-by-default `flight` feature. JSON stays the default. See
+  [answers in Arrow](/docs/reference/http-api/#answers-in-arrow).
+- **0080 Partial sync** *(Accepted 2026-10-30, not shipped)* - live local copies of part of a nest.
+  Its spikes measured the server half well over its cost gate, so that half sits behind an
+  off-by-default feature and nothing of it is in a release.
+- **0081 The engine in use** *(Accepted 2026-10-31, S0 to S5 shipped in 5.17.0, Safari aside; S6 declined)* - what the first page
+  built on the embeddable engine had to work round, fixed in the engine: a hybrid open from the mirror
+  and the RPC, one statement over two nests, a host package, `verify` for a hosted `/sql` answer, and a
+  check that the RPC left no log out. The binary is unchanged.
 
 ## Conventions
 

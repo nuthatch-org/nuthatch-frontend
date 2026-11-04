@@ -2,7 +2,7 @@
 title: The semantic layer
 description: Describe what tables and columns mean, so agents query correctly instead of guessing.
 order: 5
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 A schema tells you a column is named `value` and typed `uint256`. It doesn't tell you that `value` is

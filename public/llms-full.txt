@@ -2,8 +2,10 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.16.0**, released 2026-10-31, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.16.0 adds writer failover (RFC-0078): a standby on another host takes over a
+"Be your own indexer." Status: **v5.17.0**, released 2026-11-03, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.17.0 adds answers in Arrow on `/sql` and `/q/{name}` (RFC-0079), a separate Arrow
+Flight SQL build, and static musl Linux and Intel Mac binaries, and fixes a runtime nest on 5.14 to
+5.16 that could commit blocks without its rows. 5.16.0 adds writer failover (RFC-0078): a standby on another host takes over a
 dataset when its writer dies, through a lease held in the operator's mirror; it is off unless a
 mount's publish configuration asks for it, there is no storage migration, and followers must be
 upgraded before writers. 5.15.0 adds the embeddable engine (RFC-0077): nuthatch's core as a WebAssembly
@@ -36,7 +38,8 @@ documentation read against 4.11.0, and every command it contained then was run a
 maintained views, the diff, hosting and the roadmap were checked against 5.9.0. On 2026-10-30 the
 status, factories, the runtime and hosting, the query guards, security, the roadmap and the upgrade
 notes were checked against 5.15.0. On 2026-11-01 the status, the runtime and hosting and the upgrade
-notes were checked against 5.16.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+notes were checked against 5.16.0, and on 2026-11-04 the status, the install routes, the HTTP
+API and the upgrade notes against 5.17.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -574,6 +577,13 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.17.0 is a binary swap from 5.16.0 with no storage migration and no NID, registry hash or sealed
+segment change. A failover deployment upgrades its writers first, then restarts each follower: a 5.17
+writer puts its lease fence in the feed, and a follower refuses a fence below the highest it has seen.
+Re-index any runtime nest that 5.14.0 to 5.16.0 re-admitted after a quarantine or mounted live; it may
+have committed blocks without its rows. A nest may leave out `rpc_urls` when the run supplies the RPC,
+but 5.16 refuses one that does.
 
 5.16.0 is a binary swap from 5.15.0 with no storage migration and no NID, registry hash or sealed
 segment change. Upgrade followers before writers: a 5.16 writer sends feed ops (`outbox`,

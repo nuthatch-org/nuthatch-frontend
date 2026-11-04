@@ -2,7 +2,7 @@
 title: "Verifying a deployment"
 description: An acceptance runbook that proves a deployment works, step by falsifiable step - and an honest table of what we have verified ourselves and what we have not.
 order: 7
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
