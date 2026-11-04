@@ -2,7 +2,7 @@
 title: "Nest identity & reuse"
 description: "How immutable nest versions, mounts, dataset adoption, and shared segments avoid needless re-indexing."
 order: 5
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 A content-addressed nest is deliberately unforgiving: change its authored inputs and it becomes a

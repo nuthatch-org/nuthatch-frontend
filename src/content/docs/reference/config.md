@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
@@ -268,7 +268,10 @@ addresses = ["0xd8da6bf26964af9d7eed9e03e53415d37aa96045"]
 
 A directory whose subdirectories are address-history nests, one per chain, runs with `nuthatch dev
 --dir <that directory>`: each keeps its own cursor and one listener serves `/api`, choosing the chain
-by `chainid`. It serves no `/diff`.
+by `chainid`. It serves no `/diff`. Each chain's RPCs come from `NUTHATCH_RPC_<chain id>` and
+`NUTHATCH_TRACE_RPC_<chain id>`, else from its `rpc_urls`, which since 5.17.0 such a nest can leave
+out; a chain with no RPC from either is refused at startup, naming both. A 5.16 host refuses a nest
+without `rpc_urls`, so leave it in until every host runs 5.17.
 
 ## `entities.toml`
 

@@ -7,7 +7,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v5.16.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
+  description="Install Nuthatch v5.17.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -26,7 +26,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       </p>
 
       <h2 class="ih">Shell script</h2>
-      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS Apple Silicon and Linux x86_64, and Linux arm64 (<code>aarch64-unknown-linux-gnu</code>) from 4.12.0; on any other target it stops and prints the <code>cargo</code> command instead of installing something that will not run. No Intel Mac binary is published: on an Intel Mac, build from source with Rust 1.95.0 (below). Both Linux binaries are dynamically linked and need glibc 2.35 or newer and no C++ runtime: Debian 12 and Ubuntu 22.04 qualify. RHEL 9 and Amazon Linux 2023 ship glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build.</p>
+      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS Apple Silicon and Linux x86_64, and Linux arm64 (<code>aarch64-unknown-linux-gnu</code>) from 4.12.0; on any other target it stops and prints the <code>cargo</code> command instead of installing something that will not run. On an Intel Mac it points at the source build: an Intel binary is published from 5.17.0 (below) but has not been run on Intel hardware by us. Both Linux binaries it installs are dynamically linked and need glibc 2.35 or newer and no C++ runtime: Debian 12 and Ubuntu 22.04 qualify. RHEL 9 and Amazon Linux 2023 ship glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build or, from 5.17.0, the static musl binary below.</p>
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="note">
         Piping to a shell asks for trust. Read it first:
@@ -35,7 +35,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       </p>
 
       <h2 class="ih">Cargo</h2>
-      <p>Build from source straight from the repo, with Rust 1.95.0. This is the only route on a platform without a published binary, Intel Macs included (the Intel build has not been verified on Intel hardware). The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
+      <p>Build from source straight from the repo, with Rust 1.95.0. This is the only route on a platform without a published binary, and the one we recommend on an Intel Mac, since the Intel binary has not been verified on Intel hardware. The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
       <CopyBlock command="rustup toolchain install 1.95.0" />
       <CopyBlock command="cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" />
       <p class="note">
@@ -43,7 +43,21 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         <a href="https://github.com/nuthatch-org/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>:
         <code>nuthatch-aarch64-apple-darwin.tar.gz</code>, <code>nuthatch-x86_64-unknown-linux-gnu.tar.gz</code>,
         <code>nuthatch-aarch64-unknown-linux-gnu.tar.gz</code> (from 4.12.0),
-        or <code>nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz</code> for scaled mode.
+        or <code>nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz</code> for scaled mode. From 5.17.0 also
+        <code>nuthatch-x86_64-apple-darwin.tar.gz</code> for Intel Macs, built in CI and not yet run on Intel
+        hardware by us, and <code>nuthatch-x86_64-unknown-linux-musl.tar.gz</code>, a static Linux binary with
+        no glibc dependency whose behaviour under load has not been measured. The installer fetches neither.
+      </p>
+
+      <h2 class="ih" id="flight-build">The flight build</h2>
+      <p>
+        From 5.17.0 every release also carries <code>nuthatch-flight-&lt;target&gt;.tar.gz</code> for
+        <code>aarch64-apple-darwin</code>, <code>x86_64-unknown-linux-gnu</code> and
+        <code>aarch64-unknown-linux-gnu</code>, built with <code>--features flight</code> and attested like the
+        others, and the image <code>ghcr.io/nuthatch-org/nuthatch:5.17.0-flight</code>, never tagged
+        <code>latest</code>. It serves Arrow Flight SQL beside the HTTP API with
+        <code>nuthatch dev --flight 127.0.0.1:8815</code>. The default binary already answers
+        <a href="/docs/reference/http-api/#answers-in-arrow">in Arrow over HTTP</a> without it.
       </p>
 
       <h2 class="ih" id="graph-build">The graph build</h2>
@@ -74,12 +88,12 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.16.0' prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.17.0' prompt={true} />
       <p class="note">
         The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
         <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
-        <code>:5.16.0</code> and <code>:latest</code> are the embedded build; pin the version for anything
-        you care about. <code>:5.16.0-scaled</code> carries the Postgres driver and the <code>worker</code>,
+        <code>:5.17.0</code> and <code>:latest</code> are the embedded build; pin the version for anything
+        you care about. <code>:5.17.0-scaled</code> carries the Postgres driver and the <code>worker</code>,
         <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only, and no
         image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a binary.
         The compose files live in the

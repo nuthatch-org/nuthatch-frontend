@@ -73,6 +73,11 @@ fetches for itself by its own filter until it catches up, without moving extract
 still has one cursor, one finality view and one reorg authority. What the buffer holds is charged to
 the cursor's budget like anything else, so the change buys independence, not free memory.
 
+The buffer had one flaw in its first three releases. Until 5.17.0 a nest re-admitted after a
+quarantine, or mounted on a running runtime, could take a buffered window without checking that its
+fetch had asked for the nest's addresses, and commit it as empty: `last_block` at the tip, rows
+missing, no error. A nest now fetches for itself any range a window did not ask for.
+
 ## The runtime owns the lifecycle
 
 A runtime that could only be changed by editing a file and restarting would make every change as wide

@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -73,6 +73,42 @@ header to a page. It is a report, not a price.
 gate or of the response bytes is answered `429` with `"reason": "tenant_share"`; a saturated gate is
 still `503` `busy`. A lone nest and a one-tenant runtime are only ever told `busy`.
 
+## Answers in Arrow
+
+*(Since 5.17.0, RFC-0079.)* `/sql` and `/q/{name}` answer as one Arrow IPC stream when asked. JSON
+stays the default and is unchanged.
+
+```sh
+curl -G localhost:8288/sql --data-urlencode 'q=SELECT * FROM weth__transfer' \
+  -H 'Accept: application/vnd.apache.arrow.stream' -D head.txt -o answer.arrows
+```
+
+- **How to ask.** `Accept: application/vnd.apache.arrow.stream` on `GET` or `POST /sql` and on
+  `/q/{name}`, or `format=arrow` in `/sql`'s query string or `POST` body. `/q/{name}` takes `Accept`
+  only, since its query string carries the query's own parameters.
+- **The envelope** is the JSON answer less its rows, escaped to ASCII, in the `x-nuthatch-answer`
+  response header: `columns`, `count`, `truncated`, `degraded`, `degraded_tables`, `tip_unavailable`,
+  `cached` and `provenance`.
+- **The rows are the JSON answer's**, in the same order. Types differ, values do not: 256-bit integers
+  are the same decimal text (`Utf8`), `bool` columns the same `'true'`/`'false'` text, and dates and
+  timestamps keep their Arrow types where JSON writes text.
+- **The same caps**: `max_rows`, `truncated` when another row existed, the byte cap counted on the
+  stream, and the cost meter. A refusal is JSON either way, and an Arrow answer neither reads nor fills
+  the answer memo, so `cached` is always false.
+- **When it pays.** On a 100,000-row export IPC encoded about 5 times and decoded about 16 times faster
+  than JSON. On a point read the schema makes it the larger answer and no faster.
+- **During a rolling upgrade** a 5.16 node answers the same request with JSON, so read `Content-Type`
+  before decoding.
+
+Arrow **Flight SQL** is a separate download, the [flight build](/docs/start/install/#the-flight-build):
+`nuthatch dev --flight 127.0.0.1:8815` serves it beside the HTTP API. A statement is answered by the
+handler behind `POST /<route>/sql`, under its guards, with the caller's `authorization` passed on; the
+mount is named by the `x-nuthatch-route` header and the envelope returns as `x-nuthatch-answer`. A
+refusal is a gRPC status carrying `/sql`'s JSON error. `GetCatalogs`, `GetDbSchemas`, `GetTables`,
+`GetTableTypes` and `GetSqlInfo` answer; prepared statements and updates do not. It is proven in CI
+with ADBC's Go Flight SQL driver (v1.12.0) and arrow-flight's Rust client. JDBC, DBeaver and
+`pyarrow.flight` have not been run against it.
+
 ## Derived & compliance
 
 - `GET /derived` - the nest's declared incremental entities, and how current each one is.
@@ -122,7 +158,9 @@ event nest also answers `GET /api`, but only to say it has no `[address_history]
   asks its RPC for, so they answer `403` on any bind but loopback.
 
 A directory of chain nests serves the same routes at one listener, choosing the chain by `chainid`;
-it serves no `/diff`.
+it serves no `/diff`. There `POST /api/watch` and `/api/unwatch` change every chain or, since 5.17.0,
+only the one a `"chainid"` in the body names, so an account is backfilled only where its owner tracks
+it. A `chainid` no nest serves is refused with `400` and changes nothing.
 
 ## GraphQL (the graph download only)
 

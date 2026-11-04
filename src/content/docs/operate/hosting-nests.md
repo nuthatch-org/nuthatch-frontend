@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -518,13 +518,16 @@ A mount's own `[mounts.publish.failover]` takes the same keys. On a host that fo
 - **The lease** is `<data_identity>/lease.json` in the mirror. The writer renews it a third of a term
   at a time, and every change to it is a conditional put on the bytes last seen, so two hosts racing
   for one lease produce one holder. A host that cannot take it and is not a standby does not start.
+  Since 5.17.0 each lease renews from the moment it is taken, and each store is claimed before its
+  cursor starts, so a slow boot no longer lets an uncontested writer's lease lapse.
 - **A standby takes it** once it has gone unrenewed for the term and half again, counted on the
   standby's own clock. No two hosts' clocks are compared. A holder that cannot renew within the term
   stops committing, which is always before a standby may take the lease.
 - **A writer that loses its lease stops.** Its store is fenced off, so its next commit fails; the nest
   is quarantined with the reason on `/<tenant>/<alias>/ready`; its publisher stops; and the catalogue
   is not moved while the mirror's lease names another fence. A follower that has followed the new
-  writer refuses the old one. The old writer keeps answering at its last `as_of`.
+  writer refuses the old one: since 5.17.0 the feed carries the lease's fence, and a follower refuses
+  any fence below the highest it has seen. The old writer keeps answering at its last `as_of`.
 - **Taking over, cold.** A standby with no copy seeds an empty dataset from the mirror's seed snapshot
   and replays the unsealed gap from the chain.
 - **Taking over, warm.** A standby with `follow` follows the writer while it waits and, on taking the
@@ -535,7 +538,9 @@ A mount's own `[mounts.publish.failover]` takes the same keys. On a host that fo
   mirror's, so the mirror's history never goes backwards.
 - **Webhooks** survive a takeover: the alert outbox travels on the feed, so a promoted standby
   delivers what the old writer had not. Delivery across a takeover is at least once, so a receiver
-  should treat a repeat as harmless.
+  should treat a repeat as harmless. Each delivery carries `X-Nuthatch-Delivery`, its outbox sequence,
+  which since 5.17.0 survives a takeover. The sequence is per nest and the header is not covered by
+  `X-Nuthatch-Signature`, so deduplicate on the nest and the header together.
 - **A planned move** is `POST /_admin/failover/handover` on the writer. Each lease it holds is fenced
   off, it waits up to a minute for the mirror to hold what it sealed, and releases the lease, which a
   standby takes at once. The answer names the fence each route released at,

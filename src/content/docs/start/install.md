@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -20,7 +20,7 @@ installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It
 audit it first if `curl | sh` makes you itch.
 
 Prebuilt binaries cover **macOS (Apple Silicon)**, **Linux x86_64** and, from 4.12.0, **Linux arm64**.
-Intel Mac is deliberately not built. Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
+Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
 `nuthatch-x86_64-unknown-linux-gnu.tar.gz`, `nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.12.0)
 and, for [scaled mode](/docs/operate/scaled/), `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each
 with a `.sha256` beside it. On a platform with no prebuilt binary, or on Linux arm64 while the latest
@@ -29,12 +29,20 @@ something that will not run. From 5.0.0 the release binaries are built with fat 
 profile), which makes them smaller than a `cargo install` build from the same tag. Measured on macOS
 before the WASM layer was removed, fat LTO took the binary from 158.9 MB to 106.7 MB.
 
+From 5.17.0 two more default binaries are attached, for download by hand; the installer does not pick
+either. `nuthatch-x86_64-apple-darwin.tar.gz` is for **Intel Macs**. It is built in CI and **has not
+been run on Intel hardware by us**, which is why the installer still sends an Intel Mac to the source
+build. `nuthatch-x86_64-unknown-linux-musl.tar.gz` is a **static Linux binary with no glibc
+dependency**. It uses musl's allocator rather than jemalloc, and **its behaviour under load has not
+been measured**. The scaled, graph and flight builds are not made for either target.
+
 The Linux binaries are dynamically linked and need **glibc 2.35 or newer**, measured off the published
 artifact with `objdump -T`: from 4.1.0 the x86_64 binary references `hypot` at `GLIBC_2.35`, and the
 arm64 binary, built natively on Ubuntu 22.04, references nothing newer. It links `libc`, `libm`
 and `libgcc` and no C++ runtime; releases before 4.1 embedded DuckDB, needed only glibc 2.34, and also
 needed libstdc++ from GCC 11. Debian 12 and Ubuntu 22.04 clear it. RHEL 9 and Amazon Linux 2023 ship
-glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build.
+glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build or, from 5.17.0, the static musl
+binary above.
 
 Every artifact since 3.0 also has a GitHub build-provenance attestation, which establishes the producing
 repository and workflow rather than merely the integrity of bytes in transit:
@@ -65,16 +73,24 @@ writes; until then the route says so. What it answers is a partial read surface,
 subgraph's event-shaped fields and a refusal by name for the rest, not a drop-in replacement for a
 subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 
+## The flight build
+
+From 5.17.0 every release also carries `nuthatch-flight-<target>.tar.gz` for `aarch64-apple-darwin`,
+`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, built with `--features flight` and attested
+like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.17.0-flight`, never tagged `latest`.
+It serves Arrow Flight SQL beside the HTTP API with `nuthatch dev --flight 127.0.0.1:8815`. The default
+binary needs none of it to answer [in Arrow over HTTP](/docs/reference/http-api/#answers-in-arrow).
+
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nuthatch-org/nuthatch:5.16.0 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.17.0 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
 binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`5.16.0-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`5.17.0-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source

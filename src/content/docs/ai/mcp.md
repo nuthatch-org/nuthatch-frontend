@@ -2,7 +2,7 @@
 title: "Agent-grade MCP"
 description: "Drive nuthatch from an agent - fully offline against the local instance."
 order: 1
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 A nest isn't just queryable by you - it's queryable by your agent, with the same two-minute setup.

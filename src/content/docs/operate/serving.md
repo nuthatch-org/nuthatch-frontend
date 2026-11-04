@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.16.0 (2026-11-01)
+checked: 5.17.0 (2026-11-04)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -18,7 +18,9 @@ Three kinds of read, one process:
   `/balance/{address}` reads the in-memory incremental balances view.
 - **Analytical SQL** - `/sql?q=…`, or since 5.13.0 `POST /sql` with the statement in a JSON body:
   read-only SQL on Burrmill over the live tip ∪ sealed history. Every event is a table named
-  `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/).
+  `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/). Since 5.17.0 it answers as an
+  Arrow IPC stream when asked, and the separate flight build serves Arrow Flight SQL; see
+  [answers in Arrow](/docs/reference/http-api/#answers-in-arrow).
 - **Introspection** - `/`, `/tables`, `/schema`, `/nest`, `/metrics`: what this nest is, what it
   holds, and how it's doing.
 
