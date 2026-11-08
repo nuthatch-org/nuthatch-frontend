@@ -3,10 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import CopyBlock from '../components/CopyBlock.astro';
 import Terminal from '../components/Terminal.astro';
 import PipelineScene from '../components/PipelineScene.astro';
-import { crtRows } from '../data/transcript';
 
 const GH = 'https://github.com/nuthatch-org/nuthatch';
-const crt = JSON.stringify(crtRows());
 
 // Comparison rows, kept identical to the README's table.
 const cols = ['Needs a subgraph', 'Needs handler code', 'Data comes from', 'What you run', 'Query with'];
@@ -16,10 +14,12 @@ const rows = [
   { p: 'Nuthatch',  us: true,  c: ['no', 'no: tables come from the ABI', 'your RPC endpoint', 'one binary', 'SQL, HTTP, MCP'] },
 ];
 ---
-<Layout path="/">
+<Layout path="/" ambient>
   <!-- 1. HERO -->
   <section class="hero">
-    <div class="wrap hero-grid">
+    <canvas class="hero-scene" data-scene="machine-room" aria-hidden="true"></canvas>
+    <div class="scan" aria-hidden="true"></div>
+    <div class="wrap hero-inner">
       <div class="hero-copy">
       <p class="hero-eyebrow rise rise-1"><span class="tag">v5.17.0 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
@@ -47,22 +47,6 @@ const rows = [
       </div>
       </div>
 
-      <!-- The instrument: on wide screens a CRT replays the transcript below it, which stays in the
-           page for readers without WebGL, for phones and for crawlers. -->
-      <figure class="hero-instrument rise rise-2">
-        <div class="hero-well" data-crt={crt}>
-          <p class="fd-instrument-plate hero-plate" aria-hidden="true">Real run <b>init, then dev</b></p>
-          <div class="hero-crt" aria-hidden="true"></div>
-          <Terminal />
-        </div>
-        <figcaption class="demo-caption">
-        A real run of 5.9.0, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
-        project; <code>dev</code> follows the tip, seals finalized ranges to Parquet, and serves it.
-        <code>--backfill 300</code> starts 300 blocks behind the tip, so there are rows within
-        seconds; without it <code>dev</code> backfills from deployment, which for a contract with a
-        long history wants your own archive-capable RPC.
-        </figcaption>
-      </figure>
     </div>
   </section>
 
@@ -94,7 +78,24 @@ const rows = [
     </div>
   </section>
 
-  <!-- 3. HOW IT WORKS -->
+  <!-- 3. A REAL RUN -->
+  <section class="demo">
+    <div class="wrap">
+      <p class="section-label">A real run</p>
+      <Terminal />
+      <p class="demo-caption">
+        A real run of 5.9.0, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
+        project; <code>dev</code> follows the tip, seals finalized ranges to Parquet, and serves it.
+        <code>--backfill 300</code> starts 300 blocks behind the tip, so there are rows within
+        seconds; without it <code>dev</code> backfills from deployment, which for a contract with a
+        long history wants your own archive-capable RPC.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- 4. HOW IT WORKS -->
   <section class="how" id="how">
     <div class="wrap">
       <p class="section-label">How it works</p>
@@ -255,43 +256,49 @@ const rows = [
 </Layout>
 
 <style>
-  /* HERO: one claim and one instrument */
-  .hero { padding-block: clamp(3rem, 7vw, 5.5rem) clamp(2rem, 4vw, 3rem); }
-  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-12); align-items: center; }
-  @media (min-width: 1080px) { .hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); } }
+  /* HERO: the copy over a full-bleed machine room, as on /analytics/ */
+  .hero {
+    position: relative; isolation: isolate; overflow: hidden;
+    min-height: calc(100svh - 58px); display: flex; align-items: center;
+    padding-block: clamp(3rem, 7vw, 5rem); border-bottom: 1px solid var(--border);
+  }
+  .hero-scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; display: block; }
+  .hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(23,22,20,0.94) 0%, rgba(23,22,20,0.6) 34%, rgba(23,22,20,0) 60%),
+                linear-gradient(180deg, rgba(23,22,20,0.5) 0%, rgba(23,22,20,0) 20%, rgba(23,22,20,0) 78%, var(--bg) 100%);
+  }
+  .scan {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.2;
+    background: repeating-linear-gradient(180deg, transparent 0, transparent 2px, rgba(0,0,0,0.35) 3px, transparent 4px);
+  }
+  @media (max-width: 1100px) {
+    .hero::after { background: linear-gradient(180deg, rgba(23,22,20,0.82) 0%, rgba(23,22,20,0.72) 55%, rgba(23,22,20,0.88) 78%, var(--bg) 100%); }
+  }
+  /* The scene is drawn for dark, so in the light theme the hero stays a dark band. */
+  :root[data-theme='light'] .hero {
+    --bg: #171614; --bg-code: #1b1a17; --bg-inset: #262420; --border: rgba(255, 255, 255, 0.09); --border-hi: rgba(255, 255, 255, 0.16);
+    --text: #ece9e3; --text-muted: #9c978c; --text-faint: #6e6a61; --accent: #d0704f; --accent-ink: #f2cbbb;
+    --on-accent: #171614; --pale-accent-bg: rgba(208, 112, 79, 0.12);
+    background: var(--bg); color: var(--text); color-scheme: dark;
+  }
+  .hero-inner { position: relative; }
+  .hero-copy { max-width: 40rem; }
   .hero-eyebrow { margin-bottom: 1.2rem; }
-  .hero h1 { max-width: 16ch; font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.03; letter-spacing: -0.04em; }
-  .hero-sub { margin-top: 1.4rem; font-size: 1rem; line-height: 1.6; max-width: 60ch; color: var(--text-muted); }
-  .hero-cta { margin-top: 2rem; max-width: 40rem; }
+  .hero h1 { max-width: 13ch; font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.03; letter-spacing: -0.04em; }
+  .hero-sub { margin-top: 1.4rem; font-size: 1rem; line-height: 1.6; max-width: 36ch; color: var(--text-muted); }
+  .hero-cta { margin-top: 2rem; max-width: 34rem; }
   .hero-alt { margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-muted); }
   .hero-alt code { font-size: 0.82em; }
   .hero-links { margin-top: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  .hero .btn-ghost { background: rgba(23, 22, 20, 0.6); }
   .stars { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-faint); margin-left: 0.15rem; }
 
-  .hero-instrument { margin: 0; min-width: 0; }
-  .hero-well { position: relative; }
-  .hero-plate, .hero-crt { display: none; }
+  /* A REAL RUN */
   .demo-caption { margin-top: 1rem; font-size: 0.75rem; line-height: 1.6; color: var(--text-muted); max-width: 42rem; }
-  /* Once the CRT is lit, the well takes the machine and the DOM transcript stays in the page, unseen. */
-  @media (min-width: 920px) {
-    .hero-well.is-crt {
-      background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-md);
-      overflow: hidden; aspect-ratio: 8 / 6.4; max-height: 26rem; width: 100%;
-    }
-    .hero-well.is-crt .hero-plate { display: flex; }
-    .hero-well.is-crt .hero-crt { display: block; position: absolute; inset: 0; }
-    .hero-well.is-crt :global(.term) {
-      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
-      overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
-    }
-  }
-  @media (min-width: 1080px) { .hero-well.is-crt { max-height: 34rem; } }
-  .hero-crt :global(.fd-stage-canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-
   /* PROOF BAND */
-  .proof { padding-block: 0 clamp(3rem, 6vw, 4.5rem); }
+  .proof { padding-block: clamp(2.5rem, 5vw, 4rem); }
   .proof .fd-stat-s a { white-space: nowrap; }
-  .demo-caption code { white-space: nowrap; }
 
   /* HOW */
   .how-h { margin-bottom: 2.2rem; }
@@ -361,51 +368,3 @@ const rows = [
   .close-alt { margin-top: 1rem; font-size: 0.8125rem; color: var(--text-muted); }
 </style>
 
-<script>
-  // Light the hero CRT only on wide screens with WebGL, and only when the well scrolls into view.
-  // three and foundry.js are self-hosted under /foundry/; any failure leaves the DOM transcript.
-  const well = document.querySelector<HTMLElement>('.hero-well');
-  const screen = well?.querySelector<HTMLElement>('.hero-crt');
-  const wide = matchMedia('(min-width: 920px)');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const hasWebGL = () => {
-    try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); }
-    catch { return false; }
-  };
-  const load = (src: string) => new Promise<void>((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = () => reject(new Error(src));
-    document.head.appendChild(s);
-  });
-
-  async function light() {
-    if (!well || !screen) return;
-    const lines: { rows: string[]; pause: number }[] = JSON.parse(well.dataset.crt ?? '[]');
-    try {
-      await load('/foundry/three-0.149.0.min.js');
-      await load('/foundry/foundry.js');
-    } catch { return; }
-    const F = (window as any).Foundry;
-    if (!F) return;
-    well.classList.add('is-crt');
-    const all = lines.flatMap((l) => l.rows);
-    if (reduced) { F.CRTTerminal(screen, { title: 'nuthatch · zsh', lines: all }); return; }
-    const crt = F.CRTTerminal(screen, { title: 'nuthatch · zsh', lines: [] });
-    let i = 0;
-    const next = () => {
-      if (i >= lines.length) return;
-      const l = lines[i++];
-      l.rows.forEach((r) => crt.push(r));
-      setTimeout(next, l.pause + 260);
-    };
-    setTimeout(next, 500);
-  }
-
-  if (well && wide.matches && hasWebGL()) {
-    const io = new IntersectionObserver((es) => {
-      if (es.some((e) => e.isIntersecting)) { io.disconnect(); light(); }
-    }, { rootMargin: '200px' });
-    io.observe(well);
-  }
-</script>

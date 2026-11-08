@@ -22,6 +22,7 @@ const readQuery = `SELECT count(*), min(block_number), max(block_number)
 FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7bf115a9b15c7/gns__subgraph_published/e03958df317ac9e39634669f04c7fc1c6e6caed29e7b5f37630235acd8c9f7f2.parquet');`;
 ---
 <Layout
+  ambient
   path="/mirror"
   title="Public mirror - Nuthatch"
   description="Start a nest from indexed history someone has already paid for. Download a published mirror, check every file against its hash, and follow the chain from where it ends."

@@ -57,6 +57,7 @@ const statusLabel = { available: 'available', building: 'building', planned: 'pl
 const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`);
 ---
 <Layout
+  ambient
   path="/nests"
   title="Nests - Nuthatch"
   description="The nest catalogue: prebuilt indexing definitions for contracts and protocols, each a git repository you clone and run yourself. Self-hosted, content-addressed, nothing phoning home."

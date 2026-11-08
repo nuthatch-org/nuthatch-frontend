@@ -1,4 +1,4 @@
-// The hero's real run of `nuthatch init` then `nuthatch dev`, shared by the DOM terminal and the CRT.
+// The real run of `nuthatch init` then `nuthatch dev` that the home page's terminal replays.
 export type TranscriptLine = { kind: 'cmd' | 'ok' | 'serve'; text: string; pause: number };
 
 export const transcript: TranscriptLine[] = [
@@ -13,23 +13,3 @@ export const transcript: TranscriptLine[] = [
 
 export const prefix = { cmd: '$', ok: '✓', serve: '●' } as const;
 
-// The CRT shows 40 columns, so each line is wrapped there, breaking at spaces and commas where it can.
-export function crtRows(width = 40): { rows: string[]; pause: number }[] {
-  return transcript.map((l) => {
-    const lead = `${prefix[l.kind]} `;
-    const cont = '  ';
-    const rows: string[] = [];
-    let rest = l.text;
-    let head = lead;
-    while (rest.length) {
-      const room = width - head.length;
-      if (rest.length <= room) { rows.push(head + rest); break; }
-      let cut = Math.max(rest.lastIndexOf(' ', room), rest.lastIndexOf(',', room - 1) + 1);
-      if (cut <= 0) cut = room;
-      rows.push(head + rest.slice(0, cut).trimEnd());
-      rest = rest.slice(cut).trimStart();
-      head = cont;
-    }
-    return { rows, pause: l.pause };
-  });
-}

@@ -8,11 +8,14 @@ interface Props {
   title?: string;
   description?: string;
   path?: string;
+  /** Dim machine parts drifting in the margins: marketing pages only, never pages for reading. */
+  ambient?: boolean;
 }
 const {
   title = 'Nuthatch - be your own indexer',
   description = "Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres, no subgraph to write, and an MCP server built in.",
   path = '/',
+  ambient = false,
 } = Astro.props;
 const site = Astro.site ?? 'https://nuthatch-indexer.com';
 const canonical = new URL(path, site).href;
@@ -75,7 +78,8 @@ const ogImage = new URL('/og.png', site).href;
       })();
     </script>
   </head>
-  <body>
+  <body class={ambient ? 'has-ambient' : undefined}>
+    {ambient && <canvas id="ambient" aria-hidden="true"></canvas>}
     <a href="#main" class="skip">Skip to content</a>
     <Nav />
     <main id="main">
@@ -83,6 +87,30 @@ const ogImage = new URL('/og.png', site).href;
     </main>
     <Footer />
     <Palette />
+
+    <!-- The scenery: three.js scenes, self-hosted, imported only after first paint. Without WebGL,
+         or if the import fails, the page is simply the dark ground it already is. -->
+    <script>
+      const hero = document.querySelector<HTMLCanvasElement>('canvas[data-scene="machine-room"]');
+      const ambient = document.querySelector<HTMLCanvasElement>('#ambient');
+      const webgl = () => {
+        try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); }
+        catch { return false; }
+      };
+      if ((hero || ambient) && webgl()) {
+        const start = async () => {
+          try {
+            const url = '/foundry/scenes.js';
+            const m = await import(/* @vite-ignore */ url);
+            if (hero) m.createMachineRoom(hero);
+            if (ambient) m.createAmbient(ambient, { kit: 'machine', contentWidth: 1296 });
+          } catch { /* the page stands without it */ }
+        };
+        const idle = (window as any).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 200));
+        if (document.readyState === 'complete') idle(start, { timeout: 2000 });
+        else addEventListener('load', () => idle(start, { timeout: 2000 }), { once: true });
+      }
+    </script>
 
     <!-- Shared copy-to-clipboard handler for every [data-copy] control.
          The only site-wide JS besides the terminal typewriter. Degrades to
