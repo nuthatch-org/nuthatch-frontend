@@ -188,6 +188,13 @@ kbd {
 :is(td, th) > code { overflow-wrap: normal; }
 h1, h2, h3 { overflow-wrap: break-word; }
 
+/* Copy buttons stay small to the eye but take a 44px tap. */
+.copyblock-btn { position: relative; }
+.copyblock-btn::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
+}
+
 /* --- Skip link + a11y --------------------------------------------------- */
 .skip {
   position: absolute; left: -999px; top: 0;
