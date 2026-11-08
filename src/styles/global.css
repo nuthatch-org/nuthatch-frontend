@@ -1,9 +1,7 @@
 /* ==========================================================================
-   Nuthatch - global styles
-   Design language: premium utilitarian minimalism (minimalist-ui taste skill),
-   rendered dark-by-default with a CSS-only light toggle. Flat surfaces, 1px
-   borders, scarce pastel spot-accents, macro whitespace, editorial type.
-   No gradients, no heavy shadows, no external resources.
+   Nuthatch - global styles, in the Foundry house style (tokens.json, v1).
+   Dark by default with a light toggle. Surfaces lift by tier and a hairline,
+   never a shadow; brick labels things and red reports things.
    ========================================================================== */
 
 /* --- Self-hosted variable fonts (no CDN, no phone-home) ------------------ */
@@ -17,81 +15,98 @@
 @font-face {
   font-family: 'JetBrains Mono';
   src: url('/fonts/jetbrains-mono.woff2') format('woff2');
-  font-weight: 400;
+  font-weight: 400 700;
   font-style: normal;
   font-display: swap;
 }
 
-/* --- Tokens: dark theme is the default -------------------------------- */
+/* --- Foundry tokens: dark is the primary theme ------------------------- */
 :root {
-  --bg:          #171614;   /* warm near-black canvas */
-  --bg-elev:     #201f1c;   /* card / surface */
-  --bg-code:     #1b1a17;   /* code + terminal body */
-  --bg-inset:    #262420;   /* kbd / inline chips */
-  --border:      rgba(255, 255, 255, 0.09);
-  --border-hi:   rgba(255, 255, 255, 0.16);
-  --text:        #ece9e3;   /* warm off-white, never pure white */
-  --text-muted:  #9c978c;
-  --text-faint:  #6e6a61;
-  /* The brick dialect, as on lodestar-dashboard.com: one accent labels things, and red reports bad news. */
-  --accent:      #d0704f;   /* brick, 5.26 on --bg */
-  --accent-ink:  #f2cbbb;   /* text on an accent wash; brick on its own wash fails AA */
-  --rust:        var(--accent);
-  --bad:         #e36b6b;
-  --bad-ink:     #f5c4c4;
-  --ok:          #86b592;   /* washed green (terminal success) */
-  --warn:        #cdb06a;
-
+  --bg:             #171614;
+  --bg-elev:        #201f1c;
+  --bg-code:        #1b1a17;
+  --bg-inset:       #262420;
+  --border:         rgba(255, 255, 255, 0.09);
+  --border-hi:      rgba(255, 255, 255, 0.16);
+  --text:           #ece9e3;
+  --text-muted:     #9c978c;
+  --text-faint:     #6e6a61;
+  --accent:         #d0704f;
+  --accent-ink:     #f2cbbb;
+  --on-accent:      #171614;
   --pale-accent-bg: rgba(208, 112, 79, 0.12);
+  --bad:            #e36b6b;
+  --bad-ink:        #f5c4c4;
   --pale-bad-bg:    rgba(227, 107, 107, 0.12);
-  --pale-blue-bg: var(--pale-accent-bg);
-  --pale-rust-bg: var(--pale-accent-bg);
+  --ok:             #86b592;
+  --warn:           #cdb06a;
+  /* 3D materials only, read by the instruments; never UI colour. */
+  --metal-copper:      #b8734a;
+  --metal-brass:       #a8863a;
+  --metal-iron:        #2a2622;
+  --metal-verdigris:   #5f8f7a;
+  --material-bakelite: #2b1c14;
+  --glow-valve:        #ff8a4c;
+
+  /* Older names, kept pointing at the Foundry tokens. */
+  --rust:          var(--accent);
+  --pale-blue-bg:  var(--pale-accent-bg);
+  --pale-rust-bg:  var(--pale-accent-bg);
   --pale-green-bg: rgba(134, 181, 146, 0.12);
 
-  --maxw: 68rem;
-  --radius: 10px;
-  --radius-sm: 6px;
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, 'Helvetica Neue', sans-serif;
+  --font-sans:    'Space Grotesk', ui-sans-serif, system-ui, 'Helvetica Neue', sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-18: 72px;
+
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-pill: 999px;
+  --radius:      var(--radius-md);
+  --shadow-float: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+
+  --maxw: 72rem;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   color-scheme: dark;
 }
 
-/* --- Light theme: the taste skill's exact warm-monochrome palette ------ */
-/* Driven by [data-theme='light'] on <html> (set by a tiny inline script from localStorage), so the
-   choice persists across page loads - the one thing a pure-CSS toggle can't do. */
+/* Driven by [data-theme='light'] on <html> (set by a tiny inline script from localStorage). */
 :root[data-theme='light'] {
-  --bg:          #fbfbfa;
-  --bg-elev:     #ffffff;
-  --bg-code:     #f7f6f3;
-  --bg-inset:    #f2f1ec;
-  --border:      #eaeaea;
-  --border-hi:   rgba(0, 0, 0, 0.14);
-  --text:        #2f3437;
-  --text-muted:  #57554f;   /* 7.3:1 on --bg; #787774 was 4.4:1 and read washed */
-  --text-faint:  #6e6b64;   /* 5.2:1 - metadata, still comfortably legible */
-  --accent:      #a8481f;   /* 5.14 on --bg-inset, the lowest of the light surfaces; the brick /play uses */
-  --accent-ink:  #7a3217;   /* 7.55 on the wash */
-  --bad:         #b3261e;
-  --bad-ink:     #8c1d17;
-  --ok:          #346538;
-  --warn:        #8a6400;
-
+  --bg:             #fbfbfa;
+  --bg-elev:        #ffffff;
+  --bg-code:        #f7f6f3;
+  --bg-inset:       #f2f1ec;
+  --border:         #eaeaea;
+  --border-hi:      rgba(0, 0, 0, 0.14);
+  --text:           #2f3437;
+  --text-muted:     #57554f;
+  --text-faint:     #6e6b64;
+  --accent:         #a8481f;
+  --accent-ink:     #7a3217;
+  --on-accent:      #fbfbfa;
   --pale-accent-bg: #f7e6de;
+  --bad:            #b3261e;
+  --bad-ink:        #8c1d17;
   --pale-bad-bg:    #fbe4e2;
-  --pale-green-bg: #edf3ec;
+  --ok:             #346538;
+  --warn:           #8a6400;
+  --pale-green-bg:  #edf3ec;
 
   color-scheme: light;
 }
 
 /* --- Reset-ish ---------------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html { font-size: 112.5%; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Space Grotesk', ui-sans-serif, system-ui, 'Helvetica Neue', sans-serif;
-  font-size: 17px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
   line-height: 1.6;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -105,71 +120,104 @@ body {
   * { transition: none !important; animation: none !important; }
 }
 
-h1, h2, h3 { font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; margin: 0; }
-h1 { font-size: clamp(2.4rem, 6vw, 3.9rem); }
-h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); }
-h3 { font-size: 1.15rem; letter-spacing: -0.02em; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.04em; line-height: 1.12; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.06; }
+h2 { font-size: clamp(1.5rem, 4.4vw, 1.875rem); }
+h3 { font-size: 1.125rem; line-height: 1.25; letter-spacing: -0.03em; }
 p { margin: 0; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 strong { font-weight: 600; color: var(--text); }
-::selection { background: var(--pale-blue-bg); color: var(--text); }
+::selection { background: var(--pale-accent-bg); color: var(--text); }
 
 code, kbd, pre, .mono {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-feature-settings: 'calt' 1;
 }
 
 /* --- Layout primitives -------------------------------------------------- */
-.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: 1.5rem; }
+.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--space-6); }
+@media (max-width: 540px) { .wrap { padding-inline: var(--space-4); } }
 .narrow { max-width: 44rem; }
-section { padding-block: clamp(4rem, 9vw, 7rem); }
-.section-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+section { padding-block: clamp(3.5rem, 8vw, 6rem); }
+/* The kicker: the stamped plate above every section. */
+.section-label, .fd-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-faint);
-  margin-bottom: 1.1rem;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
 }
+.fd-lede { color: var(--text-muted); font-size: 1rem; line-height: 1.6; max-width: 60ch; }
 .divider { border: 0; border-top: 1px solid var(--border); margin: 0; }
 
 /* --- Buttons ------------------------------------------------------------ */
-.btn {
+.btn, .fd-btn {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  font: inherit; font-weight: 500; font-size: 0.95rem;
-  padding: 0.62rem 1.1rem;
+  font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.02em;
+  min-height: 40px; padding: 0 16px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.12s var(--ease), background-color 0.18s var(--ease), border-color 0.18s var(--ease);
+  transition: transform 0.12s var(--ease), background-color 0.16s var(--ease), border-color 0.16s var(--ease), color 0.16s var(--ease);
   text-decoration: none;
 }
-.btn-primary { background: var(--text); color: var(--bg); }
-.btn-primary:hover { text-decoration: none; opacity: 0.9; }
-.btn-primary:active { transform: scale(0.98); }
-.btn-ghost { background: transparent; color: var(--text); border-color: var(--border-hi); }
-.btn-ghost:hover { background: var(--bg-elev); text-decoration: none; }
+.btn:hover, .fd-btn:hover { text-decoration: none; }
+.btn:active, .fd-btn:active { transform: scale(0.98); }
+.btn-primary, .fd-btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover, .fd-btn--primary:hover { background: var(--accent-ink); color: var(--bg); }
+.btn-ghost, .fd-btn--ghost { background: transparent; color: var(--text); border-color: var(--border-hi); }
+.btn-ghost:hover, .fd-btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
 
 /* --- Cards & bento ------------------------------------------------------ */
 .card {
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: clamp(1.4rem, 3vw, 2rem);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
 }
 
-/* --- Tags / badges ------------------------------------------------------ */
-.tag {
-  display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.66rem; font-weight: 500;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 0.2rem 0.55rem;
-  border-radius: 9999px;
-  background: var(--pale-blue-bg);
+/* --- Badges: the one place a pill radius is allowed --------------------- */
+.tag, .fd-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem; font-weight: 400; line-height: 1.3;
+  letter-spacing: 0.02em;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--pale-accent-bg);
   color: var(--accent-ink);
+  white-space: nowrap;
 }
+
+/* --- Stat band: cells drawn by 1px hairlines, not boxes ----------------- */
+.fd-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
+}
+.fd-stat { background: var(--bg-elev); padding: 16px 18px; min-width: 0; }
+.fd-stat-l {
+  font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 6px;
+}
+.fd-stat-n {
+  font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 4vw, 2rem);
+  letter-spacing: -0.035em; line-height: 1.05; margin: 0; font-variant-numeric: tabular-nums;
+}
+.fd-stat-n .u { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); letter-spacing: 0.02em; margin-left: 4px; }
+.fd-stat-s { color: var(--text-muted); font-size: 0.75rem; margin: 6px 0 0; line-height: 1.5; }
+
+/* --- Instrument well: every machine sits on a plate naming what it reads */
+.fd-instrument { position: relative; background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.fd-instrument-plate {
+  position: absolute; left: 12px; top: 10px; z-index: 1;
+  font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); display: flex; gap: 8px; align-items: center;
+}
+.fd-instrument-plate b { color: var(--text); font-weight: 400; letter-spacing: 0.02em; }
 
 kbd {
   font-size: 0.82em;
@@ -204,11 +252,11 @@ h1, h2, h3 { overflow-wrap: break-word; }
 /* --- Skip link + a11y --------------------------------------------------- */
 .skip {
   position: absolute; left: -999px; top: 0;
-  background: var(--text); color: var(--bg);
+  background: var(--accent); color: var(--bg);
   padding: 0.6rem 1rem; border-radius: 0 0 var(--radius-sm) 0; z-index: 100;
 }
 .skip:focus { left: 0; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 
 /* --- Shiki code blocks (build-time highlighting, dual-theme via toggle) - */
 .astro-code {
@@ -216,7 +264,7 @@ h1, h2, h3 { overflow-wrap: break-word; }
   padding: 1rem 1.2rem;
   overflow-x: auto;
   font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
-  font-size: 0.86rem;
+  font-size: 0.75rem;
   line-height: 1.7;
   background: var(--bg-code) !important;
   scrollbar-width: thin;

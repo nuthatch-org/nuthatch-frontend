@@ -90,21 +90,21 @@ const groups = GROUPS.map((g) => ({
   .docs-nav > summary { display: none; }
   .docs-nav > summary::-webkit-details-marker { display: none; }
   .docs-nav-label {
-    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
-    letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-faint, var(--text-muted));
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
     margin-bottom: 1rem;
   }
   .docs-nav-current { display: none; }
   .docs-group { margin-bottom: 1.4rem; }
   .docs-group-label {
-    font-size: 0.82rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text);
+    font-size: 0.75rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text);
     margin: 0 0 0.5rem;
   }
   .docs-group ul { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--border); }
   .docs-group li { margin: 0; }
   .docs-group a {
     display: block; padding: 0.3rem 0 0.3rem 0.85rem; margin-left: -1px;
-    font-size: 0.9rem; color: var(--text-muted); border-left: 1px solid transparent;
+    font-size: 0.8125rem; color: var(--text-muted); border-left: 1px solid transparent;
     line-height: 1.35;
   }
   .docs-group a:hover { color: var(--text); text-decoration: none; }
@@ -113,17 +113,17 @@ const groups = GROUPS.map((g) => ({
   }
 
   .docs-content { min-width: 0; }
-  .docs-verified { margin-top: 3rem !important; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-faint) !important; font-size: 0.85rem !important; }
-  .docs-content :global(h1) { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.12; letter-spacing: -0.025em; margin-bottom: 1.4rem; }
+  .docs-verified { margin-top: 3rem !important; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-muted) !important; font-size: 0.75rem !important; }
+  .docs-content :global(h1) { font-size: clamp(1.689rem, 4vw, 2.311rem); line-height: 1.12; letter-spacing: -0.025em; margin-bottom: 1.4rem; }
 
   /* Prose - shared with the blog. */
-  .prose :global(p) { color: var(--text-muted); font-size: 1.04rem; line-height: 1.72; margin-bottom: 1.3rem; }
-  .prose :global(h2) { font-size: 1.45rem; letter-spacing: -0.02em; color: var(--text); margin: 2.6rem 0 1rem; line-height: 1.25; }
-  .prose :global(h3) { font-size: 1.12rem; letter-spacing: -0.01em; color: var(--text); margin: 2rem 0 0.7rem; }
+  .prose :global(p) { color: var(--text-muted); font-size: 1rem; line-height: 1.72; margin-bottom: 1.3rem; }
+  .prose :global(h2) { font-size: 1.289rem; letter-spacing: -0.02em; color: var(--text); margin: 2.6rem 0 1rem; line-height: 1.25; }
+  .prose :global(h3) { font-size: 1rem; letter-spacing: -0.01em; color: var(--text); margin: 2rem 0 0.7rem; }
   .prose :global(a) { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
   .prose :global(a:hover) { border-bottom-color: var(--accent); }
   .prose :global(strong) { color: var(--text); font-weight: 600; }
-  .prose :global(ul), .prose :global(ol) { color: var(--text-muted); font-size: 1.04rem; line-height: 1.7; margin: 0 0 1.3rem; padding-left: 1.3rem; }
+  .prose :global(ul), .prose :global(ol) { color: var(--text-muted); font-size: 1rem; line-height: 1.7; margin: 0 0 1.3rem; padding-left: 1.3rem; }
   .prose :global(li) { margin-bottom: 0.45rem; }
   .prose :global(li::marker) { color: var(--text-faint, var(--text-muted)); }
   .prose :global(hr) { border: none; border-top: 1px solid var(--border); margin: 2.6rem 0; }
@@ -134,7 +134,7 @@ const groups = GROUPS.map((g) => ({
   }
   .prose :global(blockquote p) { margin-bottom: 0.4rem; }
   .prose :global(blockquote p:last-child) { margin-bottom: 0; }
-  .prose :global(table) { width: 100%; border-collapse: collapse; margin: 0 0 1.6rem; font-size: 0.95rem; display: block; overflow-x: auto; }
+  .prose :global(table) { width: 100%; border-collapse: collapse; margin: 0 0 1.6rem; font-size: 0.875rem; display: block; overflow-x: auto; }
   .prose :global(th), .prose :global(td) { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
   .prose :global(th) { color: var(--text); font-weight: 600; white-space: nowrap; }
   .prose :global(code) {
@@ -143,7 +143,7 @@ const groups = GROUPS.map((g) => ({
   }
   .prose :global(pre) {
     background: var(--bg-code, #1b1a17); border: 1px solid var(--border); border-radius: var(--radius, 10px);
-    padding: 1rem 1.1rem; overflow-x: auto; margin: 0 0 1.5rem; font-size: 0.85rem; line-height: 1.6;
+    padding: 1rem 1.1rem; overflow-x: auto; margin: 0 0 1.5rem; font-size: 0.75rem; line-height: 1.6;
   }
   .prose :global(pre code) { background: none; padding: 0; border-radius: 0; font-size: inherit; }
 
@@ -160,7 +160,7 @@ const groups = GROUPS.map((g) => ({
       display: flex; flex-direction: column; gap: 0.15rem;
     }
     .docs-nav-label { margin: 0; }
-    .docs-nav-current { display: block; color: var(--text); font-weight: 600; font-size: 0.95rem; }
+    .docs-nav-current { display: block; color: var(--text); font-weight: 600; font-size: 0.875rem; }
     .docs-nav > nav { padding: 0 1rem 1rem; }
     .docs-nav[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: 0.8rem; }
   }

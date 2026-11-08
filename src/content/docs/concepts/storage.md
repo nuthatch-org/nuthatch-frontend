@@ -41,7 +41,7 @@ rows rather than hashes. That's what makes segments *reusable* across nest versi
 
 Analytical SQL (`/sql`, `nuthatch sql`) runs on [Burrmill](https://github.com/nuthatch-org/burrmill),
 an embedded query engine on DataFusion. Each session registers the sealed segments and the hot tip's
-rows as one table per event, so a query spans all of history seamlessly, hot and cold. Only the
+rows as one table per event, so a query spans all of history, hot and cold. Only the
 ingestion thread writes; queries only read.
 
 Burrmill has been the only engine since 4.1.0. Releases up to 4.0.2 used DuckDB, which is no longer

@@ -40,16 +40,16 @@ const majors = [...new Set(releases.map((r) => r.version.split('.')[0]))];
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 8vw, 6rem); }
   .page h1 { margin-bottom: 1.2rem; }
-  .lede { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem; }
-  .major { margin-top: 2.6rem; margin-bottom: 0.6rem; font-size: 1.35rem; }
+  .lede { color: var(--text-muted); font-size: 1rem; margin-bottom: 1rem; }
+  .major { margin-top: 2.6rem; margin-bottom: 0.6rem; font-size: 1.125rem; }
   .releases { list-style: none; padding: 0; margin: 0; }
   .releases li {
     display: grid; grid-template-columns: 5.5rem 6.5rem 1fr; gap: 0.2rem 0.8rem;
     padding-block: 0.55rem; border-top: 1px solid var(--border);
-    font-size: 0.92rem; color: var(--text-muted);
+    font-size: 0.8125rem; color: var(--text-muted);
   }
-  .ver, time { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
-  time { color: var(--text-faint); }
+  .ver, time { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  time { color: var(--text-muted); }
   @media (max-width: 560px) {
     .releases li { grid-template-columns: auto 1fr; }
     .hl { grid-column: 1 / -1; }

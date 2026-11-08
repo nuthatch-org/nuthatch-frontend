@@ -80,30 +80,30 @@ const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 10
   .book-shell { padding: 0 0 clamp(4rem, 9vw, 7rem); }
   .book-top, .book-grid { max-width: 90rem; }
   .book-top { min-height: 4.25rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--border); }
-  .book-mark { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.02em; }
+  .book-mark { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.02em; }
   .book-mark:hover, .book-print-link:hover { text-decoration: none; }
-  .book-kicker { margin: 0; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .book-kicker { margin: 0; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; }
   .book-kicker span { margin-inline: 0.25rem; color: var(--rust); }
-  .book-print-link { margin-left: auto; color: var(--text-muted); font-size: 0.85rem; }
+  .book-print-link { margin-left: auto; color: var(--text-muted); font-size: 0.75rem; }
   .book-progress { height: 2px; background: var(--border); }
   .book-progress span { display: block; height: 100%; width: var(--book-progress); background: var(--rust); transition: width 160ms ease; }
   .book-grid { display: grid; grid-template-columns: 10rem minmax(0, 58rem) 8rem; gap: clamp(1.5rem, 3.5vw, 3.5rem); align-items: start; padding-top: clamp(2.5rem, 7vw, 5rem); }
   .book-aside { position: sticky; top: 84px; }
-  .book-contents summary { cursor: default; list-style: none; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.85rem; }
+  .book-contents summary { cursor: default; list-style: none; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.85rem; }
   .book-contents summary::-webkit-details-marker { display: none; }
   .book-contents ol { list-style: none; padding: 0; margin: 0; border-left: 1px solid var(--border); }
   .book-contents li { margin: 0; }
-  .book-contents a { display: block; border-left: 1px solid transparent; margin-left: -1px; padding: 0.35rem 0 0.35rem 0.75rem; color: var(--text-faint); font-size: 0.8rem; line-height: 1.35; }
+  .book-contents a { display: block; border-left: 1px solid transparent; margin-left: -1px; padding: 0.35rem 0 0.35rem 0.75rem; color: var(--text-muted); font-size: 0.75rem; line-height: 1.35; }
   .book-contents a:hover { color: var(--text); text-decoration: none; }
   .book-contents a.active { color: var(--rust); border-left-color: var(--rust); }
   .book-prose { min-width: 0; }
-  .book-position { color: var(--rust); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 1rem; }
-  .book-prose :global(h1) { max-width: 39rem; color: var(--text); font-size: clamp(2.35rem, 5vw, 4.1rem); letter-spacing: -0.05em; line-height: 1.02; margin: 0 0 2.2rem; }
-  .book-cover :global(h1) { font-size: clamp(3rem, 7vw, 5.2rem); max-width: 35rem; }
-  .book-prose :global(p), .book-prose :global(li) { color: var(--text-muted); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.1rem, 1.3vw, 1.24rem); line-height: 1.82; }
+  .book-position { color: var(--rust); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 1rem; }
+  .book-prose :global(h1) { max-width: 39rem; color: var(--text); font-size: clamp(2.089rem, 5vw, 3.644rem); letter-spacing: -0.05em; line-height: 1.02; margin: 0 0 2.2rem; }
+  .book-cover :global(h1) { font-size: clamp(2.667rem, 7vw, 4.622rem); max-width: 35rem; }
+  .book-prose :global(p), .book-prose :global(li) { color: var(--text-muted); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(0.978rem, 1.3vw, 1.102rem); line-height: 1.82; }
   .book-prose :global(p) { margin: 0 0 1.55rem; }
-  .book-prose :global(h2) { color: var(--text); font-size: clamp(1.65rem, 3vw, 2.25rem); letter-spacing: -0.035em; line-height: 1.15; margin: 4.3rem 0 1.15rem; }
-  .book-prose :global(h3) { color: var(--text); font-size: 1.25rem; letter-spacing: -0.02em; margin: 2.5rem 0 0.7rem; }
+  .book-prose :global(h2) { color: var(--text); font-size: clamp(1.467rem, 3vw, 2rem); letter-spacing: -0.035em; line-height: 1.15; margin: 4.3rem 0 1.15rem; }
+  .book-prose :global(h3) { color: var(--text); font-size: 1.125rem; letter-spacing: -0.02em; margin: 2.5rem 0 0.7rem; }
   .book-prose :global(a) { color: var(--rust); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--rust) 35%, transparent); }
   .book-prose :global(a:hover) { border-bottom-color: var(--rust); }
   .book-prose :global(strong) { color: var(--text); }
@@ -114,15 +114,15 @@ const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 10
   .book-prose :global(pre) { margin: 1.8rem 0; padding: 1.2rem 1.3rem; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-code, #1b1a17); }
   .book-prose :global(pre code) { background: none; padding: 0; }
   .book-chapter-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-  .book-chapter-nav a { min-width: 0; color: var(--text-muted); border: 0; font-size: 0.95rem; line-height: 1.35; }
+  .book-chapter-nav a { min-width: 0; color: var(--text-muted); border: 0; font-size: 0.875rem; line-height: 1.35; }
   .book-chapter-nav a:hover { color: var(--rust); }
-  .book-chapter-nav span { display: block; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.35rem; }
+  .book-chapter-nav span { display: block; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.35rem; }
   .book-next { text-align: right; }
   .book-on-page { position: sticky; top: 84px; padding-top: 0.15rem; }
-  .book-on-page p { margin: 0 0 0.65rem; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .book-on-page p { margin: 0 0 0.65rem; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; }
   .book-on-page ul { list-style: none; padding: 0; margin: 0; }
   .book-on-page li { margin: 0 0 0.5rem; }
-  .book-on-page a { color: var(--text-faint); font-size: 0.77rem; line-height: 1.35; }
+  .book-on-page a { color: var(--text-muted); font-size: 0.6875rem; line-height: 1.35; }
   .book-on-page a:hover { color: var(--text); text-decoration: none; }
 
   @media (max-width: 84rem) { .book-grid { grid-template-columns: 9rem minmax(0, 58rem); } .book-on-page { display: none; } }

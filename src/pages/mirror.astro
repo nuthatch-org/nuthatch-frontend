@@ -128,12 +128,12 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
 
 <style>
   .read { margin-top: 3rem; }
-  .read h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
-  .read p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0 0 1rem; max-width: 72ch; }
+  .read h2 { font-size: clamp(1.022rem, 2.2vw, 1.2rem); margin-bottom: 0.6rem; }
+  .read p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; margin: 0 0 1rem; max-width: 72ch; }
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
   h1 { margin-bottom: 0.8rem; }
   .lede {
-    color: var(--text-muted); font-size: 1.08rem; line-height: 1.7;
+    color: var(--text-muted); font-size: 1rem; line-height: 1.7;
     margin-bottom: 2rem; max-width: 62ch;
   }
   code {
@@ -144,18 +144,18 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
     border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
     background: color-mix(in srgb, var(--warn) 8%, transparent);
     border-radius: var(--radius); padding: 0.9rem 1.1rem; margin-bottom: 2rem;
-    color: var(--text-muted); font-size: 0.94rem; line-height: 1.6; max-width: 70ch;
+    color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; max-width: 70ch;
   }
   .how {
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--bg-elev); padding: 1.4rem 1.5rem; margin-bottom: 2.5rem;
   }
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: 1.2rem; }
-  .steps p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
+  .steps p { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.6; margin: 0; }
   .cap {
     display: block; font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--text-faint); margin-bottom: 0.5rem;
+    font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.5rem;
   }
   .grid {
     list-style: none; margin: 0; padding: 0;
@@ -169,33 +169,33 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
   }
   .nest:hover { border-color: var(--border-hi); }
   .nest-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
-  .nest-top h3 { font-size: 1.1rem; color: var(--text); overflow-wrap: anywhere; }
+  .nest-top h3 { font-size: 1rem; color: var(--text); overflow-wrap: anywhere; }
   .badge {
-    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.625rem;
     letter-spacing: 0.08em; text-transform: uppercase;
     padding: 0.18rem 0.5rem; border-radius: 9999px; border: 1px solid transparent;
   }
   .status--available { color: var(--ok); background: var(--pale-green-bg); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
-  .status--planned { color: var(--text-faint); border-color: var(--border); }
+  .status--planned { color: var(--text-muted); border-color: var(--border); }
   .figures { margin: 1rem 0 0; display: grid; gap: 0.35rem; }
-  .figures div { display: flex; gap: 0.8rem; font-size: 0.86rem; }
+  .figures div { display: flex; gap: 0.8rem; font-size: 0.75rem; }
   .figures dt {
     width: 4.5rem; flex-shrink: 0; font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-faint); padding-top: 0.15rem;
+    font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); padding-top: 0.15rem;
   }
-  .figures dd { margin: 0; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+  .figures dd { margin: 0; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
   .cmd { margin-top: auto; padding-top: 1.1rem; }
   .repolink {
     display: inline-block; margin-top: 0.5rem;
-    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--text-muted);
   }
   .repolink:hover { color: var(--accent); }
-  .note { margin: 0.8rem 0 0; font-size: 0.82rem; line-height: 1.55; color: var(--text-faint); }
+  .note { margin: 0.8rem 0 0; font-size: 0.75rem; line-height: 1.55; color: var(--text-muted); }
   .notes {
     margin-top: 3.5rem; display: grid; gap: 2rem;
     grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
   }
-  .notes h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
-  .notes p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0; }
+  .notes h2 { font-size: clamp(1.022rem, 2.2vw, 1.2rem); margin-bottom: 0.6rem; }
+  .notes p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; margin: 0; }
 </style>
