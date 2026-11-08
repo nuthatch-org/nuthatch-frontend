@@ -64,6 +64,9 @@ const fmt = (d: Date) =>
   .prose :global(ul), .prose :global(ol) { color: var(--text-muted); font-size: 1.12rem; line-height: 1.7; margin: 0 0 1.35rem; padding-left: 1.3rem; }
   .prose :global(li) { margin-bottom: 0.5rem; }
   .prose :global(li::marker) { color: var(--text-faint, var(--text-muted)); }
+  .prose :global(table) { width: 100%; border-collapse: collapse; margin: 0 0 1.6rem; font-size: 0.95rem; display: block; overflow-x: auto; }
+  .prose :global(th), .prose :global(td) { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  .prose :global(th) { color: var(--text); font-weight: 600; white-space: nowrap; }
   .prose :global(hr) { border: none; border-top: 1px solid var(--border); margin: 2.6rem 0; }
   .prose :global(blockquote) {
     margin: 1.6rem 0; padding: 0.4rem 0 0.4rem 1.2rem;

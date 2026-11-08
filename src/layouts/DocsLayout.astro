@@ -149,7 +149,7 @@ const groups = GROUPS.map((g) => ({
 
   @media (max-width: 72rem) { .docs-grid { grid-template-columns: 15rem minmax(0, 1fr); } }
   @media (max-width: 52rem) {
-    .docs-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .docs-grid { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
     .docs-nav {
       position: static; max-height: none; overflow: visible;
       border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);

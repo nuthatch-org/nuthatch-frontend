@@ -89,7 +89,7 @@ import Layout from '../../layouts/Layout.astro';
   .live #entity { flex: 0 1 18rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
   .live #status { margin: 10px 0; color: var(--faint); font-size: 0.9rem; }
   .live #status.err, .live .err { color: var(--err); font-size: 0.85rem; }
-  .live .cursor { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 10px; }
+  .live .cursor { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 1fr)); gap: 10px; }
   .live .stat { padding: 12px; border-radius: 8px; background: var(--code); min-width: 0; }
   .live .stat .v { font-size: 1.3rem; font-weight: 650; overflow-wrap: anywhere; }
   .live .stat .k { color: var(--faint); font-size: 0.78rem; }

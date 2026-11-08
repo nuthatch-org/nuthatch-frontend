@@ -91,6 +91,7 @@ body {
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
   transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -181,7 +182,11 @@ kbd {
   border-radius: 5px;
   background: var(--bg-inset);
   color: var(--text);
+  overflow-wrap: anywhere;
 }
+/* A table scrolls in its own box, so its code should widen the column rather than break. */
+:is(td, th) > code { overflow-wrap: normal; }
+h1, h2, h3 { overflow-wrap: break-word; }
 
 /* --- Skip link + a11y --------------------------------------------------- */
 .skip {
