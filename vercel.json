@@ -37,6 +37,10 @@
       "destination": "https://analytics.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/analytics/",
+      "destination": "https://nuthatch-analytics.vercel.app/index.html"
+    },
+    {
       "source": "/analytics/:path*",
       "destination": "https://nuthatch-analytics.vercel.app/:path*"
     },
