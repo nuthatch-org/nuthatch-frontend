@@ -5,6 +5,7 @@ import { latest, headlineHtml } from '../data/releases';
 const GH = 'https://github.com/nuthatch-org/nuthatch';
 ---
 <Layout
+  ambient
   path="/install"
   title="Install Nuthatch"
   description="Install Nuthatch v5.17.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
@@ -143,23 +144,23 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 8vw, 6rem); }
   .page h1 { margin-bottom: 1.2rem; }
-  .lede { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem; }
-  .ih { margin-top: 2.8rem; margin-bottom: 0.8rem; font-size: 1.35rem; }
+  .lede { color: var(--text-muted); font-size: 1rem; margin-bottom: 1rem; }
+  .ih { margin-top: 2.8rem; margin-bottom: 0.8rem; font-size: 1.125rem; }
   .ih-div { margin-block: 2.8rem 0; }
   .page p { color: var(--text-muted); margin-bottom: 1rem; }
   .page :global(.copyblock) { margin-bottom: 0.6rem; }
-  .note { font-size: 0.88rem; color: var(--text-faint); }
+  .note { font-size: 0.8125rem; color: var(--text-muted); }
   .release-note {
     border-left: 3px solid var(--rust); padding: 0.2rem 0 0.2rem 0.9rem;
-    font-size: 0.92rem; margin-bottom: 2rem;
+    font-size: 0.8125rem; margin-bottom: 2rem;
   }
   .release-ver { font-family: 'JetBrains Mono', monospace; margin-right: 0.3rem; }
   .release-note > a:last-child { margin-left: 0.3rem; white-space: nowrap; }
-  .ih .tag { font-size: 0.62rem; vertical-align: middle; margin-left: 0.4rem; }
+  .ih .tag { font-size: 0.625rem; vertical-align: middle; margin-left: 0.4rem; }
   .keybox { margin-top: 1rem; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
-  .keybox-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
-  .keybox-id { display: block; margin-top: 0.5rem; font-size: 0.82rem; color: var(--accent-ink); word-break: break-all; }
-  .keybox-note { margin: 0.6rem 0 0; font-size: 0.82rem; }
+  .keybox-label { font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  .keybox-id { display: block; margin-top: 0.5rem; font-size: 0.75rem; color: var(--accent-ink); word-break: break-all; }
+  .keybox-note { margin: 0.6rem 0 0; font-size: 0.75rem; }
   .backlink { margin-top: 2.5rem; }
-  .backlink a { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+  .backlink a { font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; }
 </style>

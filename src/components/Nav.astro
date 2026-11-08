@@ -138,7 +138,7 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
   }
   .brand {
     display: inline-flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
-    color: var(--text); font-weight: 600; letter-spacing: -0.02em; font-size: 1.02rem;
+    color: var(--text); font-family: var(--font-display); font-weight: 600; letter-spacing: -0.06em; font-size: 1.125rem;
     margin-right: auto;
   }
   .brand:hover { text-decoration: none; }
@@ -147,52 +147,44 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
   .nav-search {
     display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; flex-shrink: 0;
     margin-left: clamp(0.9rem, 2vw, 1.5rem); padding: 0.28rem 0.45rem 0.28rem 0.6rem;
-    font: inherit; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;
+    font: inherit; font-size: 0.75rem; color: var(--text-muted); cursor: pointer;
     background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
     transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
   }
   .nav-search[hidden] { display: none; }
   .nav-search:hover { color: var(--text); border-color: var(--border-hi); }
   .nav-search svg { width: 15px; height: 15px; }
-  .nav-search kbd { font-size: 0.66rem; border-bottom-width: 1px; }
+  .nav-search kbd { font-size: 0.625rem; border-bottom-width: 1px; }
   /* Between the phone menu and a roomy header there is space for the icon and nothing else. */
   @media (max-width: 72rem) {
     .nav-search { padding: 0.4rem; }
     .nav-search-label, .nav-search kbd { display: none; }
   }
-  .nav-links a { color: var(--text-muted); font-size: 0.92rem; }
-  .nav-links a:hover { color: var(--text); text-decoration: none; }
+  .nav-links a { color: var(--text-muted); font-size: 0.8125rem; }
+  .nav-links a:hover { color: var(--accent); text-decoration: none; }
 
-  /* The one filled control in the header. A deeper terracotta than --rust, which white text cannot
-     read on at AA; the glow is the only motion and stops for reduced-motion. */
+  /* The one primary action in the header: solid brick with on-accent text, as a Foundry button. */
   .nav-play {
-    --play: #b4542a;
     position: relative; flex-shrink: 0;
-    display: inline-flex; align-items: center; gap: 0.35rem;
+    display: inline-flex; align-items: center; gap: 0.4rem;
     margin-left: clamp(0.6rem, 1.6vw, 1.1rem);
-    padding: 0.3rem 0.8rem 0.3rem 0.65rem; border-radius: 999px;
-    background: var(--play); color: #fff; font-size: 0.92rem; font-weight: 600; letter-spacing: 0.01em;
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--play) 55%, transparent);
-    animation: play-glow 2.8s var(--ease) infinite;
-    transition: transform 0.18s var(--ease), background 0.18s var(--ease);
+    min-height: 32px; padding: 0 12px 0 10px; border-radius: var(--radius-sm);
+    background: var(--accent); color: var(--on-accent);
+    font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.02em;
+    transition: transform 0.12s var(--ease), background 0.16s var(--ease);
   }
   /* Grows the tap target to 44px without growing the pill. */
   .nav-play::after { content: ''; position: absolute; inset: -7px -4px; }
-  :root[data-theme=light] .nav-play { --play: #a8481f; }
-  .nav-play:hover { color: #fff; text-decoration: none; background: color-mix(in srgb, var(--play) 85%, #000); transform: translateY(-1px); }
+  .nav-play:hover { color: var(--bg); text-decoration: none; background: var(--accent-ink); }
+  .nav-play:active { transform: scale(0.98); }
   .nav-play svg { width: 11px; height: 11px; }
-  @keyframes play-glow {
-    0%, 55% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--play) 55%, transparent); }
-    100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--play) 0%, transparent); }
-  }
-  @media (prefers-reduced-motion: reduce) { .nav-play { animation: none; } }
 
   /* Dropdown groups. The trigger is a real button so it takes keyboard focus; the menu opens on
      hover or on focus anywhere inside the group, and closes when both leave. */
   .nav-group { position: relative; }
   .nav-group-btn {
     display: inline-flex; align-items: center; gap: 0.3rem;
-    font: inherit; font-size: 0.92rem; color: var(--text-muted);
+    font: inherit; font-size: 0.8125rem; color: var(--text-muted);
     background: none; border: 0; padding: 0; cursor: pointer;
   }
   .nav-chevron { width: 10px; height: 10px; transition: transform 0.18s var(--ease); }
@@ -201,9 +193,8 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
   .nav-menu {
     display: none; flex-direction: column; gap: 0.1rem;
     position: absolute; top: calc(100% + 0.55rem); left: -0.5rem; min-width: 12.5rem;
-    background: var(--bg-elev); border: 1px solid var(--border);
+    background: var(--bg-elev); border: 1px solid var(--border-hi);
     border-radius: var(--radius); padding: 0.4rem;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   }
   /* Invisible bridge over the gap between trigger and menu, so the pointer can cross it. */
   .nav-menu::before { content: ''; position: absolute; left: 0; right: 0; top: -0.65rem; height: 0.65rem; }
@@ -227,9 +218,9 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
   .theme-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
   .theme-toggle {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem;
     color: var(--text-muted); cursor: pointer; user-select: none;
-    border: 1px solid var(--border); border-radius: 9999px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 0.22rem 0.6rem 0.22rem 0.5rem;
     transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
   }
@@ -259,18 +250,17 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
       flex-direction: column; align-items: stretch; gap: 0;
       background: var(--bg-elev); border-bottom: 1px solid var(--border);
       padding: 0.4rem 1rem 1rem;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
     }
     :root:has(#nav-toggle:checked) .nav-links { display: flex; }
     .nav-links a {
       display: flex; align-items: center; min-height: 44px;
-      padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); font-size: 1rem; color: var(--text);
+      padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--text);
     }
     .nav-links a:hover { background: var(--bg-inset); }
     .nav-group { display: flex; flex-direction: column; }
     .nav-group-btn {
       pointer-events: none; padding: 0.9rem 0.8rem 0.3rem; cursor: default;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.12em;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--rust);
     }
     .nav-chevron { display: none; }

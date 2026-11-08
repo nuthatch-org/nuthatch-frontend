@@ -22,6 +22,7 @@ const mcpConfig = `{
 }`;
 ---
 <Layout
+  ambient
   path="/stories"
   title="Who runs Nuthatch - Nuthatch"
   description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v5.17.0; GraphQL is only a partial, parked read surface."
@@ -200,14 +201,14 @@ const mcpConfig = `{
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
   .prose h1 { margin-bottom: 1.4rem; line-height: 1.12; }
-  .prose h2 { margin-top: 2.6rem; margin-bottom: 1rem; font-size: 1.5rem; }
-  .prose p { color: var(--text-muted); font-size: 1.05rem; line-height: 1.72; margin-bottom: 1.3rem; }
+  .prose h2 { margin-top: 2.6rem; margin-bottom: 1rem; font-size: 1.333rem; }
+  .prose p { color: var(--text-muted); font-size: 1rem; line-height: 1.72; margin-bottom: 1.3rem; }
   .prose p:first-of-type { color: var(--text); }
-  .illus { font-size: 0.9rem !important; color: var(--text-faint) !important; margin-top: -0.4rem; }
+  .illus { font-size: 0.8125rem !important; color: var(--text-muted) !important; margin-top: -0.4rem; }
   .preview-note {
     background: var(--pale-rust-bg); border: 1px solid var(--border);
     border-left: 3px solid var(--rust); border-radius: var(--radius);
-    padding: 1rem 1.2rem; font-size: 0.95rem !important; color: var(--text-muted) !important;
+    padding: 1rem 1.2rem; font-size: 0.875rem !important; color: var(--text-muted) !important;
     margin-bottom: 1rem;
   }
   .preview-note strong { color: var(--text); }
@@ -218,10 +219,10 @@ const mcpConfig = `{
   }
   .in-production h2 { margin-top: 0.8rem; }
   .in-production p { color: var(--text-muted); margin-bottom: 0; }
-  .in-production .prod-box { margin-top: 1rem; font-size: 0.95rem; color: var(--text-faint); }
+  .in-production .prod-box { margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted); }
   .in-production strong { color: var(--text); }
   .prose :global(.codecard) { margin-bottom: 1.4rem; }
-  .note { font-size: 0.92rem; color: var(--text-faint); }
+  .note { font-size: 0.8125rem; color: var(--text-muted); }
   .seg { margin-block: 2.6rem; }
   .close-div { margin-block: 2.6rem 1.8rem; }
   .signoff { color: var(--text) !important; }

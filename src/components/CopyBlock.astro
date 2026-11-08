@@ -20,32 +20,36 @@ const { command, prompt = true, size = 'md', label = 'Copy command' } = Astro.pr
 </div>
 
 <style>
+  /* Foundry's install line: the command in mono on bg-code, the prompt in brick, "copy" after a hairline. */
   .copyblock {
-    display: flex; align-items: center; gap: 0.75rem;
+    display: flex; align-items: center; gap: 10px;
     background: var(--bg-code);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.7rem 0.7rem 0.7rem 1rem;
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm);
+    padding: 6px 6px 6px 14px;
+    transition: border-color 160ms;
   }
+  .copyblock:hover { border-color: var(--accent); }
   .copyblock-code {
     flex: 1; min-width: 0;
     display: flex; align-items: baseline; gap: 0.6rem;
     overflow-x: auto; white-space: nowrap;
-    font-size: 0.92rem; color: var(--text);
+    font-size: 0.75rem; line-height: 1.85; color: var(--text);
     scrollbar-width: thin;
   }
-  .copyblock--lg { padding: 0.95rem 0.95rem 0.95rem 1.2rem; }
-  .copyblock--lg .copyblock-code { font-size: clamp(0.82rem, 2.1vw, 1.05rem); }
-  .copyblock-prompt { color: var(--accent); user-select: none; font-weight: 500; }
+  :not(pre) > .copyblock-code { padding: 0; background: none; border-radius: 0; overflow-wrap: normal; }
+  .copyblock--lg { padding: 8px 8px 8px 16px; }
+  .copyblock--lg .copyblock-code { font-size: clamp(0.6875rem, 2.1vw, 0.8125rem); }
+  .copyblock-prompt { color: var(--accent); user-select: none; }
   .copyblock-text { color: var(--text); }
   .copyblock-btn {
     flex-shrink: 0;
-    font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; letter-spacing: 0.06em;
-    text-transform: uppercase; color: var(--text-muted);
-    background: var(--bg-inset); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 0.4rem 0.7rem; cursor: pointer;
-    transition: color 0.15s var(--ease), border-color 0.15s var(--ease), background 0.15s var(--ease);
+    font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.02em;
+    color: var(--text-muted);
+    background: none; border: 0; border-left: 1px solid var(--border);
+    padding: 0.35rem 0.5rem 0.35rem 10px; cursor: pointer;
+    transition: color 160ms;
   }
-  .copyblock-btn:hover { color: var(--text); border-color: var(--border-hi); }
-  .copyblock-btn.is-copied { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+  .copyblock-btn:hover { color: var(--accent); }
+  .copyblock-btn.is-copied { color: var(--ok); }
 </style>

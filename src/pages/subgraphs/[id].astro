@@ -181,12 +181,12 @@ Use this endpoint only for supported event-history queries. It is a partial fall
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
   h1 { margin-bottom: 0.3rem; overflow-wrap: anywhere; }
-  h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin: 2.6rem 0 0.8rem; }
-  h3 { font-size: 0.98rem; color: var(--text); margin: 0; }
-  .dep { color: var(--text-faint); font-size: 0.8rem; overflow-wrap: anywhere; margin-bottom: 1.2rem; }
+  h2 { font-size: clamp(1.022rem, 2.2vw, 1.2rem); margin: 2.6rem 0 0.8rem; }
+  h3 { font-size: 0.875rem; color: var(--text); margin: 0; }
+  .dep { color: var(--text-muted); font-size: 0.75rem; overflow-wrap: anywhere; margin-bottom: 1.2rem; }
   .mono { font-family: 'JetBrains Mono', monospace; }
-  .lede { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; max-width: 66ch; margin-bottom: 1.8rem; }
-  .muted { color: var(--text-muted); font-size: 0.94rem; line-height: 1.65; max-width: 72ch; }
+  .lede { color: var(--text-muted); font-size: 1rem; line-height: 1.7; max-width: 66ch; margin-bottom: 1.8rem; }
+  .muted { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; max-width: 72ch; }
   .pad { padding: 1.2rem; }
   code {
     background: var(--bg-inset); border: 1px solid var(--border);
@@ -197,10 +197,10 @@ Use this endpoint only for supported event-history queries. It is a partial fall
     border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); padding: 1.1rem 1.25rem;
   }
   .cap {
-    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--text-faint); margin-bottom: 0.35rem;
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 0.35rem;
   }
-  .val { font-family: 'JetBrains Mono', monospace; font-size: 0.86rem; color: var(--text); }
+  .val { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text); }
   .val.ok { color: var(--ok); }
   .val.warn { color: var(--warn); }
   .playground {
@@ -213,12 +213,12 @@ Use this endpoint only for supported event-history queries. It is a partial fall
   .examples li, .grid2 > * { min-width: 0; }
   .ex-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.4rem; }
   .open-ex {
-    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em;
+    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--accent); background: none; border: 1px solid var(--border);
     border-radius: 9999px; padding: 0.2rem 0.6rem; cursor: pointer;
   }
   .open-ex:hover { border-color: var(--border-hi); }
-  .refused { color: var(--text-muted); font-size: 0.94rem; line-height: 1.65; max-width: 72ch; }
+  .refused { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; max-width: 72ch; }
   /* The endpoint is one long token: let it break rather than widen the page. */
   :global(.copyblock-text) { overflow-wrap: anywhere; word-break: break-all; white-space: normal; }
   .playground { max-width: 100%; min-width: 0; }

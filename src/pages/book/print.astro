@@ -44,22 +44,22 @@ const rendered = await Promise.all(chapters.map(async (doc) => ({ doc, Content: 
 </Layout>
 
 <style>
-  .print-actions { display: flex; justify-content: space-between; align-items: center; padding-block: 1.2rem; font-size: 0.9rem; }
+  .print-actions { display: flex; justify-content: space-between; align-items: center; padding-block: 1.2rem; font-size: 0.8125rem; }
   .print-actions a { color: var(--text-muted); }
   .print-actions button { border: 1px solid var(--border); border-radius: 999px; background: var(--bg-elev); color: var(--text); cursor: pointer; padding: 0.5rem 0.9rem; font: inherit; }
   .print-page { width: min(100% - 2rem, 48rem); margin: 3rem auto 7rem; }
   .print-cover { min-height: 26rem; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--border); }
-  .print-cover p, .print-chapter-number { color: var(--rust); font: 0.75rem/1.4 'JetBrains Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; }
-  .print-cover h1 { margin: 0.8rem 0; color: var(--text); font-size: clamp(3.5rem, 11vw, 7rem); letter-spacing: -0.06em; line-height: 0.9; }
-  .print-cover span { color: var(--text-faint); font: 0.8rem 'JetBrains Mono', monospace; }
+  .print-cover p, .print-chapter-number { color: var(--rust); font: 0.6875rem/1.4 'JetBrains Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; }
+  .print-cover h1 { margin: 0.8rem 0; color: var(--text); font-size: clamp(3.111rem, 11vw, 6.222rem); letter-spacing: -0.06em; line-height: 0.9; }
+  .print-cover span { color: var(--text-faint); font: 0.75rem 'JetBrains Mono', monospace; }
   .print-toc { padding: 4rem 0; border-bottom: 1px solid var(--border); }
   .print-toc h2, .print-chapter :global(h2) { color: var(--text); letter-spacing: -0.03em; }
   .print-toc ol { padding-left: 1.4rem; color: var(--text-muted); font-family: Georgia, 'Times New Roman', serif; line-height: 1.8; }
   .print-chapter { padding-top: 4rem; break-before: page; }
-  .print-chapter :global(h1) { color: var(--text); font-size: 2.8rem; letter-spacing: -0.04em; line-height: 1.05; }
-  .print-chapter :global(h2) { margin-top: 3.4rem; font-size: 1.8rem; }
+  .print-chapter :global(h1) { color: var(--text); font-size: 2.489rem; letter-spacing: -0.04em; line-height: 1.05; }
+  .print-chapter :global(h2) { margin-top: 3.4rem; font-size: 1.6rem; }
   .print-chapter :global(h3) { color: var(--text); margin-top: 2.1rem; }
-  .print-chapter :global(p), .print-chapter :global(li) { color: var(--text-muted); font: 1.12rem/1.75 Georgia, 'Times New Roman', serif; }
+  .print-chapter :global(p), .print-chapter :global(li) { color: var(--text-muted); font: 1rem/1.75 Georgia, 'Times New Roman', serif; }
   .print-chapter :global(p) { margin-bottom: 1.35rem; }
   .print-chapter :global(a) { color: var(--rust); }
   .print-chapter :global(code) { font-family: 'JetBrains Mono', monospace; font-size: 0.8em; }

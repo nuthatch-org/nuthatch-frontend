@@ -107,6 +107,7 @@ const releaseNotes = `${REPO}/tree/main/docs/releases`;
 const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
 ---
 <Layout
+  ambient
   path="/roadmap"
   title="Roadmap - Nuthatch"
   description="What is shipped, in progress, and planned in Nuthatch, generated from the repo README's working-now table, the release notes, and the numbered RFCs. Dates are not promised; order is."
@@ -403,12 +404,12 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
 <style>
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
   .prose h1 { margin-bottom: 1.4rem; line-height: 1.12; }
-  .prose p { color: var(--text-muted); font-size: 1.05rem; line-height: 1.72; margin-bottom: 1.3rem; }
+  .prose p { color: var(--text-muted); font-size: 1rem; line-height: 1.72; margin-bottom: 1.3rem; }
   .prose p:first-of-type { color: var(--text); }
 
   /* status section headings with a minimal CSS dot */
   .stat {
-    margin-top: 2.8rem; margin-bottom: 1rem; font-size: 1.5rem;
+    margin-top: 2.8rem; margin-bottom: 1rem; font-size: 1.333rem;
     display: flex; align-items: center; gap: 0.6rem;
   }
   .stat::before {
@@ -421,16 +422,16 @@ const rfc0055 = `${REPO}/blob/v4.15.2/docs/rfcs/0055-the-dune-view-emitter.md`;
   .s-none     { --dot: var(--text-faint); }
 
   .grp {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
     margin: 1.6rem 0 0.7rem !important;
   }
   .rl { margin: 0 0 0.4rem; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
-  .rl li { color: var(--text-muted); font-size: 0.98rem; line-height: 1.55; padding-left: 1.2rem; position: relative; }
+  .rl li { color: var(--text-muted); font-size: 0.875rem; line-height: 1.55; padding-left: 1.2rem; position: relative; }
   .rl li::before { content: '·'; position: absolute; left: 0.3rem; color: var(--accent); font-weight: 700; }
   .rl code { font-size: 0.84em; }
-  .rfc-todo { color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 0.78em; }
-  .grp-note { font-size: 0.9rem !important; color: var(--text-faint) !important; margin-top: 0.9rem !important; }
+  .rfc-todo { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.78em; }
+  .grp-note { font-size: 0.8125rem !important; color: var(--text-muted) !important; margin-top: 0.9rem !important; }
   .close-div { margin-block: 2.8rem 1.8rem; }
   .signoff { color: var(--text) !important; }
 </style>

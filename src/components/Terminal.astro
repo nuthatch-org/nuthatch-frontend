@@ -2,6 +2,8 @@
 // The product "screenshot": a faux-OS terminal window replaying the init → dev
 // flow. Full transcript is static in the DOM (works with JS disabled). With JS,
 // it types out; the reserved line-height means zero layout shift either way.
+import { transcript, prefix } from '../data/transcript';
+const pre = { cmd: 'pre-cmd', ok: 'pre-ok', serve: 'pre-serve' } as const;
 ---
 <div class="term" role="img" aria-label="Terminal transcript of nuthatch init followed by nuthatch dev --backfill 300, ending with the API live on 127.0.0.1 port 8288.">
   <div class="term-bar">
@@ -9,13 +11,9 @@
     <span class="term-title">nuthatch - zsh - 92×14</span>
   </div>
   <div class="term-body" aria-hidden="true">
-    <div class="tline" data-pause="520"><span class="tline-pre pre-cmd">$</span><span class="tline-body">nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet</span></div>
-    <div class="tline tline--out" data-pause="140"><span class="tline-pre pre-ok">✓</span><span class="tline-body">ABI resolved via Sourcify</span></div>
-    <div class="tline tline--out" data-pause="320"><span class="tline-pre pre-ok">✓</span><span class="tline-body">scaffolded nest 'weth' (1 contract(s), 4 table(s)): nuthatch.toml, abis/, schema.json, semantic.toml, views/, llms.txt, .claude/skills/nuthatch/</span></div>
-    <div class="tline" data-pause="520"><span class="tline-pre pre-cmd">$</span><span class="tline-body">nuthatch dev --backfill 300</span></div>
-    <div class="tline tline--out" data-pause="160" data-serve="1"><span class="tline-pre pre-serve">●</span><span class="tline-body">API live on http://127.0.0.1:8288  (try GET /  and  /metrics)</span></div>
-    <div class="tline tline--out" data-pause="160"><span class="tline-pre pre-ok">✓</span><span class="tline-body">cold start: backfilling from block 26253980 (tip 26254280)</span></div>
-    <div class="tline tline--out" data-pause="200"><span class="tline-pre pre-ok">✓</span><span class="tline-body">backfilling 100.0% - block 26254306 of 26254280, 18726 events</span></div>
+    {transcript.map((l) => (
+      <div class={l.kind === 'cmd' ? 'tline' : 'tline tline--out'} data-pause={l.pause} data-serve={l.kind === 'serve' ? '1' : undefined}><span class={`tline-pre ${pre[l.kind]}`}>{prefix[l.kind]}</span><span class="tline-body">{l.text}</span></div>
+    ))}
   </div>
 </div>
 
@@ -23,7 +21,7 @@
   .term {
     background: var(--bg-code);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     overflow: hidden;
   }
   .term-bar {
@@ -35,12 +33,12 @@
   .term-dots { display: inline-flex; gap: 0.45rem; }
   .term-dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--border-hi); }
   .term-title {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--text-faint);
     margin-inline: auto; padding-right: 3rem;
   }
   .term-body {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(0.72rem, 1.9vw, 0.92rem);
+    font-size: clamp(0.64rem, 1.9vw, 0.818rem);
     line-height: 1.85;
     padding: 1.1rem 1.2rem 1.4rem;
     color: var(--text);
