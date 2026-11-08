@@ -70,8 +70,8 @@ import Layout from '../../layouts/Layout.astro';
 </Layout>
 <style is:global>
   /* Global under .live: live.js builds the table and lists, which scoped styles cannot reach. */
-  .live { --panel: var(--bg-elev); --ink: var(--text); --faint: var(--text-muted); --line: var(--border-hi); --code: var(--bg-inset); --err: #f08a7e; --accent: #c8693a; --accent-ink: #fff; }
-  :root[data-theme='light'] .live { --err: #a3271b; --accent: #a8481f; }
+  .live { --panel: var(--bg-elev); --ink: var(--text); --faint: var(--text-muted); --line: var(--border-hi); --code: var(--bg-inset); --err: var(--bad); --accent-ink: var(--bg); }
+  :root[data-theme='light'] .live { --err: var(--bad); --accent-ink: #fff; }
   .live.page { padding-block: 2rem 4rem; }
   .live .pg-wide { max-width: 80rem; }
   .live h1 { margin: 0.2rem 0 0.4rem; }

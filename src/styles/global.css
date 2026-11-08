@@ -33,14 +33,19 @@
   --text:        #ece9e3;   /* warm off-white, never pure white */
   --text-muted:  #9c978c;
   --text-faint:  #6e6a61;
-  --accent:      #8bb8dc;   /* muted slate blue - nuthatch back */
-  --accent-ink:  #cfe3f2;
-  --rust:        #cd8560;   /* muted terracotta - nuthatch underside */
+  /* The brick dialect, as on lodestar-dashboard.com: one accent labels things, and red reports bad news. */
+  --accent:      #d0704f;   /* brick, 5.26 on --bg */
+  --accent-ink:  #f2cbbb;   /* text on an accent wash; brick on its own wash fails AA */
+  --rust:        var(--accent);
+  --bad:         #e36b6b;
+  --bad-ink:     #f5c4c4;
   --ok:          #86b592;   /* washed green (terminal success) */
   --warn:        #cdb06a;
 
-  --pale-blue-bg: rgba(139, 184, 220, 0.12);
-  --pale-rust-bg: rgba(205, 133, 96, 0.12);
+  --pale-accent-bg: rgba(208, 112, 79, 0.12);
+  --pale-bad-bg:    rgba(227, 107, 107, 0.12);
+  --pale-blue-bg: var(--pale-accent-bg);
+  --pale-rust-bg: var(--pale-accent-bg);
   --pale-green-bg: rgba(134, 181, 146, 0.12);
 
   --maxw: 68rem;
@@ -64,14 +69,15 @@
   --text:        #2f3437;
   --text-muted:  #57554f;   /* 7.3:1 on --bg; #787774 was 4.4:1 and read washed */
   --text-faint:  #6e6b64;   /* 5.2:1 - metadata, still comfortably legible */
-  --accent:      #1f6c9f;
-  --accent-ink:  #1a5680;
-  --rust:        #a85a38;
+  --accent:      #a8481f;   /* 5.14 on --bg-inset, the lowest of the light surfaces; the brick /play uses */
+  --accent-ink:  #7a3217;   /* 7.55 on the wash */
+  --bad:         #b3261e;
+  --bad-ink:     #8c1d17;
   --ok:          #346538;
   --warn:        #8a6400;
 
-  --pale-blue-bg: #e1f3fe;
-  --pale-rust-bg: #f7ebe4;
+  --pale-accent-bg: #f7e6de;
+  --pale-bad-bg:    #fbe4e2;
   --pale-green-bg: #edf3ec;
 
   color-scheme: light;

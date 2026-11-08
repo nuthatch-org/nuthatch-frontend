@@ -342,8 +342,8 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
   .status--building { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
   .status--planned { color: var(--text-faint); background: transparent; border-color: var(--border); }
   /* blocked is not a dimmer 'planned': the chain will not give this one up, so it reads as a
-     refusal rather than an absence. Terracotta, the palette's one warning accent. */
-  .status--blocked { color: var(--rust); background: var(--pale-rust-bg); border-color: color-mix(in srgb, var(--rust) 30%, transparent); }
+     refusal rather than an absence, which is bad news, so it is the one red. */
+  .status--blocked { color: var(--bad-ink); background: var(--pale-bad-bg); border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
   /* group count reuses status colours for its text only */
   .count.status--available { color: var(--ok); }
   .count.status--building { color: var(--warn); }
@@ -357,8 +357,8 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 0.16rem 0.45rem;
   }
-  .tier--0 { color: var(--rust); border-color: color-mix(in srgb, var(--rust) 35%, transparent); background: var(--pale-rust-bg); }
-  .factory { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--pale-blue-bg); }
+  .tier--0 { color: var(--accent-ink); border-color: color-mix(in srgb, var(--rust) 35%, transparent); background: var(--pale-rust-bg); }
+  .factory { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--pale-blue-bg); }
   .cx { text-transform: capitalize; }
 
   .summary { color: var(--text-muted); font-size: 0.94rem; line-height: 1.6; margin: 0; }

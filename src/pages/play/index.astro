@@ -74,9 +74,9 @@ import Layout from '../../layouts/Layout.astro';
      elements are made by play.js, which scoped styles cannot reach, hence global under .playground. */
   .playground {
     --panel: var(--bg-elev); --ink: var(--text); --faint: var(--text-muted); --line: var(--border-hi);
-    --code: var(--bg-inset); --err: #f08a7e; --accent: #c8693a; --accent-ink: #fff;
+    --code: var(--bg-inset); --err: var(--bad); --accent-ink: var(--bg);
   }
-  :root[data-theme='light'] .playground { --err: #a3271b; --accent: #a8481f; }
+  :root[data-theme='light'] .playground { --err: var(--bad); --accent-ink: #fff; }
   .playground .pg-wide { max-width: 80rem; }
   .playground.page { padding-block: 2rem 4rem; }
   .playground h1 { margin: 0.2rem 0 0.4rem; }
