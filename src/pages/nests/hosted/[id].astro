@@ -112,7 +112,7 @@ It feeds these Etherscan-shaped actions on the nest's GET /api: ${h.answers.map(
     border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em; overflow-wrap: anywhere;
   }
   .status {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: 1rem;
     border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); padding: 1.1rem 1.25rem;
   }
   .cap {

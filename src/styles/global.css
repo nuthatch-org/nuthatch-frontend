@@ -91,6 +91,7 @@ body {
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
   transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -181,6 +182,17 @@ kbd {
   border-radius: 5px;
   background: var(--bg-inset);
   color: var(--text);
+  overflow-wrap: anywhere;
+}
+/* A table scrolls in its own box, so its code should widen the column rather than break. */
+:is(td, th) > code { overflow-wrap: normal; }
+h1, h2, h3 { overflow-wrap: break-word; }
+
+/* Copy buttons stay small to the eye but take a 44px tap. */
+.copyblock-btn { position: relative; }
+.copyblock-btn::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
 }
 
 /* --- Skip link + a11y --------------------------------------------------- */

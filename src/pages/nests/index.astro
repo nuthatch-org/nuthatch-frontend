@@ -294,7 +294,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em;
   }
   .how-cmds {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
     gap: 1rem; margin-top: 1.2rem;
   }
   .how-cap, .events-cap {
@@ -318,7 +318,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
   /* Card grid */
   .grid {
     list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
     gap: 1rem;
   }
   .nest {

@@ -126,7 +126,7 @@ const receiver = 'https://github.com/nuthatch-org/nuthatch/tree/main/count/recei
     background: var(--bg-inset); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em;
   }
-  .totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; }
+  .totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: 1rem; }
   .totals > div {
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--bg-elev); padding: 1.2rem 1.3rem;
@@ -138,7 +138,7 @@ const receiver = 'https://github.com/nuthatch-org/nuthatch/tree/main/count/recei
   }
   .big { font-family: 'JetBrains Mono', monospace; font-size: clamp(2rem, 6vw, 2.8rem); color: var(--text); }
   .since { color: var(--text-faint); font-size: 0.88rem; margin: 0.8rem 0 2.5rem; }
-  .breakdowns { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+  .breakdowns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
   .breakdowns[hidden] { display: none; }
   .breakdowns h2, .notes h2 { font-size: clamp(1.05rem, 2vw, 1.25rem); margin: 0 0 0.6rem; }
   .breakdowns dl { margin: 0; display: grid; gap: 0.3rem; }

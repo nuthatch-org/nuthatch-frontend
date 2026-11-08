@@ -150,7 +150,7 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--bg-elev); padding: 1.4rem 1.5rem; margin-bottom: 2.5rem;
   }
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.2rem; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: 1.2rem; }
   .steps p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
   .cap {
     display: block; font-family: 'JetBrains Mono', monospace;
@@ -159,7 +159,7 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
   }
   .grid {
     list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 1rem;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr)); gap: 1rem;
   }
   .nest {
     border: 1px solid var(--border); border-radius: var(--radius);
@@ -194,7 +194,7 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
   .note { margin: 0.8rem 0 0; font-size: 0.82rem; line-height: 1.55; color: var(--text-faint); }
   .notes {
     margin-top: 3.5rem; display: grid; gap: 2rem;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
   }
   .notes h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
   .notes p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0; }

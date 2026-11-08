@@ -1,10 +1,13 @@
 ---
 import Mark from './Mark.astro';
 
-// Top-level links stay flat; the rest fold into two groups. Each group is a CSS-only dropdown on
-// desktop (hover or focus-within, zero JavaScript, like the theme toggle) and a labelled section of
-// the hamburger list on mobile.
-const groups = [
+type Link = { href: string; text: string };
+type Group = { label: string; links: Link[] };
+
+// The one list both navs render. On desktop a group is a CSS-only dropdown; on phones it is a
+// labelled section of the menu, so nothing needs a second tap to reach.
+const items: (Link | Group)[] = [
+  { href: '/install', text: 'Install' },
   {
     label: 'Docs',
     links: [
@@ -15,19 +18,25 @@ const groups = [
       { href: '/migrate', text: 'Move a subgraph' },
     ],
   },
+  { href: '/nests', text: 'Nests' },
+  { href: '/analytics/', text: 'Analytics' },
   {
     label: 'Project',
     links: [
+      { href: '/blog', text: 'Blog' },
       { href: '/stories', text: 'Stories' },
       { href: '/roadmap', text: 'Roadmap' },
       { href: '/manifesto', text: 'Manifesto' },
       { href: '/compare', text: 'Compare' },
       { href: '/the-graph', text: 'Nuthatch & The Graph' },
       { href: '/subgraphs', text: 'Hosting' },
+      { href: '/mirror', text: 'Mirror' },
       { href: '/rotki', text: 'rotki' },
     ],
   },
+  { href: 'https://github.com/nuthatch-org/nuthatch', text: 'GitHub' },
 ];
+const isGroup = (item: Link | Group): item is Group => 'links' in item;
 ---
 <header class="nav">
   <div class="wrap nav-inner">
@@ -36,38 +45,29 @@ const groups = [
       <span>nuthatch</span>
     </a>
 
-    <!-- CSS-only menu toggle: a :has() checkbox hack, zero JavaScript (matches the theme toggle). -->
-    <input type="checkbox" id="nav-toggle" class="nav-input" aria-label="Toggle menu" />
+    <!-- The phone menu is a :has() checkbox so it opens without JavaScript; the script below only
+         adds Escape, close-on-link and close-on-outside-tap. -->
+    <input type="checkbox" id="nav-toggle" class="nav-input" aria-label="Menu" aria-controls="nav-links" />
     <label for="nav-toggle" class="nav-burger" title="Menu">
       <span></span><span></span><span></span>
     </label>
 
-    <nav class="nav-links" aria-label="Primary">
-      <a href="/install">Install</a>
-      {groups.map((group, i) => (
-        <>
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      {items.map((item, i) => isGroup(item) ? (
         <div class="nav-group">
           <button type="button" class="nav-group-btn" aria-haspopup="true" aria-controls={`nav-menu-${i}`}>
-            {group.label}
+            {item.label}
             <svg class="nav-chevron" viewBox="0 0 10 10" aria-hidden="true">
               <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </button>
           <div class="nav-menu" id={`nav-menu-${i}`}>
-            {group.links.map((link) => <a href={link.href}>{link.text}</a>)}
+            {item.links.map((link) => <a href={link.href}>{link.text}</a>)}
           </div>
         </div>
-        {/* Nests, Mirror and Blog sit between the two groups, so the flat links alternate with the folded ones. */}
-        {i === 0 && <a href="/nests">Nests</a>}
-        {i === 0 && <a href="/mirror">Mirror</a>}
-        {i === 0 && <a href="/blog">Blog</a>}
-        </>
+      ) : (
+        <a href={item.href} rel={item.href.startsWith('http') ? 'noopener' : undefined}>{item.text}</a>
       ))}
-      <a href="https://github.com/nuthatch-org/nuthatch" rel="noopener">GitHub</a>
-      <a href="/play/" class="nav-play" title="Run SQL over a live nest, in this tab">
-        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.8v8.4L10 6z" fill="currentColor" /></svg>
-        Play
-      </a>
       <!-- CSS-only theme toggle: a :has() checkbox hack, zero JavaScript. -->
       <input type="checkbox" id="theme-toggle" class="theme-input" aria-label="Switch to light theme" />
       <label for="theme-toggle" class="theme-toggle" title="Toggle light / dark">
@@ -86,8 +86,43 @@ const groups = [
       <span class="nav-search-label" aria-hidden="true">Search</span>
       <kbd aria-hidden="true"></kbd>
     </button>
+
+    <!-- Outside the collapsible list, so it stays in the bar at every width. -->
+    <a href="/play/" class="nav-play" title="Run SQL over a live nest, in this tab">
+      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.8v8.4L10 6z" fill="currentColor" /></svg>
+      Play
+    </a>
   </div>
 </header>
+
+<script is:inline>
+  (function () {
+    var toggle = document.getElementById('nav-toggle');
+    var links = document.getElementById('nav-links');
+    if (!toggle || !links) return;
+    var phone = window.matchMedia('(max-width: 60rem)');
+    // On phones the group labels are headings, not controls, so keep them out of the tab order.
+    function syncGroups() {
+      links.querySelectorAll('.nav-group-btn').forEach(function (b) {
+        if (phone.matches) b.setAttribute('tabindex', '-1'); else b.removeAttribute('tabindex');
+      });
+      if (!phone.matches) toggle.checked = false;
+    }
+    syncGroups();
+    phone.addEventListener('change', syncGroups);
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !toggle.checked) return;
+      toggle.checked = false;
+      toggle.focus();
+    });
+    links.addEventListener('click', function (e) {
+      if (e.target.closest('a')) toggle.checked = false;
+    });
+    document.addEventListener('click', function (e) {
+      if (toggle.checked && !e.target.closest('.nav')) toggle.checked = false;
+    });
+  })();
+</script>
 
 <style>
   .nav {
@@ -102,16 +137,16 @@ const groups = [
     height: 58px;
   }
   .brand {
-    display: inline-flex; align-items: center; gap: 0.5rem;
+    display: inline-flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
     color: var(--text); font-weight: 600; letter-spacing: -0.02em; font-size: 1.02rem;
     margin-right: auto;
   }
   .brand:hover { text-decoration: none; }
-  .nav-links { display: flex; align-items: center; gap: clamp(0.9rem, 2.4vw, 1.6rem); }
+  .nav-links { display: flex; align-items: center; gap: clamp(0.9rem, 2vw, 1.5rem); }
 
   .nav-search {
-    display: inline-flex; align-items: center; gap: 0.45rem; flex-shrink: 0;
-    margin-left: clamp(0.9rem, 2.4vw, 1.6rem); padding: 0.28rem 0.45rem 0.28rem 0.6rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; flex-shrink: 0;
+    margin-left: clamp(0.9rem, 2vw, 1.5rem); padding: 0.28rem 0.45rem 0.28rem 0.6rem;
     font: inherit; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;
     background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
     transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
@@ -121,7 +156,7 @@ const groups = [
   .nav-search svg { width: 15px; height: 15px; }
   .nav-search kbd { font-size: 0.66rem; border-bottom-width: 1px; }
   /* Between the phone menu and a roomy header there is space for the icon and nothing else. */
-  @media (max-width: 64rem) {
+  @media (max-width: 72rem) {
     .nav-search { padding: 0.4rem; }
     .nav-search-label, .nav-search kbd { display: none; }
   }
@@ -130,23 +165,27 @@ const groups = [
 
   /* The one filled control in the header. A deeper terracotta than --rust, which white text cannot
      read on at AA; the glow is the only motion and stops for reduced-motion. */
-  .nav-links a.nav-play {
+  .nav-play {
     --play: #b4542a;
+    position: relative; flex-shrink: 0;
     display: inline-flex; align-items: center; gap: 0.35rem;
+    margin-left: clamp(0.6rem, 1.6vw, 1.1rem);
     padding: 0.3rem 0.8rem 0.3rem 0.65rem; border-radius: 999px;
-    background: var(--play); color: #fff; font-weight: 600; letter-spacing: 0.01em;
+    background: var(--play); color: #fff; font-size: 0.92rem; font-weight: 600; letter-spacing: 0.01em;
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--play) 55%, transparent);
     animation: play-glow 2.8s var(--ease) infinite;
     transition: transform 0.18s var(--ease), background 0.18s var(--ease);
   }
-  :root[data-theme=light] .nav-links a.nav-play { --play: #a8481f; }
-  .nav-links a.nav-play:hover { color: #fff; background: color-mix(in srgb, var(--play) 85%, #000); transform: translateY(-1px); }
+  /* Grows the tap target to 44px without growing the pill. */
+  .nav-play::after { content: ''; position: absolute; inset: -7px -4px; }
+  :root[data-theme=light] .nav-play { --play: #a8481f; }
+  .nav-play:hover { color: #fff; text-decoration: none; background: color-mix(in srgb, var(--play) 85%, #000); transform: translateY(-1px); }
   .nav-play svg { width: 11px; height: 11px; }
   @keyframes play-glow {
     0%, 55% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--play) 55%, transparent); }
     100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--play) 0%, transparent); }
   }
-  @media (prefers-reduced-motion: reduce) { .nav-links a.nav-play { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .nav-play { animation: none; } }
 
   /* Dropdown groups. The trigger is a real button so it takes keyboard focus; the menu opens on
      hover or on focus anywhere inside the group, and closes when both leave. */
@@ -172,18 +211,18 @@ const groups = [
   .nav-menu a { padding: 0.5rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap; }
   .nav-menu a:hover, .nav-menu a:focus-visible { background: var(--bg-inset); color: var(--text); }
 
-  /* Hamburger - hidden on desktop, a CSS-only toggle on mobile. */
+  /* Hamburger: hidden on desktop, a CSS-only toggle on phones. */
   .nav-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
   .nav-burger {
-    display: none; flex-direction: column; gap: 4px; cursor: pointer;
-    padding: 9px 8px; margin: -9px -8px; border-radius: 8px;
+    display: none; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+    width: 44px; height: 44px; margin-right: -10px; cursor: pointer; border-radius: 8px;
   }
   .nav-burger span {
     display: block; width: 20px; height: 2px; border-radius: 2px;
     background: var(--text-muted); transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
   }
   .nav-burger:hover span { background: var(--text); }
-  .nav-input:focus-visible + .nav-burger { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .nav-input:focus-visible + .nav-burger { outline: 2px solid var(--accent); outline-offset: -2px; }
 
   .theme-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
   .theme-toggle {
@@ -206,27 +245,33 @@ const groups = [
   :root[data-theme='light'] .theme-word--dark { display: none; }
   :root[data-theme='light'] .theme-word--light { display: inline; }
 
-  /* Mobile: collapse the links into a dropdown behind the hamburger. Groups flatten into labelled
-     sections of the same list, so nothing needs a second tap to reach. */
-  @media (max-width: 48rem) {
-    .nav-burger { display: inline-flex; order: 2; margin-left: 0.5rem; }
-    .nav-search { order: 1; margin-left: auto; padding: 0.5rem; }
+  /* The full desktop row stops fitting at about 940px, so below 60rem the links fold behind the
+     hamburger and Play stays in the bar. */
+  @media (max-width: 60rem) {
+    .nav-burger { display: inline-flex; order: 3; margin-left: 0.25rem; }
+    .nav-play { order: 2; }
+    .nav-search { order: 1; margin-left: 0; width: 44px; height: 44px; padding: 0; border-color: transparent; }
+    .nav-search svg { width: 18px; height: 18px; }
     .nav-links {
       display: none;
       position: absolute; top: 58px; left: 0; right: 0;
+      max-height: calc(100dvh - 58px); overflow-y: auto; overscroll-behavior: contain;
       flex-direction: column; align-items: stretch; gap: 0;
-      background: var(--bg-elev); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 0.4rem;
+      background: var(--bg-elev); border-bottom: 1px solid var(--border);
+      padding: 0.4rem 1rem 1rem;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
     }
     :root:has(#nav-toggle:checked) .nav-links { display: flex; }
-    .nav-links a { padding: 0.7rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.98rem; }
+    .nav-links a {
+      display: flex; align-items: center; min-height: 44px;
+      padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); font-size: 1rem; color: var(--text);
+    }
     .nav-links a:hover { background: var(--bg-inset); }
     .nav-group { display: flex; flex-direction: column; }
     .nav-group-btn {
-      pointer-events: none; padding: 0.8rem 0.8rem 0.3rem;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--text-faint);
+      pointer-events: none; padding: 0.9rem 0.8rem 0.3rem; cursor: default;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--rust);
     }
     .nav-chevron { display: none; }
     .nav-menu {
@@ -234,11 +279,14 @@ const groups = [
       background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none;
     }
     .nav-menu::before { display: none; }
-    .nav-menu a { padding: 0.6rem 0.8rem 0.6rem 1.4rem; white-space: normal; }
-    .theme-toggle { align-self: flex-start; margin: 0.6rem 0.8rem 0.2rem; }
-    /* Burger → X when open. */
+    .nav-menu a { padding-left: 1.4rem; white-space: normal; }
+    .theme-toggle { align-self: flex-start; min-height: 44px; margin: 0.6rem 0.8rem 0; padding-inline: 0.9rem; }
+    /* Burger to X when open. */
     :root:has(#nav-toggle:checked) .nav-burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
     :root:has(#nav-toggle:checked) .nav-burger span:nth-child(2) { opacity: 0; }
     :root:has(#nav-toggle:checked) .nav-burger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  }
+  @media (max-width: 22rem) {
+    .nav-inner { padding-inline: 1rem; }
   }
 </style>
