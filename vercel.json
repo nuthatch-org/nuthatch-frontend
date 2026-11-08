@@ -1,13 +1,52 @@
 {
   "redirects": [
-    { "source": "/play", "destination": "/play/", "permanent": true },
-    { "source": "/play/build", "destination": "/play/build/", "permanent": true },
-    { "source": "/play/build.html", "destination": "/play/build/", "permanent": true },
-    { "source": "/play/timelapse", "destination": "/play/timelapse/", "permanent": true },
-    { "source": "/play/live", "destination": "/play/live/", "permanent": true }
+    {
+      "source": "/play",
+      "destination": "/play/",
+      "permanent": true
+    },
+    {
+      "source": "/play/build",
+      "destination": "/play/build/",
+      "permanent": true
+    },
+    {
+      "source": "/play/build.html",
+      "destination": "/play/build/",
+      "permanent": true
+    },
+    {
+      "source": "/play/timelapse",
+      "destination": "/play/timelapse/",
+      "permanent": true
+    },
+    {
+      "source": "/play/live",
+      "destination": "/play/live/",
+      "permanent": true
+    },
+    {
+      "source": "/analytics",
+      "destination": "/analytics/",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/play/timelapse/", "destination": "https://nuthatch-play.vercel.app/timelapse/index.html" },
-    { "source": "/play/:path+", "destination": "https://nuthatch-play.vercel.app/:path+" }
+    {
+      "source": "/analytics/api/:path*",
+      "destination": "https://analytics.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/analytics/:path*",
+      "destination": "https://nuthatch-analytics.vercel.app/:path*"
+    },
+    {
+      "source": "/play/timelapse/",
+      "destination": "https://nuthatch-play.vercel.app/timelapse/index.html"
+    },
+    {
+      "source": "/play/:path+",
+      "destination": "https://nuthatch-play.vercel.app/:path+"
+    }
   ]
 }
