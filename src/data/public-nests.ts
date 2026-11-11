@@ -49,17 +49,6 @@ export const publicNests: PublicNest[] = [
       "curl 'https://nuthatch-indexer.com/nests/rotki-demo/api?module=account&action=tokentx&address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045&startblock=24000000&endblock=24100000&page=1&offset=10'",
   },
   {
-    id: 'bsc-history',
-    name: 'BSC address history',
-    chain: 'bsc',
-    for: { label: 'PavelArs/capital-tracker', href: 'https://github.com/PavelArs/capital-tracker/pull/354' },
-    summary:
-      'One active account from genesis in the Etherscan-shaped /api, where Etherscan’s free plan no longer serves BNB Smart Chain: transactions, internal transactions, token transfers and its balance.',
-    endpoint: 'https://nuthatch-indexer.com/nests/bsc-history',
-    example:
-      "curl 'https://nuthatch-indexer.com/nests/bsc-history/api?module=account&action=txlist&address=0x1aaf53fdf0c3d5cb3721970850ddc9dfe398690d&startblock=0&endblock=129000000&page=1&offset=10'",
-  },
-  {
     id: 'base-history',
     name: 'Base address history',
     chain: 'base',
