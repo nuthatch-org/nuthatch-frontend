@@ -19,9 +19,9 @@ interface Live {
   nid?: string;
   tables: Table[];
 }
-type Props =
-  | { kind: 'catalogue'; nest: CollectionEntry<'nests'>; mirror: Published[] }
-  | { kind: 'public'; nest: PublicNest; live: Live | null };
+interface Hosted { nest: PublicNest; live: Live | null }
+// A nest can be in the catalogue, hosted by us, or both; one page carries whichever apply.
+interface Props { entry?: CollectionEntry<'nests'>; mirror: Published[]; hosted?: Hosted }
 
 export async function getStaticPaths() {
   // Declared in here because Astro lifts getStaticPaths out of the component's scope.
@@ -37,9 +37,7 @@ export async function getStaticPaths() {
 
   const catalogue = await getCollection('nests');
   const mirror = await published();
-  const taken = new Set(catalogue.map((n) => n.id));
-  const clash = publicNests.find((p) => taken.has(p.id) || p.id === 'hosted');
-  if (clash) throw new Error(`public nest id '${clash.id}' collides with another /nests/ path`);
+  if (publicNests.some((p) => p.id === 'hosted')) throw new Error("a public nest cannot be called 'hosted': /nests/hosted/ is taken");
 
   const hosted = await Promise.all(
     publicNests.map(async (nest) => {
@@ -60,16 +58,23 @@ export async function getStaticPaths() {
         nid: root?.nid,
         tables: tables?.tables ?? [],
       };
-      return { params: { id: nest.id }, props: { kind: 'public', nest, live } satisfies Props };
+      return { nest, live } satisfies Hosted;
     }),
   );
 
+  const inCatalogue = new Set(catalogue.map((n) => n.id));
   return [
-    ...catalogue.map((nest) => ({
-      params: { id: nest.id },
-      props: { kind: 'catalogue', nest, mirror: mirror.filter((m) => sameRepo(nest.data.repo, m.repo)) } satisfies Props,
+    ...catalogue.map((entry) => ({
+      params: { id: entry.id },
+      props: {
+        entry,
+        mirror: mirror.filter((m) => sameRepo(entry.data.repo, m.repo)),
+        hosted: hosted.find((h) => h.nest.id === entry.id),
+      } satisfies Props,
     })),
-    ...hosted,
+    ...hosted
+      .filter((h) => !inCatalogue.has(h.nest.id))
+      .map((h) => ({ params: { id: h.nest.id }, props: { mirror: [], hosted: h } satisfies Props })),
   ];
 }
 
@@ -80,70 +85,129 @@ const block = (s: string | undefined) => (s && /^\d+$/.test(s) ? num(Number(s)) 
 const statusLabel = { available: 'available', building: 'building', planned: 'planned', blocked: 'blocked' } as const;
 const sectionName = { 'graph-protocol': 'Graph Protocol', 'subgraph-ports': 'port of a subgraph', other: 'catalogue' } as const;
 
-const title = props.kind === 'catalogue' ? props.nest.data.name : props.nest.name;
-const summary = props.kind === 'catalogue' ? props.nest.data.summary : props.nest.summary;
-const id = props.nest.id;
+const { entry, mirror, hosted } = props;
+const n = entry?.data;
+const title = n?.name ?? hosted!.nest.name;
+const summary = n?.summary ?? hosted!.nest.summary;
+const id = entry?.id ?? hosted!.nest.id;
+const live = hosted?.live ?? null;
 ---
 
 <Layout path={`/nests/${id}`} title={`${title} - nest - Nuthatch`} description={summary}>
   <section class="page">
     <div class="wrap">
-      {props.kind === 'catalogue' ? (
+      {n ? (
         <>
           <p class="section-label">
-            <a href="/nests">Nests</a> · {sectionName[props.nest.data.catalogue_section ?? (props.nest.data.category === 'Graph Protocol' ? 'graph-protocol' : 'other')]}
+            <a href="/nests">Nests</a> · {sectionName[n.catalogue_section ?? (n.category === 'Graph Protocol' ? 'graph-protocol' : 'other')]}
           </p>
           <h1>{title}</h1>
-          <p class="mono dep">{id} · {props.nest.data.chains.join(', ')}</p>
+          <p class="mono dep">{id} · {n.chains.join(', ')}</p>
           <p class="lede">{summary}</p>
 
           <div class="status">
-            <div><span class="cap">status</span><span class={`val ${props.nest.data.status === 'available' ? 'ok' : 'warn'}`}>{statusLabel[props.nest.data.status]}</span></div>
-            <div><span class="cap">category</span><span class="val">{props.nest.data.category}</span></div>
-            <div><span class="cap">tier</span><span class="val">{props.nest.data.tier === 0 ? '0 · beachhead' : props.nest.data.tier}</span></div>
-            <div><span class="cap">complexity</span><span class="val">{props.nest.data.complexity}</span></div>
-            <div><span class="cap">discovery</span><span class="val">{props.nest.data.factory ? 'factory: contracts found as they are created' : 'fixed addresses'}</span></div>
+            <div><span class="cap">status</span><span class={`val ${n.status === 'available' ? 'ok' : 'warn'}`}>{statusLabel[n.status]}</span></div>
+            <div><span class="cap">category</span><span class="val">{n.category}</span></div>
+            <div><span class="cap">tier</span><span class="val">{n.tier === 0 ? '0 · beachhead' : n.tier}</span></div>
+            <div><span class="cap">complexity</span><span class="val">{n.complexity}</span></div>
+            <div><span class="cap">discovery</span><span class="val">{n.factory ? 'factory: contracts found as they are created' : 'fixed addresses'}</span></div>
           </div>
 
+        </>
+      ) : (
+        <>
+          <p class="section-label"><a href="/nests#public">Nests</a> · public</p>
+          <h1>{title}</h1>
+          <p class="mono dep">{id} · {hosted!.nest.chain}</p>
+          <p class="lede">{summary}</p>
+
+        </>
+      )}
+
+      {hosted && (
+        <>
+          <h2>The copy we host</h2>
+          <div class="status" data-ready={`/nests/${id}/ready`}>
+            <div><span class="cap">status</span><span class={`val ${live ? 'ok' : 'warn'}`} data-live="state">{live ? `answering on ${builtOn}` : `did not answer on ${builtOn}`}</span></div>
+            <div><span class="cap">at block</span><span class="val" data-live="block">{block(live?.lastBlock) ?? 'not read'}</span></div>
+            {live?.sealedThrough && <div><span class="cap">sealed through block</span><span class="val">{block(live.sealedThrough)}</span></div>}
+            {live?.startBlock && <div><span class="cap">from block</span><span class="val">{block(live.startBlock)}</span></div>}
+            {live?.version && <div><span class="cap">nuthatch</span><span class="val" data-live="version">{live.version}</span></div>}
+            {live?.address && <div><span class="cap">contract</span><span class="val">{live.address}</span></div>}
+            {live?.nid && <div><span class="cap">nid</span><span class="val">{live.nid}</span></div>}
+          </div>
+          <p class="muted fine">
+            Read when this page was built, on {builtOn}. If your browser can reach the nest, the status and block above
+            are replaced with what it says now.
+          </p>
+
+          <h3>Query it</h3>
+          <p class="muted">
+            The stock binary behind a read-only proxy: <code>GET</code> only, no key, no admin. Stood up for
+            <a href={hosted.nest.for.href} rel="noopener">{hosted.nest.for.label}</a>.
+          </p>
+          <CopyBlock command={hosted.nest.endpoint} prompt={false} label="Copy URL" />
+          <CopyBlock command={hosted.nest.example} size="md" />
+
+          {live && live.tables.length > 0 && (
+            <>
+              <h3>Tables</h3>
+              <p class="muted">One per contract event, as the nest listed them on {builtOn}. <a href={`/nests/${id}/schema`}>Its schema</a> describes the views as well.</p>
+              <div class="scroll">
+                <table>
+                  <thead><tr><th>table</th><th>event</th></tr></thead>
+                  <tbody>
+                    {live.tables.map((t) => <tr><td>{t.table}</td><td>{t.event ?? ''}</td></tr>)}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+        </>
+      )}
+
+      {n && (
+        <>
           <h2>What it indexes</h2>
           <p class="muted">Each event becomes a decoded SQL table.</p>
-          <p class="mono events">{props.nest.data.events}</p>
-          {props.nest.data.note && <p class="muted">{props.nest.data.note}</p>}
+          <p class="mono events">{n.events}</p>
+          {n.note && <p class="muted">{n.note}</p>}
 
           <h2>Run it yourself</h2>
-          {props.nest.data.repo ? (
+          {n.repo ? (
             <>
               <p class="muted">
                 The nest is a git repository: ABIs, views and a manifest. One command scaffolds a local copy, and
                 <code>nuthatch dev</code> in it backfills and follows the chain against your own RPC.
               </p>
-              <CopyBlock command={`nuthatch init --from ${props.nest.data.repo}`} size="md" />
+              <CopyBlock command={`nuthatch init --from ${n.repo}`} size="md" />
               <p class="muted">
-                Source: <a href={props.nest.data.repo} rel="noopener">{props.nest.data.repo.replace('https://github.com/', '')}</a>.
+                Source: <a href={n.repo} rel="noopener">{n.repo.replace('https://github.com/', '')}</a>.
               </p>
             </>
-          ) : props.nest.data.command ? (
+          ) : n.command ? (
             <>
               <p class="muted">There is no repository to clone: nuthatch generates this nest from the contract address.</p>
-              <CopyBlock command={props.nest.data.command} size="md" />
+              <CopyBlock command={n.command} size="md" />
             </>
           ) : (
             <p class="muted">Not published yet, so there is nothing to run. Its status above says how far along it is.</p>
           )}
 
-          {props.mirror.length === 0 ? (
+          {mirror.length === 0 ? (
             <>
               <h2>Published data</h2>
               <p class="muted">
-                {props.nest.data.repo
+                {n.repo
                   ? 'This nest’s data is not on the public mirror, so there is nothing of it to query from this page. Running it yourself is the way to its data.'
                   : 'Nothing is published for this nest: its data exists once you run it.'}
               </p>
             </>
           ) : (
-            props.mirror.map((m) => (
+            mirror.map((m) => (
               <>
-                <h2>Published data{props.mirror.length > 1 ? `: ${m.nest}` : ''}</h2>
+                <h2>Published data{mirror.length > 1 ? `: ${m.nest}` : ''}</h2>
                 <p class="muted">
                   We run this nest and publish its sealed segments to the <a href="/mirror">public mirror</a>, each
                   stored under the hash of its contents. The figures are what the mirror listed on {builtOn}, when this
@@ -196,51 +260,11 @@ const id = props.nest.id;
             ))
           )}
         </>
-      ) : (
+      )}
+
+      {hosted && (
         <>
-          <p class="section-label"><a href="/nests#public">Nests</a> · public</p>
-          <h1>{title}</h1>
-          <p class="mono dep">{id} · {props.nest.chain}</p>
-          <p class="lede">{summary}</p>
-
-          <div class="status" data-ready={`/nests/${id}/ready`}>
-            <div><span class="cap">status</span><span class={`val ${props.live ? 'ok' : 'warn'}`} data-live="state">{props.live ? `answering on ${builtOn}` : `did not answer on ${builtOn}`}</span></div>
-            <div><span class="cap">at block</span><span class="val" data-live="block">{block(props.live?.lastBlock) ?? 'not read'}</span></div>
-            {props.live?.sealedThrough && <div><span class="cap">sealed through block</span><span class="val">{block(props.live.sealedThrough)}</span></div>}
-            {props.live?.startBlock && <div><span class="cap">from block</span><span class="val">{block(props.live.startBlock)}</span></div>}
-            {props.live?.version && <div><span class="cap">nuthatch</span><span class="val" data-live="version">{props.live.version}</span></div>}
-            {props.live?.address && <div><span class="cap">contract</span><span class="val">{props.live.address}</span></div>}
-            {props.live?.nid && <div><span class="cap">nid</span><span class="val">{props.live.nid}</span></div>}
-          </div>
-          <p class="muted fine">
-            Read when this page was built, on {builtOn}. If your browser can reach the nest, the status and block above
-            are replaced with what it says now.
-          </p>
-
-          <h2>Query it</h2>
-          <p class="muted">
-            The stock binary behind a read-only proxy: <code>GET</code> only, no key, no admin. Stood up for
-            <a href={props.nest.for.href} rel="noopener">{props.nest.for.label}</a>.
-          </p>
-          <CopyBlock command={props.nest.endpoint} prompt={false} label="Copy URL" />
-          <CopyBlock command={props.nest.example} size="md" />
-
-          {props.live && props.live.tables.length > 0 && (
-            <>
-              <h2>Tables</h2>
-              <p class="muted">One per contract event, as the nest listed them on {builtOn}. <a href={`/nests/${id}/schema`}>Its schema</a> describes the views as well.</p>
-              <div class="scroll">
-                <table>
-                  <thead><tr><th>table</th><th>event</th></tr></thead>
-                  <tbody>
-                    {props.live.tables.map((t) => <tr><td>{t.table}</td><td>{t.event ?? ''}</td></tr>)}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          <h2>Limits</h2>
+          <h2>Limits of the hosted copy</h2>
           <ul class="list">
             <li>No uptime promise. It is one process on one box, and a nest you run yourself answers to nobody else’s outage.</li>
             <li>Read-only. Anything that would write, or spend the operator’s RPC, is refused at the proxy.</li>
