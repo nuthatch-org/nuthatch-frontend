@@ -29,12 +29,12 @@ something that will not run. From 5.0.0 the release binaries are built with fat 
 profile), which makes them smaller than a `cargo install` build from the same tag. Measured on macOS
 before the WASM layer was removed, fat LTO took the binary from 158.9 MB to 106.7 MB.
 
-From 5.17.0 two more default binaries are attached, for download by hand; the installer does not pick
-either. `nuthatch-x86_64-apple-darwin.tar.gz` is for **Intel Macs**. It is built in CI and **has not
-been run on Intel hardware by us**, which is why the installer still sends an Intel Mac to the source
-build. `nuthatch-x86_64-unknown-linux-musl.tar.gz` is a **static Linux binary with no glibc
-dependency**. It uses musl's allocator rather than jemalloc, and **its behaviour under load has not
-been measured**. The scaled, graph and flight builds are not made for either target.
+From 5.17.0 two more default binaries are attached. `nuthatch-x86_64-apple-darwin.tar.gz` is for
+**Intel Macs**, and the installer picks it. It is cross-compiled on Apple Silicon and run on an Intel
+runner in CI each week: 5.19.0 went from `init` to a first row there in 11 s. It has not been
+measured under load. `nuthatch-x86_64-unknown-linux-musl.tar.gz` is a **static Linux binary with no
+glibc dependency**, for download by hand; the installer does not pick it. It uses musl's allocator
+rather than jemalloc, and **its behaviour under load has not been measured**. The scaled, graph and flight builds are not made for either target.
 
 The Linux binaries are dynamically linked and need **glibc 2.35 or newer**, measured off the published
 artifact with `objdump -T`: from 4.1.0 the x86_64 binary references `hypot` at `GLIBC_2.35`, and the

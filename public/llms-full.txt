@@ -538,11 +538,10 @@ nuthatch --version
 ```
 
 The script downloads the matching release binary, verifies its SHA-256 checksum and installs it to
-`~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS Apple Silicon,
-Linux x86_64 and, from 4.12.0, Linux arm64. An Intel Mac binary is attached to each release from
-5.17.0 for download by hand, but the installer does not pick it, because it has not been run on Intel
-hardware; there, and on any target with no prebuilt binary, the script stops and prints the
-source-build command. Each release carries
+`~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS on Apple
+Silicon and on Intel, Linux x86_64 and, from 4.12.0, Linux arm64. The Intel Mac binary is
+cross-compiled and run on an Intel runner in CI each week. On any target with no prebuilt binary the
+script stops and prints the source-build command. Each release carries
 `nuthatch-aarch64-apple-darwin.tar.gz`, `nuthatch-x86_64-unknown-linux-gnu.tar.gz`,
 `nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.12.0),
 `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz` and, since 4.11.0, the GraphQL-serving
