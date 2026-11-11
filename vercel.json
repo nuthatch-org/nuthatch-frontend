@@ -33,6 +33,10 @@
   ],
   "rewrites": [
     {
+      "source": "/nests/bounty-nest/:path*",
+      "destination": "https://bounties.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/analytics/api/:path*",
       "destination": "https://analytics.89.167.109.4.sslip.io/:path*"
     },
