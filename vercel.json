@@ -37,6 +37,26 @@
       "destination": "https://bounties.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/irmarket/:path*",
+      "destination": "https://irmarket.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/rotki-demo/:path*",
+      "destination": "https://rotki.nuthatch-indexer.com/:path*"
+    },
+    {
+      "source": "/nests/bsc-history/:path*",
+      "destination": "https://bsc-history.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/base-history/:path*",
+      "destination": "https://base-history.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/gnosis-history/:path*",
+      "destination": "https://gnosis-history.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/analytics/api/:path*",
       "destination": "https://analytics.89.167.109.4.sslip.io/:path*"
     },
