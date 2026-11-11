@@ -102,7 +102,59 @@
   <url><loc>https://nuthatch-indexer.com/migrate</loc></url>
   <url><loc>https://nuthatch-indexer.com/mirror</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/aave-v3</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/aave-v3-arbitrum</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/aave-v3-base</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/aerodrome</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/base-history</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/betswirl-bnb</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/bounty-nest</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/compound</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/conditional-tokens-gnosis</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/curve</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/doudouchain-v2</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/ebo</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/eigenlayer</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/ens</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/erc20-token</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/erc721-nft</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/forsage-bsc</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/gmx</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/gnosis-history</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/graph-allocations</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/graph-gns</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/graph-network</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/graph-staking</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/graph-tap-escrow</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/horizon</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/hosted/ethereum-address-history</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/irmarket</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/lido</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/livepeer</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/machinex-peaq</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/makerdao</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/makerdao-dai</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/omen-gnosis</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/pancakeswap-infinity-cl-bsc</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/pancakeswap-v3-bsc</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/peeranha</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/perpl</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/poa</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/qos-reo</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/request-payments</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/rewards-eligibility-oracle</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/rotki-demo</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/seaport</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/spookyswap</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/squadswap-wow-v2-bsc</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/subgraph-availability-oracle</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/uniswap-v2</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/uniswap-v2-arbitrum</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/uniswap-v2-base</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/uniswap-v3</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/uniswap-v4</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/uniswap-v4-base</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/velodrome</loc></url>
   <url><loc>https://nuthatch-indexer.com/platform</loc></url>
   <url><loc>https://nuthatch-indexer.com/play/</loc></url>
   <url><loc>https://nuthatch-indexer.com/play/build/</loc></url>
