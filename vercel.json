@@ -45,10 +45,6 @@
       "destination": "https://rotki.nuthatch-indexer.com/:path*"
     },
     {
-      "source": "/nests/bsc-history/:path*",
-      "destination": "https://bsc-history.89.167.109.4.sslip.io/:path*"
-    },
-    {
       "source": "/nests/base-history/:path*",
       "destination": "https://base-history.89.167.109.4.sslip.io/:path*"
     },
