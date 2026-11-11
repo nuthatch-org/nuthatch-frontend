@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Layout.astro';
+const DISCORD = 'https://discord.gg/p9Xc45txWa';
+---
+
+<Layout
+  path="/hosting"
+  title="Hosted nests - Nuthatch"
+  description="Send a contract and a chain; we build the nest, keep it at the chain's tip on our servers and hand you an endpoint. Free, with no billing and no accounts."
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">Hosting</p>
+      <h1>We host your nest. You get an endpoint.</h1>
+      <p class="lede">
+        Rather not run the binary yourself? Send us a contract and its chain. We build the nest, check it against
+        the chain, and keep it at the tip on our own servers. You get a URL with SQL and HTTP over the contract's
+        whole history, and help when something does not answer the way you expected. Free, with no billing and no
+        accounts.
+      </p>
+
+      <p class="ask">
+        Ask on the <a href={DISCORD} rel="noopener">Nuthatch Discord</a>, or in a GitHub issue that mentions
+        nuthatch. A nest over a few contracts is usually up the same day.
+      </p>
+
+      <div class="notes">
+        <section>
+          <h2>What to send</h2>
+          <p>
+            The contract addresses and the chain, and the start block if you know it. If a contract is not verified,
+            send its ABI. A line on what your app asks of it helps us check the answers it will need.
+          </p>
+        </section>
+        <section>
+          <h2>What you get</h2>
+          <p>
+            An endpoint serving <code>/sql</code>, entity reads over HTTP and <code>/ready</code>, which says how far
+            it has indexed. It follows the tip and handles reorgs, on any EVM chain with a JSON-RPC endpoint. The RPC
+            is ours to pay for.
+          </p>
+        </section>
+        <section>
+          <h2>Take it home any time</h2>
+          <p>
+            A hosted nest is the stock binary run as any operator would run it. You get its config and its identity,
+            and the same nest run on your machine seals the same bytes. Leaving costs you nothing.
+          </p>
+        </section>
+      </div>
+
+      <section class="kinds">
+        <h2>What we host</h2>
+        <p>
+          <strong>Contract nests.</strong> A contract's events, factories and the pools or vaults they create, with
+          SQL views over them. The <a href="/nests#hosted">public ones are listed on Nests</a>.
+        </p>
+        <p>
+          <strong>Account history.</strong> An Etherscan-shaped <code>/api</code> for chains whose explorer API is
+          paid or gone, for rotki and anything else that speaks it. A hosted one sees the addresses you ask about;
+          if that matters, <a href="https://github.com/nuthatch-org/nuthatch/tree/main/examples/paywalled-chains" rel="noopener">run it yourself</a>.
+        </p>
+        <p>
+          <strong>Subgraph ports.</strong> A subgraph The Graph no longer serves, ported to a nest from the same
+          contracts. <a href="/subgraphs">Nest-backed subgraphs</a> says what answers exactly and what is refused.
+        </p>
+      </section>
+
+      <section class="kinds">
+        <h2>The terms</h2>
+        <p>
+          It runs on our own boxes, kept up the way we keep our own nests up, with no SLA. If you need one, the same
+          nest runs on yours. There is no account, no key and no quota, so there is nothing to sign up for and nothing
+          to cancel.
+        </p>
+      </section>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.8rem; }
+  .lede { color: var(--text-muted); font-size: 1rem; line-height: 1.7; margin-bottom: 2.2rem; max-width: 64ch; }
+  .ask {
+    border: 1px dashed var(--border); border-radius: var(--radius); padding: 1.2rem 1.25rem;
+    color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin: 0;
+  }
+  .notes { margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: 2rem; }
+  .notes h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .notes p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; margin: 0; }
+  .kinds { margin-top: 2.5rem; max-width: 64ch; }
+  .kinds h2 { font-size: 1.125rem; margin-bottom: 0.6rem; }
+  .kinds p { color: var(--text-muted); line-height: 1.7; margin: 0 0 0.8rem; }
+  .kinds strong { color: var(--text); font-weight: 600; }
+</style>

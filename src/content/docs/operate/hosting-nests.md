@@ -23,7 +23,7 @@ authorisation and billing belong to a gateway in front of the runtime; process s
 systemd or a container restart policy.
 
 Hosting is for operators, and the nuthatch team is one of them. It
-[offers to host nests](/subgraphs/) for people and teams who ask on the
+[offers to host nests](/hosting/) for people and teams who ask on the
 [Nuthatch Discord](https://discord.gg/p9Xc45txWa): the stock binary run as any operator would run it,
 on our own boxes, with no billing, no accounts and no platform. One use is
 [subgraph stopgap nests](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
