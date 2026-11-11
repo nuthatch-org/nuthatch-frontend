@@ -2,7 +2,7 @@
 title: "Nest identity & reuse"
 description: "How immutable nest versions, mounts, dataset adoption, and shared segments avoid needless re-indexing."
 order: 5
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 A content-addressed nest is deliberately unforgiving: change its authored inputs and it becomes a
@@ -27,9 +27,35 @@ domain-separated SHA-256 of that manifest.
 Any authored edit produces a new NID. That includes a changed ABI, event selection, view, or README.
 The old package is not modified in place and a mount cannot silently start meaning something else.
 
+What is not authored is not hashed. The hot store, `segments/`, `.admin-token`, `.git`, `.DS_Store`
+and a query's `nuthatch-spill-<pid>-<seq>` directory are left out at any depth. So, since 5.18.0, is a
+`.gitignore`, which `init` and `add` now write: a nest that had one gets the NID it would have had
+without it, and keeps its data. Since 5.18.1 that rule lives in the identity crate, so the embeddable
+engine and the nest builder name the nest the node names. The derived directories `maintained`,
+`quarantine` and `checkpoints` are left out only at the nest's root, in every build; one of those
+names deeper down, such as `abis/checkpoints/`, is an input. Every input must be a regular file and
+UTF-8: a symbolic link or a file that is not UTF-8 refuses the nest by name.
+
 The NID deliberately ignores the Nuthatch generator version. A binary upgrade that produces the same
 decode registry must not orphan a dataset. The regenerated decoder registry hash remains part of the
-manifest, so a binary which actually decodes differently still makes a new NID.
+manifest, so a binary which actually decodes differently still makes a new NID. 5.18.0 did that
+to one kind of nest: an event with a Solidity `function` parameter used to store null and now stores
+the 24 bytes of address and selector, so such an event marks the registry hash, the nest moves
+identity and it must re-index. Every other nest's registry hash is unchanged.
+
+## The store remembers what decoded it
+
+A store records the decode hash it was indexed under: the event registry folded with every other
+declared source of rows, `[[calls]]` among them. `dev` refuses a store whose recorded hash is not the
+config's, because continuing would serve old rows under a new reading. `schema.json` carries the same
+hash, so the NID moves with it.
+
+Since 5.18.0 the store records identity formula 3, under which a row-driven call's `args`,
+`signature`, `on`, `on_any`, `contract_column` and `canonical` feed that hash. Formula 2 could not see
+them, so editing one left the hash where it was. A formula-2 store whose hash matches today's config
+is adopted once, with a warning: if a call was edited before the upgrade, rows written under the old
+reading stay in the table and only a re-index removes them. After that one adoption, an edit to what
+a call reads is refused like any other decode change. A sampled declaration keeps its hash.
 
 ## Mounts and datasets are different things
 
@@ -54,7 +80,8 @@ this package store the same bytes?”
 
 For the latter Nuthatch computes a separate **data identity**. It includes the decode registry and all
 authored inputs that can affect indexed data. It excludes only inputs the indexing path cannot read:
-views, `queries.toml`, `semantic.toml`, documentation, and scaffolded agent material.
+views, entity declarations, `maintained.toml`, `queries.toml`, `semantic.toml`, documentation,
+scaffolded agent material, and any hidden file or directory.
 
 When a staged nest has a new NID, the runtime looks across existing runtime datasets. It may adopt one
 only when all of the following hold:

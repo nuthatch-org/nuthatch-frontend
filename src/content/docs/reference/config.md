@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
@@ -113,6 +113,10 @@ all chain-agnostic downstream. Two caveats worth knowing:
 2. **`chain_id` is enforced.** Every endpoint in `rpc_urls` is checked against it at startup and a
    mismatch is refused - get it wrong and nuthatch tells you immediately rather than three days into
    a backfill.
+3. **A built-in chain keeps its built-in name.** Since 5.18.0 a `chain` nuthatch does not know, over
+   a `chain_id` it does (`arbitrum-mainnet` over 42161, say), refuses to load and names the built-in
+   chain. It used to run on the unlisted defaults above without a word. Rename `chain` to the name
+   the message gives; that changes the NID.
 
 ### Factories (RFC-0009)
 
@@ -132,7 +136,8 @@ start = 12369621              # optional: ignore discoveries before this block
 ```
 
 All children of one template share tables (`{template}__{event}`), distinguished by the implicit
-`address` column. `filter = "topic0"` is a strategy override for templates known to have many
+`address` column. `child_param` must name an address parameter of the event: since 5.18.0 any other
+is refused, naming the event's parameters, where it used to discover no children and say nothing. `filter = "topic0"` is a strategy override for templates known to have many
 children; omit it and logs are asked for by factory and child addresses until the template has 500
 children, then by topic0. Since 4.11.0 that holds from the first backfill window and at the tip, and
 an endpoint that refuses a topic0-only fetch keeps the cursor on addresses. See
@@ -257,7 +262,7 @@ addresses = ["0xd8da6bf26964af9d7eed9e03e53415d37aa96045"]
 | Key | Meaning |
 |---|---|
 | `addresses` | Accounts to watch. May be empty: a client registers its own through `/api/watch`. A mixed-case address must pass its EIP-55 checksum |
-| `start_block`, `end_block` | History bounds; a request before `start_block` is refused as incomplete |
+| `start_block`, `end_block` | History bounds. A request starting before `start_block`, or with either bound past `end_block`, answers `NUTHATCH_UNSUPPORTED` (since 5.18.1; `NUTHATCH_INCOMPLETE` before), because this nest will never cover it |
 | `poll_interval` | How often the head is read (default `5m`; `dev --poll-interval` overrides) |
 | `request_deadline` | The longest a request for uncovered history may wait (default `8s`) |
 | `mev_relays` | `true` asks the MEV-Boost relays' public API about blocks a watched address produced or was paid for. Off by default: the relays see this machine's IP |
@@ -412,7 +417,9 @@ effect, so what runs is what the next start runs:
   true` waits for a lease another host holds rather than refusing to start. `follow` names the writer
   to follow while waiting, so a takeover starts from its hot state rather than the mirror's last seal,
   and needs `registry`, the registry the writer's nests are published to, and the writer's `followers
-  = true`. A mount's own `[mounts.publish.failover]` takes the same keys. It is read at boot only. See
+  = true`. A mount's own `[mounts.publish.failover]` takes the same keys. It is read at boot only: since
+  5.18.0 a live mount that asks for a failover mirror is refused with `409`, so declare it here and
+  restart. See
   [writer failover](/docs/operate/hosting-nests/#writer-failover).
 - **`[[chains]]`** may also carry `finality_depth` and `log_window` (5.13.0), for a chain the
   built-in registry does not know. `POST /_admin/chains` adds one live (5.13.0).

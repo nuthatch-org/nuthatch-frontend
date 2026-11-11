@@ -2,7 +2,7 @@
 title: nuthatch.toml
 description: The one config file a nest has - the [nest] header and one or more [[contracts]].
 order: 1
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 A nest starts with `nuthatch.toml`. `init` generates it from a contract address; you
@@ -10,6 +10,10 @@ edit it to add contracts, events, factories, and the optional compliance and web
 `schema.json`, `llms.txt` and the footguns in `semantic.toml` are *derived* from it and the ABIs -
 regenerate them with `nuthatch schema`. Views, semantic descriptions and the optional declaration
 files are yours to author, and `schema` leaves them alone.
+
+Since 5.18.0 `init` also writes a `.gitignore` naming the store (`data/`) and `.admin-token`. A
+`.gitignore`, at any depth, is not one of the nest's inputs, so adding or editing one never changes
+the nest's identity.
 
 ## The shape
 
@@ -33,7 +37,7 @@ events = ["Transfer", "Approval"]  # empty = index every event the ABI defines
 | Field | Meaning |
 | --- | --- |
 | `name` | The nest's name (used for the served surface and logs). |
-| `chain` | The chain name, e.g. `mainnet`, `arbitrum-one`, `base`. |
+| `chain` | The chain name, e.g. `mainnet`, `arbitrum-one`, `base`. Since 5.18.0 a name the built-in registry does not know, over a `chain_id` it does, is refused at load; the error names the registry's chain. |
 | `chain_id` | The chain id, e.g. `1`, `42161`, `8453`. |
 | `rpc_urls` | RPC endpoints, tried in order with round-robin failover. Point at your own node. |
 | `schema_version` | The config and data layout version, written by `init` and managed by nuthatch. |

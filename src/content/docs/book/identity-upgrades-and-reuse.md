@@ -32,7 +32,9 @@ declarations, `maintained.toml`, the named-query allowlist, the semantic descrip
 scaffolded agent skill and, since 4.9.0, any hidden file are all part of the NID and none of the
 data identity, because none of them is read on the indexing path. (That last one was learnt the
 hard way: a stray `.cache/` made two copies of one nest compute different identities, so neither
-could find the other's mirror.) Vendored ABIs and address labels stay in, because the decode and
+could find the other's mirror. A few hidden files are in neither identity, because they are not
+inputs at all: `.git`, `.DS_Store`, the `.admin-token` the binary writes for itself and, since 5.18.0, a
+`.gitignore` at any depth, which `init` and `add` now write.) Vendored ABIs and address labels stay in, because the decode and
 the exposure annotations do read them.
 
 On mounting a new identity, or on migration, Nuthatch compares that data identity with the datasets
@@ -81,7 +83,10 @@ A nest now compares the decode identity recorded in its store against the one it
 produces, and refuses to start when they differ, naming both hashes and the remedy. The identity is
 the event registry hash folded with every other declared source of rows: the calldata registry when
 the nest decodes transaction calls, and its `[[ipfs]]` and `[[calls]]` declarations, the pinned
-contract reads, because those also decide what gets stored. A store written before the check existed has no recorded hash;
+contract reads, because those also decide what gets stored. Since 5.18.0 that includes what a
+row-driven call reads, its arguments and signature among them, which an edit used to slip past; a
+store recorded under the older formula whose hash still matches is adopted once, with a warning,
+and an edit after that is refused like any other. A store written before the check existed has no recorded hash;
 refusing those would break every running deployment for a fault it may not have, so it adopts the
 hash and logs that **it was recorded, not verified** - which is a different claim, and says so.
 

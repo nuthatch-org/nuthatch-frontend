@@ -27,7 +27,8 @@ one transaction, so there is no moment at which the store claims a block it does
 The details matter because RPCs are prone to giving an answer that is technically valid and
 operationally useless. A provider may time out, cap a response, or make a 10,000-block request feel
 like a personal insult. The window therefore adapts: it starts from the chain's measured default,
-shrinks when a request is refused and grows back when requests succeed, and `--window` is the
+shrinks when a request is refused or, since 5.18.0, when a range of more than one block goes
+unanswered within the client timeout, and grows back when requests succeed, and `--window` is the
 ceiling an operator places on that. A provider can also object to the filter rather than the
 range: publicnode on BNB Chain and Polygon refuses a request naming ten or more addresses, and since
 4.11.0 that is recognised as a refused filter rather than misread as a credentials failure, and the

@@ -38,7 +38,9 @@ and is itself part of the evidence an operator can inspect.
 "Final enough" is decided per chain, in the binary's chain table rather than in the nest's
 configuration. Ethereum mainnet seals 64 blocks behind the tip; the L2s that serve a `finalized`
 tag use it, with a fixed depth to fall back on when an endpoint will not answer; a chain the table
-does not know gets 64 blocks. Finality says when a row *may* be sealed, not when it *is*. The
+does not know gets 64 blocks. (Since 5.18.0 that means a chain whose id the table does not know: a
+name it does not know over an id it does is refused at load, naming the registered chain, because
+such a nest used to run on the unknown-chain policy without a word.) Finality says when a row *may* be sealed, not when it *is*. The
 sealer cuts a segment once the finalised rows reach 20,000 or 64 MiB, or once they span the
 chain's seal span (1,800 blocks on mainnet), whichever comes first, because a segment per poll
 would be a catalogue of crumbs. Until a cut, finalised rows stay in the hot store with the

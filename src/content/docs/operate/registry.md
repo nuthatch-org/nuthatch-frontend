@@ -2,7 +2,7 @@
 title: The nest registry
 description: Publish and pull nests by name - a filesystem folder or an S3 bucket, with private nests, decoupled and never mandatory.
 order: 9
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be
@@ -71,7 +71,10 @@ Since 5.13.0 such a runtime also publishes, inspects and prunes its registry ove
 fails says why in a `code`: `not_found` (no bundle under that NID), `access_denied` (an S3 `401` or
 `403`, or no credential for a private bucket), or `verification_failed` (the bytes served are not that
 nest). Prune never leaves a ref naming a missing blob, and skips blobs younger than 15 minutes in case
-their publisher has not written its refs yet.
+their publisher has not written its refs yet. Since 5.18.0 it deletes a ref only while the ref is
+unchanged, so a publish that re-points it in between is not lost: under a lock on a filesystem
+registry, and on S3 or R2 by a conditional put of an empty tombstone, which stays behind as a
+zero-byte object. A store configured without conditional writes fails the prune.
 
 Layout, beside the name index:
 

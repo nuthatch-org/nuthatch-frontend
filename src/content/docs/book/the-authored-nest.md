@@ -65,7 +65,9 @@ identifies what was authored, not which directory happens to contain it and not 
 copies of the same inputs have the same identity. A one-byte change in an ABI, configuration or view
 creates a new identity. The one deliberate exception is an address-history nest's
 `[address_history]` table, which is cut out of `nuthatch.toml` before hashing: the accounts it
-watches are private and change at runtime, and they are not part of what the nest is.
+watches are private and change at runtime, and they are not part of what the nest is. Housekeeping
+is not an input at all: the store, the admin token and, since 5.18.0, the `.gitignore` that `init`
+writes are left out, so none of them can move a NID.
 
 That is deliberately strict. The hash is not a version label chosen at a meeting. It is a statement
 that this exact package is what the runtime verified. Human names and versions remain useful for

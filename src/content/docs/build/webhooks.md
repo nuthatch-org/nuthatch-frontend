@@ -2,7 +2,7 @@
 title: Webhooks
 description: POST sealed rows to a URL - an optional delivery stage, past finality, at-least-once. The deposit sweep's webhook is separate, and carries retractions.
 order: 8
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 A webhook pushes rows out to a URL as they're indexed - feed a downstream service, a queue, a Slack
@@ -54,7 +54,8 @@ acknowledged seal, so a crash mid-batch doesn't drop rows.
 The POST is an effect, so it lives **after** sealing, never inside decode or entity derivation. A slow or
 failing endpoint can't stall or corrupt indexing - it only backs up its own delivery queue. Webhooks
 fill at most half the outbox, so compliance alerts keep room; when that half is full a webhook holds
-its cursor and resumes from it, rather than dropping deliveries (since 5.11.0). This is the
+its cursor and resumes from it, rather than dropping deliveries (since 5.11.0). Each sink drains on
+its own (since 5.18.0), so one dead endpoint does not hold up deliveries to the others. This is the
 same purity rule that governs enrichers and alerts (see [Determinism](/docs/concepts/determinism/)).
 
 ## The deposit sweep's webhook is a different one

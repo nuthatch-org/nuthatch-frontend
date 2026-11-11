@@ -2,8 +2,12 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.17.0**, released 2026-11-03, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.17.0 adds answers in Arrow on `/sql` and `/q/{name}` (RFC-0079), a separate Arrow
+"Be your own indexer." Status: **v5.19.0**, released 2026-11-11, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.19.0 lets an address-history nest on Gnosis list the transactions of a contract,
+by `trace_filter` where the trace RPC serves it, and fixes a regression in 5.18.0 that failed an
+address-history window whose span timed out instead of narrowing it. 5.18.0 and 5.18.1 fix the 67
+issues of a cold audit of 2026-11-06 and add no feature; some nests get a new NID and a few must
+re-index or are refused at load. 5.17.0 adds answers in Arrow on `/sql` and `/q/{name}` (RFC-0079), a separate Arrow
 Flight SQL build, and static musl Linux and Intel Mac binaries, and fixes a runtime nest on 5.14 to
 5.16 that could commit blocks without its rows. 5.16.0 adds writer failover (RFC-0078): a standby on another host takes over a
 dataset when its writer dies, through a lease held in the operator's mirror; it is off unless a
@@ -38,8 +42,9 @@ documentation read against 4.11.0, and every command it contained then was run a
 maintained views, the diff, hosting and the roadmap were checked against 5.9.0. On 2026-10-30 the
 status, factories, the runtime and hosting, the query guards, security, the roadmap and the upgrade
 notes were checked against 5.15.0. On 2026-11-01 the status, the runtime and hosting and the upgrade
-notes were checked against 5.16.0, and on 2026-11-04 the status, the install routes, the HTTP
-API and the upgrade notes against 5.17.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+notes were checked against 5.16.0, on 2026-11-04 the status, the install routes, the HTTP
+API and the upgrade notes against 5.17.0, and on 2026-11-11 the status and the upgrade notes against
+5.19.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -577,6 +582,24 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.19.0 is a binary swap from 5.18 with no storage migration and no NID, registry hash or sealed
+segment change. An address-history window that failed with `timed out` on 5.18.0 is narrowed and
+recorded. On Gnosis, `txlist` and `txlistinternal` for a watched contract or EIP-7702 delegated account
+stop answering `NUTHATCH_UNSUPPORTED` and are backfilled by `trace_filter` when the trace RPC serves
+it; that costs trace calls (Alchemy served 20,000 blocks a call on 2026-11-11, the keyless Gnosis
+endpoints 100).
+
+5.18 is a binary swap from 5.17 with exceptions; go to 5.18.1 or later, not 5.18.0. A nest with an
+event that has a Solidity `function` parameter must re-index. A nest whose `chain` the registry does
+not know, over a `chain_id` it does, is refused at load until `chain` is renamed, and a nest holding a
+file that is not UTF-8 is refused until it is removed. A nest with a row-driven `[[calls]]`
+declaration, or with a `.gitignore`, gets a new NID and keeps its data. `nuthatch add` is refused on a
+nest that has indexed; a live mount asking for a failover mirror answers 409; a `[[factories]]`
+`child_param` that is not an address parameter of its event is refused. Under `isolation = "strict"` a
+mount's `/metrics` carries only its own series. From 5.18.1 an address-history range before
+`start_block` or past `end_block` answers `NUTHATCH_UNSUPPORTED`, not `NUTHATCH_INCOMPLETE`, with the
+same text after the prefix. 5.17.1 and 5.17.2 are binary swaps from 5.17.0.
 
 5.17.0 is a binary swap from 5.16.0 with no storage migration and no NID, registry hash or sealed
 segment change. A failover deployment upgrades its writers first, then restarts each follower: a 5.17

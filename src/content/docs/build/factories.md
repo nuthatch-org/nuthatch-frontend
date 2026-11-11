@@ -2,7 +2,7 @@
 title: Factories
 description: Index children a contract spawns at runtime - Uniswap pools, Safe proxies, any factory.
 order: 5
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Many protocols deploy contracts at runtime: Uniswap's factory spins up a pool per pair, a Safe factory
@@ -32,6 +32,10 @@ template = "pool"          # which [[templates]] to apply to the child
 
 When the parent emits `PoolCreated`, nuthatch registers the address in that event's `pool` param as a new
 `pool` child and decodes its events - every event the template's ABI defines - from discovery onward.
+
+`child_param` must be an address parameter of that event. Since 5.18.0 a name the event does not
+have, or a parameter of another type, is refused with an error naming the event's parameters. Before
+it, such a factory discovered no children and said nothing.
 
 ## One table, many children
 

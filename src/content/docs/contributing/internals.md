@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -58,7 +58,9 @@ taking the provider's own suggested range when it offers one. A refusal of the f
 list (publicnode on BSC and Polygon refuses ten or more addresses in one `eth_getLogs`) is a fifth
 kind: the list is halved until the endpoint accepts it, and that group size is remembered, rather
 than the endpoint being cooled down as if its credentials had been refused. An archive refusal stops
-a backfill at once with a hint to supply an archive endpoint.
+a backfill at once with a hint to supply an archive endpoint. Since 5.18.0 an `eth_getLogs` over more
+than one block that gets no answer within the client timeout is narrowed like an oversized range,
+rather than retried at the same width as a transport blip.
 
 **A failure we cannot classify is split once anyway.** Providers phrase the same refusal a dozen ways
 and invent new phrasings without telling anyone. Running Sentio's OBIB benchmark found the cost of
@@ -230,7 +232,8 @@ A nest's *authored inputs* - config, ABIs, views, labels, skills - canonicalise 
 pinned by a Merkle root. `nest load` verifies the manifest, every file's bytes, and that the decode
 registry regenerated from those inputs matches the author's pinned hash. A nest that cannot reproduce
 its own registry is refused, and since 5.11.0 so is one whose installed files do not compute the NID
-its manifest claims. Every input must be a regular file: a symbolic link is refused by name.
+its manifest claims. Every input must be a regular file: a symbolic link is refused by name, and since 5.18.0 so is a file
+that is not UTF-8. A `.gitignore` is not an input (5.18.0).
 
 That makes a bundle **tamper-evident**, which is not the same as safe - a valid bundle can still
 declare outbound endpoints you would rather it did not, so `load` warns about every non-loopback URL
@@ -266,7 +269,8 @@ is re-admitted on a backoff if the fault was retryable. Blast radius is bounded 
 a nest's error no longer kills its cursor, a cursor's death no longer kills the runtime. Since 5.13.0
 that includes a panic in one nest's window, prepare, reorg rollback or rejoin, which quarantines that
 nest terminally while the cursor carries on, and a nest that fails to build at boot, which boots
-quarantined rather than failing the runtime. Since 5.16.0 a store whose ownership another holder
+quarantined rather than failing the runtime. Since 5.18.0 so does a nest that cannot be loaded or
+whose data directory is missing, and a panic while one nest is built. Since 5.16.0 a store whose ownership another holder
 has claimed (`LostOwnership`) is a terminal fault for the nest on it, not a retryable one.
 
 A window is split at its commit (5.14.0): the part that decodes, reads, checks and binds has no side

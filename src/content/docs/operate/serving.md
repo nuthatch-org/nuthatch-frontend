@@ -2,12 +2,14 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
 `127.0.0.1:8288` (change with `--listen`). There is no separate server to deploy - a nest that's
-indexing is a nest that's serving.
+indexing is a nest that's serving. The startup log's `API live on http://...` line prints the address
+the listener bound (since 5.18.1), so a nest started with `--listen 127.0.0.1:0` reports the port it
+took.
 
 ## The surface
 
@@ -55,6 +57,10 @@ raise:
 - **SELECT/WITH only.** The query surface is read-only by construction; the ingest thread is the
   only writer.
 
+The listener guards itself too, on every route. A connection has 10 seconds to send its request
+head, and since 5.18.0 a request body that goes 30 seconds without a new chunk is cut off and one
+listener holds at most 256 connections open; past that, a new connection waits for one to close.
+
 Every session over one dataset draws on one shared memory pool, so two concurrent statements, or two
 mounts of the same dataset, compete for the same budget. The pool is sized by
 `NUTHATCH_BURRMILL_MEMORY_LIMIT`, falling back to `NUTHATCH_ANALYTICS_MEMORY_LIMIT` (512 MB by default),
@@ -73,7 +79,8 @@ is the statement and its row cap, the sealed segments it is served, the hot rows
 entity's watermark and the nest's authored files. Since 4.11.0 the key follows the segments and rows a
 statement reads rather than every cursor poll, so a quiet nest at the tip answers a repeat from the
 cache, while a busy one computes again once a new row lands. A statement that calls a volatile
-function such as `now()` or `random()`, and a degraded answer, are never remembered. The cache is
+function such as `now()`, `random()` or (since 5.18.0) its alias `rand()`, and a degraded answer, are
+never remembered. The cache is
 process-local, cleared by a restart, and bounded at 64 MiB (`NUTHATCH_SQL_MEMO_BYTES`; `0` turns it
 off).
 
@@ -109,7 +116,7 @@ tells you, rather than refusing.
 ## Exposure
 
 **The API has no authentication.** Bound to localhost (the default) that's the point. Bound off
-localhost, `dev` logs a loud warning: the guards bound *how much* a query can cost, but *who* may
+localhost, `dev` logs a loud warning, which names the SQL concurrency in force: the guards bound *how much* a query can cost, but *who* may
 query is your gateway's job. Put a reverse proxy with auth in front before exposing a nest publicly.
 
 Shutdown is graceful: on SIGTERM/SIGINT axum drains in-flight requests, the ingest task checkpoints

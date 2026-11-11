@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -121,7 +121,8 @@ are cited, and targets are labeled as targets, never as results.
   decoder drops, was built by RFC-0073 in 5.13.0.
 - **0044 The subgraph port skill** *(Implemented in part)* - one subgraph, one nest; S1, S2 and S5
   shipped, S3 and S4 closed.
-- **0045 Offchain data** *(Stage 1 implemented)* - the file drop, `nuthatch offchain`.
+- **0045 Offchain data** *(Stages 1 and 2 implemented; stage 3 deferred)* - the file drop and a
+  scheduled pull, `nuthatch offchain`.
 - **0046 x402 at the counter** *(Implemented)* - an operator's optional x402 counter, off the default
   binary (`--features counter`).
 - **0047 The lakehouse pattern** *(Implemented)* - the sealed directory as a storage contract other

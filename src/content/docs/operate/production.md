@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -101,6 +101,9 @@ If the nest ships `checks/`, prove it before serving anyone:
 ```sh
 nuthatch check --dir /opt/nuthatch/my-nest
 ```
+
+Since 5.18.0 `check` also fails, with the same error, on a config `dev` would refuse at load; it used
+to exit 0 without looking.
 
 ## 4. Install the service
 
@@ -218,7 +221,9 @@ a re-backfill, not data you cannot recover.
 Two different axes, and conflating them is the usual confusion:
 
 - **The binary**: a swap and a restart. A newer release reads an older one's hot store and sealed
-  segments as they are. Back up the old binary first, restart one nest, check it, then the rest. A
+  segments as they are, unless its notes name an exception: 5.18.0 asks a nest with a Solidity
+  `function` event parameter to re-index, and refuses a few nests at load until their config is
+  fixed. Back up the old binary first, restart one nest, check it, then the rest. A
   runtime that must keep answering through the restart needs followers in front of it (since 5.13.0);
   see [upgrading without an outage](/docs/operate/upgrades/#upgrading-a-runtime-without-an-outage).
 - **The nest** (its schema, views or decode): stage the new version and run `nuthatch migrate`. The

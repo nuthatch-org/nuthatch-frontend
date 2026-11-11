@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -34,7 +34,8 @@ nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain ma
 ```
 
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `semantic.toml`, `views/`,
-`llms.txt` and a `.claude/skills/nuthatch/` skill for a coding agent.
+`llms.txt`, a `.claude/skills/nuthatch/` skill for a coding agent and, from 5.18.0, a `.gitignore`
+for the store and the admin token.
 
 `--alias` is the table prefix, so this contract's events land in `weth__transfer`, `weth__approval`,
 and so on. Leave it out and the alias is the contract name from the ABI in snake_case

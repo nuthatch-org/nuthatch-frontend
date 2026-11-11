@@ -2,11 +2,16 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
 counters only ever increase - standard scrape targets, no exporter sidecar needed.
+
+In a runtime, scrape the root `/metrics`. Each mount serves `/<name>/metrics` too, and since 5.18.0
+under `isolation = "strict"` that one carries only the samples labelled with the mount, with its
+entity and snapshot series: no unlabelled, chain or tenant series, and no other mount's. A client
+that read a strict mount's `/metrics` for runtime-wide series should read the root instead.
 
 ## The series
 
@@ -64,6 +69,11 @@ by contract alias or template name. Past 256 pairs a nest counts the rest under
 `contract="other",topic0="other"`. A proxy upgrade that changed an event is what this usually looks
 like: the nest indexes less and stays ready, and `/ready`'s `undecoded` names the pair.
 
+An [address-history](/docs/reference/config/#address-history-nests) nest has `nuthatch_address_history_*` series of its
+own. Since 5.18.0 one of them is `nuthatch_address_history_skipped_logs_total`: `Transfer`,
+`TransferSingle` and `TransferBatch` logs naming a watched address that could not be decoded and
+filed no row. Such a log used to stall that address's history for good.
+
 Storage per nest, since 3.13.0: `nuthatch_nest_hot_store_bytes` is that nest's own hot store, and
 `nuthatch_nest_sealed_segments_bytes` the sealed segments its manifest names. Segments are
 content-addressed and shared, so a segment two datasets both contain counts under both nests and the sum
@@ -78,7 +88,7 @@ Health series (RFC-0026), which is where you look when *part* of a runtime is un
 |---|---|
 | `nuthatch_nest_health{nest,chain}` | `1` while the nest is indexing, `0` while it is quarantined. |
 | `nuthatch_nest_quarantine_total{nest}` | Times this nest has been quarantined since start - a flapping nest shows up here before anyone notices. |
-| `nuthatch_cursor_live{chain}` | `1` while the chain's cursor is running, `0` once it has died. |
+| `nuthatch_cursor_live{chain}` | `1` while the chain's cursor is running, `0` once it has died. A mount that did not load adds no chain here (since 5.18.0; it used to report one named `unknown`). |
 
 How each nest on a chain advances, since 5.14.0 (see [Run many nests](/docs/operate/many-nests/#how-a-chains-nests-advance)):
 

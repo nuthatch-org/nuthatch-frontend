@@ -2,7 +2,7 @@
 title: ABIs, events & tables
 description: How decoded events become SQL tables - one table per event, with implicit columns.
 order: 2
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Nuthatch is a log indexer: it turns a contract's **events** into **SQL tables**. This page explains the
@@ -55,6 +55,11 @@ and `_overflow` is true, so `SUM({col}_dec)` is the sum of the values that fit, 
 signed 128-bit, so it overflows at the same order of magnitude, and `DOUBLE` holds any size but loses
 precision past about 15 digits. Keep the decimal string when exactness matters.
 See [The SQL surface](/docs/reference/sql/).
+
+A Solidity `function` parameter, as in `Callback(function target)`, is a `fixed_bytes` column holding
+its 24 bytes, the address then the selector; inside a tuple or an array it renders as `0x` hex. Before
+5.18.0 it was stored as null. History is not re-decoded, so a nest with such an event moves identity
+on upgrading and must re-index.
 
 ## Regenerating
 

@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional labels, flags, exposure and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Some nests need more than raw rows: flag transfers that cross a threshold, measure an address's
@@ -62,7 +62,8 @@ url = "https://your-service/alerts"
 Flags and exposure are deterministic derivations over decoded transfers - two numeric rules and a
 labeled-set join, nothing that phones out mid-decode. They're re-executable: the same blocks and the
 same label snapshot always produce the same annotations. `nuthatch audit report` summarises the
-threshold flags in a block range, and `nuthatch audit sealed` checks sealed history against a second
+threshold flags in a block range (since 5.18.0 it refuses a nest with no `[flags] threshold`, or a
+dataset it cannot read, rather than report zero flags), and `nuthatch audit sealed` checks sealed history against a second
 endpoint. Effectful notification (the alert POST) happens **after** sealing, never in the decode
 path - the same rule as webhooks (see [Determinism](/docs/concepts/determinism/)).
 
@@ -70,7 +71,8 @@ path - the same rule as webhooks (see [Determinism](/docs/concepts/determinism/)
 
 Alerts ride the same host-side [webhook](/docs/build/webhooks/) delivery engine: at-least-once, via a
 durable outbox, with retries and backoff. A stalled sink never blocks indexing - it only backs up its own
-queue (`nuthatch_alert_outbox_depth` in [/metrics](/docs/operate/metrics/)).
+queue (`nuthatch_alert_outbox_depth` in [/metrics](/docs/operate/metrics/)). Since 5.18.0 each sink
+drains on its own, so one dead sink does not hold up deliveries to the others.
 
 ## Query the annotations
 

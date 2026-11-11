@@ -2,7 +2,7 @@
 title: Contract calls and IPFS documents
 description: Pin a contract read to a block, or resolve and verify an IPFS document, without giving up determinism.
 order: 9
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Two things a subgraph could do and a nest could not, until v2.6.0. Both are opt-in: a nest that
@@ -56,6 +56,13 @@ args = ["{to}"]
 `on_any` and `canonical` need `schema_version = 3`, which only a nuthatch built with
 `--features graph` reads. A default build refuses such a nest rather than ignore the fields.
 Without `canonical`, a call is pinned by block number.
+
+What a call reads is part of the nest's decode identity. Since 5.18.0 that covers a row-driven
+call's `on`, `on_any`, `signature`, `args`, `contract_column` and `canonical`, beside the `name`,
+`contract`, `calldata`, `every` and `start` it already covered. Editing any of them on a nest that
+has indexed is refused at start, like any other change to what the nest decodes: re-index to adopt
+it. Before 5.18.0 an edit to a row-driven call was accepted, and rows under the new reading were
+written beside rows under the old one, in one table.
 
 ### Why this is still deterministic
 
