@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -36,7 +36,8 @@ to run it yourself and how to go back to the network.
 
 - **A nest** is authored inputs (config, ABIs, views) packed into a content-addressed **bundle**.
 - **A NID** is the nest's identity: the key its data is stored under, `data/<nid>/`. Change anything
-  that changes what the nest indexes and you get a new NID; upgrading the nuthatch binary does not.
+  that changes what the nest indexes and you get a new NID; upgrading the nuthatch binary does not,
+  except for the few nests a release's [upgrade notes](/docs/operate/upgrades/) name, as 5.18.0's do.
 - **A registry** is where bundles live: a directory or an S3-compatible bucket. See
   [the nest registry](/docs/operate/registry/).
 - **A runtime** is one `nuthatch dev --dir <dir>` process over a directory with a `mounts.toml`. It
@@ -202,7 +203,7 @@ script; a platform should poll.
 | `400` | A malformed NID, or a name the runtime would not accept (see step 5). |
 | `401` | No token, or the wrong one. |
 | `404` | The runtime does not hold the NID and was started without `--registry`. With `--registry`, a NID the registry lacks ends the job `failed` instead, its reason naming the NID. |
-| `409` | The name is taken, the nest's chain is not declared, or that chain's cursor has died (restart the runtime). |
+| `409` | The name is taken, the nest's chain is not declared, that chain's cursor has died (restart the runtime), or the mount would mirror with [failover](#writer-failover), which is only taken at boot. |
 | `507` | The mount would breach the chain cursor's RAM ceiling; the reason carries projected and ceiling MB. |
 
 On the job route the same refusals end the job `failed` with the same reason. A nest the runtime
@@ -375,7 +376,9 @@ the other is busy.
 **Strict isolation.** By default every mount of one dataset shares its SQL session, engine memory
 pool and answer cache, which is right when one operator owns every mount. `[runtime] isolation =
 "strict"` gives each tenant label its own of all three, holds `/sql` and the views it reaches to a
-function allow-list, and runs only `CREATE VIEW` from a nest's `views/*.sql`. **The isolation
+function allow-list, and runs only `CREATE VIEW` from a nest's `views/*.sql`. Since 5.18.0 a mount's
+own `/<name>/metrics` carries only the series labelled with that mount, with its entity and snapshot
+series, where it used to serve every tenant's; the root `/metrics` still carries everything. **The isolation
 guarantee is not claimed**: the threat model,
 [`docs/security/shared-runtime.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/security/shared-runtime.md),
 says what it is meant to stop and what it does not defend (timing, shared CPU, the engine's own memory
@@ -384,7 +387,8 @@ safety), and it is not a guarantee until an independent review has run against i
 ## 10. Meter it
 
 The runtime serves `/metrics` at its root, before anything is mounted, broken down per mount with the
-label `{nest="<name>"}`:
+label `{nest="<name>"}`. Meter from the root: under `isolation = "strict"` a mount's own `/metrics`
+has only that mount's series (since 5.18.0).
 
 | Series | Use |
 |---|---|
@@ -439,7 +443,9 @@ between the network and a mount.
   alone, terminally, with the panic message as its reason; the cursor and its co-tenants carry on,
   and the nest keeps answering from its last committed window. A nest that fails to build at boot,
   or no longer fits its cursor's ceiling, boots quarantined and answers `503` with the reason while
-  the rest boot. Boot fails only when every nest does; `--fail-fast` restores the strict behaviour.
+  the rest boot. Since 5.18.0 so does a nest whose config will not load, one whose data directory is
+  missing, and one whose build panics, each with its mount record kept. Boot fails only when every
+  nest does; `--fail-fast` restores the strict behaviour.
 - **A slow nest stays its own too.** Since 5.14.0 a runtime's cursor is an extraction stage feeding a
   bounded window buffer, with one ingest task per nest reading it from its own position, so a nest
   whose windows are slow delays only itself; see [Run many nests](/docs/operate/many-nests/).
@@ -447,7 +453,8 @@ between the network and a mount.
 - **Restart** at any time. Mounts come back from `mounts.toml`, suspended mounts stay suspended,
   unfinished jobs resume, and a fetch a killed process left half-staged is cleared first.
 - **Upgrade the binary** by replacing it and restarting. NIDs are independent of the nuthatch version,
-  so no dataset moves and nothing re-indexes. See [upgrades](/docs/operate/upgrades/).
+  so no dataset moves and nothing re-indexes, unless the release's notes name an exception: 5.18.0
+  moves the NID of some nests and asks one kind to re-index. See [upgrades](/docs/operate/upgrades/).
 - **Supervise** the process with systemd or a container restart policy. A runtime whose every cursor
   has died exits non-zero so the supervisor restarts it; a runtime with nothing mounted, or whose
   nests have all been unmounted, stays up and waits.
@@ -513,7 +520,9 @@ registry = "s3://bucket/registry"         # needed with follow
 ```
 
 A mount's own `[mounts.publish.failover]` takes the same keys. On a host that follows,
-`NUTHATCH_ADMIN_TOKEN` must be the writer's.
+`NUTHATCH_ADMIN_TOKEN` must be the writer's. A dataset has one writer lease: since 5.18.0 failover
+declared on any mount of a shared dataset takes it, not only on the first, and two mounts of one
+dataset asking for failover at different mirrors are refused at boot.
 
 - **The lease** is `<data_identity>/lease.json` in the mirror. The writer renews it a third of a term
   at a time, and every change to it is a conditional put on the bytes last seen, so two hosts racing
@@ -564,8 +573,10 @@ The limits:
   your store first.
 - **A waiting standby serves nothing**: its listener starts when it takes the lease, so a load
   balancer sees it as down until then. Put followers behind the load balancer for reads.
-- **Failover is taken at boot.** A mount made over the admin API whose mirror asks for failover is
-  refused with "restart the runtime"; put it in `mounts.toml` and restart.
+- **Failover is taken at boot.** A mount made over the admin API whose mirror asks for failover,
+  whether from the request, its record or `[runtime.publish]`, is refused with `409` before anything
+  is written (since 5.18.0; it used to answer `200` with no publisher running and no lease taken).
+  Declare it in `mounts.toml` and restart. A plain mirror still mounts live.
 - The parity run covers an ERC-20 nest at three chosen points. A factory nest's child registry is
   rebuilt from stored events on promotion, which is reasoned and not yet run.
 

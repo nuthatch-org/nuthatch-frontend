@@ -2,7 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
@@ -88,7 +88,9 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   its row cap, the sealed segments it can read, the hot rows, each entity's watermark and the authored
   files. Since 4.11.0 a cursor poll that commits no new row does not change the key, so a quiet nest at
   the tip answers a repeat from the cache; a committed row, a newly sealed segment or an edited view
-  does, and the next request computes. A degraded answer is never remembered. It is bounded by
+  does, and the next request computes. A degraded answer is never remembered, nor is a statement
+  calling a volatile function such as `random()` or `now()`; since 5.18.0 that covers the `rand()`
+  alias, which used to keep its first rows until the next commit. It is bounded by
   `NUTHATCH_SQL_MEMO_BYTES` (64 MiB by default, `0` turns it off) and cleared by a restart.
 - **One snapshot per request.** Since 5.14.0 every request answers from the snapshot it pinned at its
   start: one window's hot rows and every derived view together, so a statement never sees a window's rows

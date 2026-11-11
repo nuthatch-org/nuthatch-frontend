@@ -2,7 +2,7 @@
 title: Runtimes & cursors
 description: One runtime, many nests, across one or more chains, with one isolated cursor per chain.
 order: 2
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 A **runtime** is one process hosting one nest or many. A **cursor** is a single chain's follow
@@ -102,6 +102,10 @@ chain's nests. A cursor that dies is **quarantined**: its nests keep serving wha
 themselves unhealthy, its siblings keep indexing, and a mount onto that chain is refused until restart.
 The runtime exits, non-zero, only when every cursor has died, since nothing will advance again and a
 restart is the only thing that can help.
+
+A nest has the same boundary at boot. Since 5.18.0 a nest that cannot be loaded, or whose data
+directory is missing, is quarantined beside the others with its mount record kept, where it used to
+stop the runtime from starting.
 
 ## Next
 

@@ -2,7 +2,7 @@
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
 order: 13
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
@@ -41,7 +41,9 @@ A *sparse* contract over millions of blocks isn't stuck, just inefficient - each
 near-empty. Widen it: `--window 50000` turns tens of thousands of near-empty requests into a few.
 A window over your provider's `getLogs` cap is not fatal: a refused range is split and the halves
 retried, and a refusal that names the range it would serve (`eth_getLogs is limited to 0 - 50 blocks
-range`, since 4.11.0) is split there. Only a single block over the cap stops the run (below). Each
+range`, since 4.11.0) is split there. Since 5.18.0 a range the endpoint does not answer within
+nuthatch's 20-second client timeout is narrowed the same way; before, it was split once, retried at
+the same width and the backfill aborted. Only a single block over the cap stops the run (below). Each
 split is another request, though, so `nuthatch doctor` (above) gives a window that needs none.
 
 ## Free public RPCs: stalls and empty results
@@ -99,6 +101,11 @@ One block's logs are too large for the provider to return, and a single block ca
 further. Use a provider with a higher (or no) result cap. This fails loudly by design rather than
 looping forever. In a runtime since 5.14.0 such a block is asked for again by each nest's own
 filter, so only a nest still over the cap is quarantined; its siblings carry on.
+
+Since 5.18.0 the message means what it says. A one-block window is asked together with a short
+overlap behind it, and a refusal of that request used to end the run with this error; each block is
+now asked alone first, and only one refused alone is over the cap. A single block whose answer
+stalls is retried as a timeout, not reported as over the cap.
 
 ## Tip lag
 
@@ -168,6 +175,33 @@ monad, robinhood) - or pass --rpc <url> to point nuthatch at a chain it doesn't 
 ```
 
 For any other EVM chain, pass `--rpc` with an endpoint on it; the chain id is read from the endpoint.
+Since 5.18.0, when that id belongs to a built-in chain, as with a provider's own name such as
+`--chain arbitrum-mainnet`, `init` keeps your RPCs, takes the built-in name and says so:
+
+```text
+chain_id 42161 is 'arbitrum-one' in the built-in registry; using that name
+```
+
+## "chain_id N is '...' in the built-in registry, not '...'"
+
+Since 5.18.0 a nest whose `chain` is not a built-in name, over a `chain_id` that is, is refused at
+load by `dev` and `check` alike:
+
+```text
+chain_id 42161 is 'arbitrum-one' in the built-in registry, not 'arbitrum-mainnet': set `chain =
+"arbitrum-one"` so the nest keeps the registry's finality and log window (this changes its NID)
+```
+
+Before, it ran without a word on the policy for unknown chains: finality at 64 blocks and a 20-block
+log window. Set `chain` to the name the message gives. The NID changes with it.
+
+## `nuthatch add` refuses a nest that "has already indexed"
+
+A new contract changes what the nest decodes, so the next `dev` would refuse the stored data. Since
+5.18.0 `add` opens the store first and refuses before it writes anything, where it used to append the
+contract and leave `dev` to exit 1. The message gives both ways on: move `nuthatch.redb` and
+`segments/` out of the nest and run `add` again, which re-indexes every contract, or index the new
+contract as a nest of its own with the `nuthatch init` line it prints.
 
 ## ABI won't resolve at `init`
 
@@ -231,3 +265,10 @@ with it in the startup log; pass it as `?token=…` or `Authorization: Bearer �
 Since 5.11.0 a nest's input files must be regular files, because its identity is taken from what is in
 the directory. Replace the link with a copy of what it points to. A linked `segments/` or
 `nuthatch.redb` is fine.
+
+## "is not UTF-8" at startup
+
+Since 5.18.0 a nest's input files must be UTF-8 text, and one that is not is refused by name
+(`docs/a.bin is not UTF-8`). The node used to hash its bytes while the embeddable engine hashed
+replacement characters, so the two named different nests. Remove the file from the nest directory,
+or convert it.

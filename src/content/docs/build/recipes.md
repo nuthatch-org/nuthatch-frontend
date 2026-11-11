@@ -2,7 +2,7 @@
 title: Recipes - the eth_call you usually do not need
 description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node. When a read is not derivable, pinned calls are there.
 order: 6
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 The Foundation reports that **over 70% of subgraphs call `eth_call`**. But most of those reads aren't
@@ -92,4 +92,6 @@ irreducible residue a fallback handles - the derive-first path here needs
 nuthatch metadata fetch
 ```
 
-The result lands in `metadata.json`, keyed by address; a cached contract is never re-fetched.
+The result lands in `metadata.json`, keyed by address; a cached contract is never re-fetched. A call
+that reverts is an answer, and that field is cached as absent. Since 5.18.0 any other failure, a
+dropped connection say, caches nothing for that contract and the command exits non-zero: run it again.

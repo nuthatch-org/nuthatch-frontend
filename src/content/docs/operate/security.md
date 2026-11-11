@@ -2,7 +2,7 @@
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
 order: 4
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 ## Upgrade first
@@ -51,9 +51,13 @@ shape had another spelling. That is what shaped the fix below.
 
 Two controls with deliberately **different failure modes**, not one behind the other.
 
-**A denylist** rejects the file-reading and environment-disclosing functions by name, scanning after
-quotes are normalised away - so `"read_csv"(`, `read"_"csv(`, and anything else quoting can do to break
-a name apart all collapse to the same match.
+**A denylist** rejects the file-reading and environment-disclosing functions by name. Since 5.18.0 it
+reads the statement as the engine's own tokenizer does, as do the checks for stacked statements, a
+`WITH` in front of a write and a file path in table position: a quoted `"read_csv"(` is the same word
+as the bare one, in any case, and a comment marker inside a string is part of the string and hides
+nothing after it. Before, these gates scanned the text with quotes and comments stripped, and a `--`
+in a string literal or a path after a comma in `FROM` slipped past them; the engine refused every
+such statement, so nothing was exploitable. A statement that will not tokenize is refused.
 
 **An allowlist** (since v0.9.3) asks the engine's own parser what a statement references and refuses
 anything unrecognised: a table function must be one of three, and a base table must be *named like an
@@ -174,7 +178,10 @@ each other, 5.13.0 added two things (RFC-0073):
   every authored view it reaches, is held to an allow-list of functions, every one the engine
   registers except `version`, `arrow_metadata` and `arrow_field`, and a test fails the build when the
   engine registers a function the list does not name. Authored views must be `CREATE VIEW`. A
-  `fuzz/sql` target runs in CI.
+  `fuzz/sql` target runs in CI. Since 5.18.0 a mount's own `/metrics` carries only the series
+  labelled with that mount, with its entity and snapshot series; before, every mount served the whole
+  runtime's exposition, other tenants' mount names and contracts included. The root `/metrics` still
+  carries everything, so keep it behind the gateway.
 
 **The isolation guarantee is not claimed.** The threat model,
 [`docs/security/shared-runtime.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/security/shared-runtime.md),

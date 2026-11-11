@@ -2,7 +2,7 @@
 title: "Deploy it"
 description: systemd, Docker, and a reverse proxy - the whole distance from "it works on my laptop" to "it is running on my box".
 order: 2
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one
@@ -60,7 +60,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nuthatch-org/nuthatch:5.17.0
+  ghcr.io/nuthatch-org/nuthatch:5.19.0
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
@@ -72,7 +72,17 @@ The default command binds `0.0.0.0:8288` *inside* the container. Publish it to `
 as above and put a proxy in front, exactly as on bare metal. `docker stop` sends SIGTERM, which drains
 and checkpoints cleanly.
 
-Pin the version tag rather than `:latest` for anything you care about. The image is `linux/amd64`
+Pin the version tag rather than `:latest` for anything you care about. Since 5.18.0 `:latest` moves
+only for the newest stable release, never for a pre-release or a patch on an older line, and an image
+is pushed only once the release has passed every gate the binaries pass, with a build provenance
+attestation on its digest:
+
+```sh
+gh attestation verify oci://ghcr.io/nuthatch-org/nuthatch:5.19.0 --repo nuthatch-org/nuthatch \
+  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.19.0
+```
+
+The image is `linux/amd64`
 only. From 4.12.0 an aarch64 Linux box has release binaries, default and graph, so run the binary
 under systemd there rather than the image under emulation.
 
@@ -136,8 +146,10 @@ external state to reconcile - which is the reason the hot/cold split exists in t
 Within 5.x, a binary swap. No data migration, no re-backfill: a newer release reads an older one's
 hot store and sealed segments as they are. Two older crossings are not drop-in: a pre-2.0 runtime
 directory needs `nuthatch migrate`, and a nest that still declares `[screening]` must drop it before
-it loads on 5.0 or later. Read the [upgrade notes](/docs/operate/upgrades/) for the versions you are
-crossing first.
+it loads on 5.0 or later. And 5.18.0 has exceptions of its own: a nest with an event that has a
+Solidity `function` parameter must re-index, a nest whose `chain` is not the built-in name for its
+`chain_id` is refused at load until it is renamed, and some nests get a new NID while keeping their
+data. Read the [upgrade notes](/docs/operate/upgrades/) for the versions you are crossing first.
 
 ```sh
 systemctl stop nuthatch

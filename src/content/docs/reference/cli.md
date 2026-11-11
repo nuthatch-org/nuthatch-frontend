@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -22,7 +22,9 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   `--chain` - init probes the known chains for the contract's bytecode and picks the one it lives
   on. `--alias` names the contracts (default: the contract name from the ABI, else `c0, c1, …`);
   `--rpc` uses your own endpoints; paired with a `--chain` name nuthatch does not ship, it scaffolds
-  any other EVM chain, reading the chain id from the endpoint. `--abi` supplies a local ABI (the escape
+  any other EVM chain, reading the chain id from the endpoint; since 5.18.0, when that chain id is one
+  nuthatch ships, it takes the shipped chain's name, keeps your endpoints and says which name it
+  used. `--abi` supplies a local ABI (the escape
   hatch for a proxy), `--explorer` names a Blockscout instance to resolve from, `--start-block` skips
   the deploy-block probe, and `--no-timestamps` drops `block_timestamp` for good.
   `--from <git-url|dir>` initialises from a published nest instead of addresses (nothing is
@@ -42,7 +44,10 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
 
 ## Everyday companions
 
-- **`nuthatch add <address>…`** - grow an existing nest with another contract; no re-init.
+- **`nuthatch add <address>…`** - grow a nest that has not indexed yet with another contract; no
+  re-init. Since 5.18.0 it refuses a nest that has indexed, before writing anything, and names both
+  ways on: move `nuthatch.redb` and `segments/` aside to re-index every contract, or index the new
+  contract as a nest of its own.
 - **`nuthatch sql [query]`** - query the live tip ∪ sealed history; prints a table. No query opens
   a REPL (`.tables`, `.schema <t>`, history). `--json` emits NDJSON for piping to `jq`.
 - **`nuthatch schema`** - regenerate the derived artifacts (`schema.json`, `llms.txt`, the
@@ -52,7 +57,8 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   names an environment variable whose value is sent as a bearer token on every request, for a nest
   behind a gateway; `NUTHATCH_MCP_TOKEN` is read when it is not given. See [MCP](/docs/ai/mcp/).
 - **`nuthatch check [name]`** - run the nest's invariant/parity checks (`checks/*.sql`) against
-  recorded expected results; `--update` records current results as the fixtures.
+  recorded expected results; `--update` records current results as the fixtures. Since 5.18.0 it
+  fails, with the same error, on a config `dev` refuses at load.
 - **`nuthatch doctor`** - probe an RPC endpoint before trusting a backfill to it: widest `eth_getLogs`
   range, batch limit, archive depth, and the largest safe `--window`. `--catalogue` checks the sealed
   segment catalogue instead.

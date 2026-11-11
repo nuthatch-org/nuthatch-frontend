@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,79 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.19
+
+Replace the binary and restart. A 5.18 store is used as it is, with no storage migration, and no NID,
+registry hash or sealed segment changes. Things to know:
+
+- **An address-history window that has been failing with `timed out` since 5.18.0 is recorded.**
+  5.18.0 made a span the provider ran out of time on fail its whole window instead of being asked
+  again in halves, so a dense window could be retried at the same width for good. 5.19 narrows it
+  again, as 5.17 did.
+- **On Gnosis, a watched contract or EIP-7702 delegated account gets its transactions.** `txlist`
+  and `txlistinternal` answered `NUTHATCH_UNSUPPORTED` from the first block the account had code. If
+  your trace RPC serves `trace_filter`, 5.19 finds them that way instead and backfills from the block
+  they were refused at; if it does not, nothing changes. That backfill costs trace calls: Alchemy
+  served 20,000 blocks a call on 2026-11-11, the keyless endpoints 100. The other chains read by the
+  balance are unchanged.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.19.0) have the
+measurements.
+
+## Upgrading to 5.18
+
+Replace the binary and restart. A 5.17 store is used as it is, with no storage migration, **with the
+exceptions below**. 5.18.0 fixes what a cold audit found and adds no feature, and several of its fixes
+change a nest's identity or refuse what used to be accepted. Go straight to 5.18.1 or later: 5.18.0's
+engine disagreed with the node on the NID of any nest made by its own `init` or `add`.
+
+**These nests must act.**
+
+- **A nest with an event that has a Solidity `function` parameter must re-index.** The parameter was
+  stored as null; it is now the 24 bytes of address and selector, and the nest moves identity so the
+  old null rows are refused rather than served beside new ones.
+- **A nest whose `chain` the registry does not know, over a `chain_id` it does, is refused at load**,
+  naming the registry's chain. Rename `chain` to the name the message gives; that changes the NID.
+- **A nest holding a file that is not UTF-8 is refused by name** until the file is removed.
+
+**These nests get a new NID and keep their data.**
+
+- A nest with a row-driven `[[calls]]` declaration: the fields that say what a call reads now feed the
+  decode hash. A store is adopted once, with a warning; after that, an edit to what a call reads is
+  refused like any other change to what the nest decodes.
+- A nest with a `.gitignore`, at any depth: it is no longer hashed. `init` and `add` now write one.
+- A nest built with `graph` that has a `checkpoints` directory below its root: only the root one is
+  left out now, in every build.
+
+**These are refused where they used to be accepted.**
+
+- `nuthatch add` on a nest that has already indexed. It names both ways on: move `nuthatch.redb` and
+  `segments/` aside to re-index, or index the new contract as a nest of its own.
+- A live mount that asks for a failover mirror answers 409. Declare the lease in `mounts.toml` and
+  restart; a plain mirror still mounts live.
+- A `[[factories]]` `child_param` that is not an address parameter of its event.
+- `init --from` on a directory holding a symbolic link.
+
+**These behave differently.**
+
+- **Address history says unsupported for a range it will never cover.** A request before
+  `start_block` or past `end_block` answers `NUTHATCH_UNSUPPORTED` from 5.18.1 (5.18.0 and earlier
+  said `NUTHATCH_INCOMPLETE`). The text after the prefix is unchanged, so a client that reads
+  `history starts at block N` needs nothing; one that matches on the prefix should match the new one.
+- **Under `isolation = "strict"`, a mount's `/metrics` carries only its own series.** Read the root
+  `/metrics` for runtime-wide ones.
+- **Verify a release with the workflow and tag pinned**: add
+  `--signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml` and
+  `--source-ref refs/tags/<tag>` to `gh attestation verify`.
+- **A `getLogs` range with no answer within the client timeout narrows** instead of aborting the
+  backfill.
+- The `API live on` log line prints the address the node bound (5.18.1).
+
+A failover deployment upgrades writers before followers, as for 5.17. The release notes for
+[5.18.0](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.18.0) and
+[5.18.1](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.18.1) have the rest, with the issue
+behind each line.
 
 ## Upgrading to 5.17
 
@@ -63,6 +136,12 @@ Things to know:
   that file in its NID. It no longer does, so such a directory's NID returns to a clean one's.
 - **An `ORDER BY ... LIMIT` over a `UNION ALL` of literal-tagged arms** returned the wrong rows; its
   answers may change, to the correct ones.
+
+Two patches followed, each a binary swap. **5.17.1** writes a filesystem mirror's objects whole (a
+reader could catch a half-written one; an `s3://` mirror was never affected) and leaves a query's
+spill directory out of a nest's NID, which matters only to a nest run with `HOME` set to its own
+directory. **5.17.2** makes `information_schema` reads on a nest with many sealed segments faster and
+smaller.
 
 The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.17.0) have the rest.
 

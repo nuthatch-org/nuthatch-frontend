@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
@@ -165,7 +165,9 @@ and a cursor's death doesn't kill the runtime.
 Since 5.13.0 that covers a panic too: a panic in one nest's window, reorg rollback or rejoin
 quarantines that nest alone, terminally, and it keeps answering from its last committed window. A
 nest that fails to build at boot, or no longer fits its cursor's ceiling, boots quarantined with the
-reason, and the rest boot; boot fails only when every nest does. A re-admitted nest resumes from its
+reason, and the rest boot; boot fails only when every nest does. Since 5.18.0 the same holds for a
+nest whose config will not load, a missing data directory and a panic while a nest is built, and the
+mount record is kept. A re-admitted nest resumes from its
 own position, checked against its own checkpoints; on the buffered cursor it fetches its missed range
 for itself, so extraction never moves back for it.
 

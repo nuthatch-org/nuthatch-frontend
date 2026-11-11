@@ -29,9 +29,10 @@ worth knowing where it parts company before the chapters that follow assume othe
 A nest whose `nuthatch.toml` carries an `[address_history]` table and no contracts watches accounts
 instead: their transactions, internal transfers, token transfers, withdrawals and the blocks they
 produced. It needs no ABI. It serves that history at `/api` in Etherscan's shapes, so a client
-written against an explorer can be pointed at it, and it answers a range it has not fetched with
-`NUTHATCH_INCOMPLETE` and an action it does not serve with `NUTHATCH_UNSUPPORTED`, rather than with
-an empty list a client would read as no history at all.
+written against an explorer can be pointed at it, and it answers a range it has not fetched yet with
+`NUTHATCH_INCOMPLETE`, and an action it does not serve, or since 5.18.1 a range its configuration
+means it never will cover, with `NUTHATCH_UNSUPPORTED`, rather than with an empty list a client would
+read as no history at all.
 
 It runs on a light path of its own: one cursor reading the chain head and backfilling each watched
 account up to the finalized block, with no SQL engine, no sealing and no derived entities. The

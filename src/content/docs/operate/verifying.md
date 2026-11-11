@@ -2,7 +2,7 @@
 title: "Verifying a deployment"
 description: An acceptance runbook that proves a deployment works, step by falsifiable step - and an honest table of what we have verified ourselves and what we have not.
 order: 7
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
@@ -45,10 +45,14 @@ Level 0 is one you can run on your own download in a line. Every release tarball
 provenance attestation:
 
 ```sh
-gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nuthatch-org/nuthatch
+gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nuthatch-org/nuthatch \
+  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.19.0
 ```
 
-It exits `0` when the file was built by the release workflow in that repository, at a release tag.
+It exits `0` when the file was built by the release workflow in that repository, at that tag. All
+three flags bind it: `--repo` alone accepts an attestation from any workflow on any ref of the
+repository, so since 5.18.0 the documented command pins the workflow and the tag. `--source-ref`
+names the tag of the release you downloaded.
 
 ## Level 5 is worth reading before you trust it
 

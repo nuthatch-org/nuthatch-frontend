@@ -2,13 +2,14 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
 the ingest thread is the only data writer. A runtime additionally has authenticated lifecycle mutation
 routes for mounting, suspending, moving and unmounting nests. In a [runtime](/docs/operate/many-nests/), each nest's full
-surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
+surface appears under its `/<name>/…` prefix, byte-identical to a solo nest. Since 5.18.0 a
+listener holds at most 256 connections and cuts off a request body that has been idle for 30 s.
 
 ## Status & introspection
 
@@ -140,13 +141,24 @@ event nest also answers `GET /api`, but only to say it has no `[address_history]
   string. A key given in both with different values is refused, and `chainId` is read as `chainid`.
   Answers use Etherscan's envelope, `{"status", "message", "result"}`. A range the nest cannot cover
   inside `request_deadline` answers `status "0"` with a result starting `NUTHATCH_INCOMPLETE:`, which
-  a client can retry; a range before `start_block` says where history starts.
+  a client can retry. A range the nest will never cover starts `NUTHATCH_UNSUPPORTED:` instead (since
+  5.18.1; 5.18.0 and earlier said `NUTHATCH_INCOMPLETE:`, with the same text after the prefix): one
+  starting before `start_block` says `history starts at block N`, and one with either bound past
+  `end_block`, Etherscan's usual `endblock=99999999` included, says `history ends at block E`. A
+  request naming no `endblock` is not refused for that.
   - `module=account`: `txlist`, `txlistinternal` (also by `txhash`), `tokentx`, `tokennfttx`,
     `token1155tx`, `txsBeaconWithdrawal`, `getminedblocks`, with `address`, `startblock`,
     `endblock` and Etherscan's `page`, `offset` and `sort`; plus nuthatch's own `nuthatchProducedBlocks`,
     `nuthatchValidatorBlocks` and `nuthatchDeposits` (the sweep's deposit feed, paged by `after` and
-    `offset`, up to 10,000). A `chainid` other than the nest's is refused.
-  - `module=block&action=getblocknobytime`.
+    `offset`, up to 10,000). A `chainid` other than the nest's is refused. On the chains read by
+    an account's nonce and balance rather than by `trace_filter` (Optimism, BSC, Gnosis, Polygon,
+    Base and Arbitrum One), `txlist` and `txlistinternal` answer `NUTHATCH_UNSUPPORTED` for a
+    contract, or an account with EIP-7702 delegated code, from the first block it had code. Since
+    5.19.0 Gnosis is the exception: there such an account is traced with `trace_filter`, when the
+    trace RPC serves it, and backfilled from the block it was refused at. Its history then rests on
+    the trace RPC's answer, with no balance to check it against.
+  - `module=block&action=getblocknobytime`. Off a loopback bind it answers from verified headers
+    only (since 5.18.0) and never searches the operator's RPC for a caller.
   - On a loopback bind only, `module=proxy` (`eth_blockNumber`, `eth_getBlockByNumber`,
     `eth_getTransactionByHash`, `eth_getTransactionReceipt`, `eth_call` and similar), `module=logs`
     `getLogs`, and account `balance`/`balancemulti` are forwarded to the nest's own RPC and stored
@@ -219,7 +231,7 @@ route key: `usdc` for the default tenant, `acme/usdc` for any other, fixed for t
 | `POST /_admin/nests?wait=true` | The same, answering when finished | `200`, or `400` / `404` / `409` / `507` |
 | `POST /_admin/nests?dry_run=true` | Price and check a mount, mounting nothing | `200` and a report with `refusal_status` |
 | `GET /_admin/mounts` | Every mount the runtime knows, with its phase | `200` `{"mounts": [...]}` |
-| `GET /metrics` | The runtime's Prometheus exposition, per-nest series labelled `{nest}` | `200`, even with nothing mounted |
+| `GET /metrics` | The runtime's Prometheus exposition, per-nest series labelled `{nest}`. Under `isolation = "strict"` a mount's own `/<name>/metrics` carries only its own series (since 5.18.0); the root still carries everything | `200`, even with nothing mounted |
 | `GET /_admin/mounts/<name>` | One mount's job | `200`, or `404` |
 | `POST /_admin/suspend/<name>` | Take a mount off its cursor, keep its data, answer `503` in its place | `200`; `404` if not mounted |
 | `POST /_admin/resume/<name>` | Resume a suspended mount, as a job (`?wait=true` accepted) | `202`; `404` if not suspended |
@@ -247,7 +259,8 @@ A job is `{"name", "nid"?, "phase", "reason"?, "code"?, "since_unixtime", "gener
 `is_move: true` marks a move, so a restart resumes it as one. `phase` is one of `accepted`,
 `fetching`, `seeding` (5.13.0), `joining`, `live`, `failed`, or `suspended` while paused. Reading a job never waits on a mount in progress; unfinished
 jobs resume after a restart. Mount refusals: `400` malformed NID or a name boot would refuse, `404` NID not held and no
-`--registry`, `409` name taken, chain not declared or its cursor dead, `507` over the cursor's RAM
+`--registry`, `409` name taken, chain not declared or its cursor dead, or (since 5.18.0) a mount
+that would mirror with failover, since the writer lease is only taken at boot, `507` over the cursor's RAM
 ceiling or its authored-entity cap. On the job route each ends the job `failed` with the same reason.
 Since 5.13.0 a failed job also carries `code`, one of `not_found`, `access_denied`,
 `verification_failed` or `other`, for a caller to branch on; a retry clears it.

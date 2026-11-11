@@ -2,7 +2,7 @@
 title: What is a nest?
 description: A nest is a content-addressed specification of a question about on-chain data - a spec, not a program.
 order: 1
-checked: 5.17.0 (2026-11-04)
+checked: 5.19.0 (2026-11-11)
 ---
 
 A **nest** is the unit of everything in nuthatch. It's a content-addressed, reproducible
@@ -48,11 +48,12 @@ my-nest/
 
 Only the *authored inputs* are part of a nest's identity - the hot store and sealed segments are
 *derived*, so they never enter the content hash. Neither does `.admin-token`, the admin credential a
-localhost nest makes for itself.
+localhost nest makes for itself, nor, since 5.18.0, the `.gitignore` that `init` and `add` write.
 
 The inputs must be regular files. Since 5.11.0 a symbolic link among them refuses the nest by name,
 because the identity is taken from what is in the directory and a link would let two nests with
-different configs share one NID. Replace the link with a copy. A linked `segments/` or
+different configs share one NID. Replace the link with a copy. Since 5.18.0 an input that is not
+UTF-8 is refused by name as well. A linked `segments/` or
 `nuthatch.redb`, putting data on another disk, is fine.
 
 ## Decoding
