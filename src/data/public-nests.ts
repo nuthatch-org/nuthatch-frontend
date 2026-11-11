@@ -14,6 +14,17 @@ export interface PublicNest {
 
 export const publicNests: PublicNest[] = [
   {
+    id: 'bounty-nest',
+    name: 'Lodestar sync bounties',
+    chain: 'arbitrum-one',
+    for: { label: 'Lodestar', href: 'https://www.lodestar-dashboard.com/bounties' },
+    summary:
+      'Every bounty posted on BountyBoard 2.0.0 and what became of it, so an indexer can poll for open ones. SQL at /sql, views bounties and open_bounties.',
+    endpoint: 'https://nuthatch-indexer.com/nests/bounty-nest',
+    example:
+      "curl 'https://nuthatch-indexer.com/nests/bounty-nest/sql?q=SELECT%20*%20FROM%20open_bounties'",
+  },
+  {
     id: 'irmarket',
     name: 'IRMarket',
     chain: 'monad-testnet',
