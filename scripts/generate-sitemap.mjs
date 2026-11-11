@@ -18,6 +18,13 @@ async function markdownFiles(dir) {
 const hostedSource = await readFile(join(root, 'src/data/hosted.ts'), 'utf8');
 for (const [, id] of hostedSource.matchAll(/^    id: '([^']+)',$/gm)) routes.push(`/nests/hosted/${id}`);
 
+// Per-nest pages: the public nests from src/data/public-nests.ts and the catalogue the site builds from.
+const publicSource = await readFile(join(root, 'src/data/public-nests.ts'), 'utf8');
+for (const [, id] of publicSource.matchAll(/^    id: '([^']+)',$/gm)) routes.push(`/nests/${id}`);
+const catalogue = await fetch('https://raw.githubusercontent.com/nuthatch-org/nests/main/index.json');
+if (!catalogue.ok) throw new Error(`nests index fetch failed: ${catalogue.status}`);
+for (const { id } of (await catalogue.json()).nests) routes.push(`/nests/${id}`);
+
 const docsRoot = join(root, 'src/content/docs');
 const docs = await markdownFiles(docsRoot);
 for (const file of docs) {

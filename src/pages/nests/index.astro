@@ -147,7 +147,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
           {publicNests.map((p) => (
             <li class="nest" id={`public-${p.id}`} data-search={[p.name, p.chain, p.for.label].join(' ')}>
               <div class="nest-top">
-                <h3>{p.name}</h3>
+                <h3><a href={`/nests/${p.id}`}>{p.name}</a></h3>
                 <span class="badge status--available">live</span>
               </div>
               <p class="summary">{p.summary}</p>
@@ -179,7 +179,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
                 data-search={[n.data.name, n.id, ...n.data.chains, n.data.repo?.replace('https://github.com/', '') ?? ''].join(' ')}
               >
                 <div class="nest-top">
-                  <h3>{n.data.name}</h3>
+                  <h3><a href={`/nests/${n.id}`}>{n.data.name}</a></h3>
                   <span class={`badge status--${n.data.status}`}>{statusLabel[n.data.status]}</span>
                 </div>
 
@@ -394,6 +394,10 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--text-muted);
   }
   .hosted:hover .open, .hosted:hover h3 { color: var(--accent); }
+  /* The heading's link covers the card; what is clickable inside it sits above that. */
+  .nest:hover h3 a { color: var(--accent); }
+  .nest { position: relative; }
+  .nest .cmd, .nest .repolink, .nest .note a { position: relative; z-index: 1; }
   .note {
     margin: 0.95rem 0 0; padding-top: 0.85rem; border-top: 1px solid var(--border);
     font-size: 0.75rem; line-height: 1.55; color: var(--text-muted);
