@@ -1,0 +1,328 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeCard from '../../components/CodeCard.astro';
+import CopyBlock from '../../components/CopyBlock.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { publicNests, type PublicNest } from '../../data/public-nests';
+import { published, sameRepo, type Published } from '../../data/mirror';
+import vercel from '../../../vercel.json';
+
+interface Table { table: string; event?: string }
+interface Live {
+  version?: string;
+  mode?: string;
+  chain?: string;
+  address?: string;
+  startBlock?: string;
+  lastBlock?: string;
+  sealedThrough?: string;
+  nid?: string;
+  tables: Table[];
+}
+type Props =
+  | { kind: 'catalogue'; nest: CollectionEntry<'nests'>; mirror: Published[] }
+  | { kind: 'public'; nest: PublicNest; live: Live | null };
+
+export async function getStaticPaths() {
+  // Declared in here because Astro lifts getStaticPaths out of the component's scope.
+  // A nest that does not answer must not stop the site building; the page says it did not answer.
+  async function ask<T>(url: string): Promise<T | null> {
+    try {
+      const res = await fetch(url, { headers: { 'user-agent': 'curl/8 (nuthatch-frontend build)' }, signal: AbortSignal.timeout(15000) });
+      return res.ok ? ((await res.json()) as T) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  const catalogue = await getCollection('nests');
+  const mirror = await published();
+  const taken = new Set(catalogue.map((n) => n.id));
+  const clash = publicNests.find((p) => taken.has(p.id) || p.id === 'hosted');
+  if (clash) throw new Error(`public nest id '${clash.id}' collides with another /nests/ path`);
+
+  const hosted = await Promise.all(
+    publicNests.map(async (nest) => {
+      const rewrite = vercel.rewrites.find((r) => r.source === `/nests/${nest.id}/:path*`);
+      if (!rewrite) throw new Error(`public nest '${nest.id}' has no /nests/${nest.id}/:path* rewrite in vercel.json`);
+      const upstream = rewrite.destination.replace('/:path*', '');
+      const ready = await ask<{ version?: string; mode?: string }>(`${upstream}/ready`);
+      const root = await ask<Record<string, string | undefined>>(`${upstream}/`);
+      const tables = await ask<{ tables: Table[] }>(`${upstream}/tables`);
+      const live: Live | null = ready && {
+        version: ready.version,
+        mode: ready.mode,
+        chain: root?.chain,
+        address: root?.address,
+        startBlock: root?.start_block,
+        lastBlock: root?.last_block,
+        sealedThrough: root?.sealed_through,
+        nid: root?.nid,
+        tables: tables?.tables ?? [],
+      };
+      return { params: { id: nest.id }, props: { kind: 'public', nest, live } satisfies Props };
+    }),
+  );
+
+  return [
+    ...catalogue.map((nest) => ({
+      params: { id: nest.id },
+      props: { kind: 'catalogue', nest, mirror: mirror.filter((m) => sameRepo(nest.data.repo, m.repo)) } satisfies Props,
+    })),
+    ...hosted,
+  ];
+}
+
+const props = Astro.props as Props;
+const builtOn = new Date().toISOString().slice(0, 10);
+const num = (n: number) => n.toLocaleString('en-GB');
+const block = (s: string | undefined) => (s && /^\d+$/.test(s) ? num(Number(s)) : s);
+const statusLabel = { available: 'available', building: 'building', planned: 'planned', blocked: 'blocked' } as const;
+const sectionName = { 'graph-protocol': 'Graph Protocol', 'subgraph-ports': 'port of a subgraph', other: 'catalogue' } as const;
+
+const title = props.kind === 'catalogue' ? props.nest.data.name : props.nest.name;
+const summary = props.kind === 'catalogue' ? props.nest.data.summary : props.nest.summary;
+const id = props.nest.id;
+---
+
+<Layout path={`/nests/${id}`} title={`${title} - nest - Nuthatch`} description={summary}>
+  <section class="page">
+    <div class="wrap">
+      {props.kind === 'catalogue' ? (
+        <>
+          <p class="section-label">
+            <a href="/nests">Nests</a> · {sectionName[props.nest.data.catalogue_section ?? (props.nest.data.category === 'Graph Protocol' ? 'graph-protocol' : 'other')]}
+          </p>
+          <h1>{title}</h1>
+          <p class="mono dep">{id} · {props.nest.data.chains.join(', ')}</p>
+          <p class="lede">{summary}</p>
+
+          <div class="status">
+            <div><span class="cap">status</span><span class={`val ${props.nest.data.status === 'available' ? 'ok' : 'warn'}`}>{statusLabel[props.nest.data.status]}</span></div>
+            <div><span class="cap">category</span><span class="val">{props.nest.data.category}</span></div>
+            <div><span class="cap">tier</span><span class="val">{props.nest.data.tier === 0 ? '0 · beachhead' : props.nest.data.tier}</span></div>
+            <div><span class="cap">complexity</span><span class="val">{props.nest.data.complexity}</span></div>
+            <div><span class="cap">discovery</span><span class="val">{props.nest.data.factory ? 'factory: contracts found as they are created' : 'fixed addresses'}</span></div>
+          </div>
+
+          <h2>What it indexes</h2>
+          <p class="muted">Each event becomes a decoded SQL table.</p>
+          <p class="mono events">{props.nest.data.events}</p>
+          {props.nest.data.note && <p class="muted">{props.nest.data.note}</p>}
+
+          <h2>Run it yourself</h2>
+          {props.nest.data.repo ? (
+            <>
+              <p class="muted">
+                The nest is a git repository: ABIs, views and a manifest. One command scaffolds a local copy, and
+                <code>nuthatch dev</code> in it backfills and follows the chain against your own RPC.
+              </p>
+              <CopyBlock command={`nuthatch init --from ${props.nest.data.repo}`} size="md" />
+              <p class="muted">
+                Source: <a href={props.nest.data.repo} rel="noopener">{props.nest.data.repo.replace('https://github.com/', '')}</a>.
+              </p>
+            </>
+          ) : props.nest.data.command ? (
+            <>
+              <p class="muted">There is no repository to clone: nuthatch generates this nest from the contract address.</p>
+              <CopyBlock command={props.nest.data.command} size="md" />
+            </>
+          ) : (
+            <p class="muted">Not published yet, so there is nothing to run. Its status above says how far along it is.</p>
+          )}
+
+          {props.mirror.length === 0 ? (
+            <>
+              <h2>Published data</h2>
+              <p class="muted">
+                {props.nest.data.repo
+                  ? 'This nest’s data is not on the public mirror, so there is nothing of it to query from this page. Running it yourself is the way to its data.'
+                  : 'Nothing is published for this nest: its data exists once you run it.'}
+              </p>
+            </>
+          ) : (
+            props.mirror.map((m) => (
+              <>
+                <h2>Published data{props.mirror.length > 1 ? `: ${m.nest}` : ''}</h2>
+                <p class="muted">
+                  We run this nest and publish its sealed segments to the <a href="/mirror">public mirror</a>, each
+                  stored under the hash of its contents. The figures are what the mirror listed on {builtOn}, when this
+                  page was built; <a href={`/play/#nest=${m.nest}`}>Play</a> reads the mirror as it is now.
+                </p>
+                <div class="status">
+                  <div><span class="cap">tables</span><span class="val">{num(m.tables.length)}</span></div>
+                  <div><span class="cap">segments</span><span class="val">{num(m.segments)}</span></div>
+                  <div><span class="cap">rows sealed</span><span class="val">{num(m.rows)}</span></div>
+                  <div><span class="cap">sealed through block</span><span class="val">{m.sealedThrough === null ? 'nothing sealed yet' : num(m.sealedThrough)}</span></div>
+                  <div><span class="cap">dataset</span><span class="val">{m.dataset}</span></div>
+                  <div>
+                    <span class="cap">views from</span>
+                    <span class="val"><a href={`${m.repo}/tree/${m.commit}`} rel="noopener">{m.repo.replace('https://github.com/', '')} at {m.commit.slice(0, 7)}</a></span>
+                  </div>
+                </div>
+                <p class="go"><a class="btn" href={`/play/#nest=${m.nest}`}>Query it in your tab →</a></p>
+
+                {m.views.length > 0 && (
+                  <>
+                    <h3>Authored views</h3>
+                    <p class="muted">The nest’s own SQL over its event tables, as published. Open one to read it.</p>
+                    {m.views.map((v) => (
+                      <details class="view">
+                        <summary><span class="mono">{v.names.length ? v.names.join(', ') : v.path}</span><span class="view-path">{v.path}</span></summary>
+                        <CodeCard code={v.text.trim()} lang="sql" label={v.path} />
+                      </details>
+                    ))}
+                  </>
+                )}
+
+                <h3>Tables on the mirror</h3>
+                <div class="scroll">
+                  <table>
+                    <thead><tr><th>table</th><th class="n">rows</th><th class="n">segments</th><th class="n">from block</th><th class="n">to block</th></tr></thead>
+                    <tbody>
+                      {m.tables.map((t) => (
+                        <tr>
+                          <td>{t.name}</td>
+                          <td class="n">{num(t.rows)}</td>
+                          <td class="n">{num(t.segments)}</td>
+                          <td class="n">{t.segments ? num(t.from) : ''}</td>
+                          <td class="n">{t.segments ? num(t.to) : ''}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ))
+          )}
+        </>
+      ) : (
+        <>
+          <p class="section-label"><a href="/nests#public">Nests</a> · public</p>
+          <h1>{title}</h1>
+          <p class="mono dep">{id} · {props.nest.chain}</p>
+          <p class="lede">{summary}</p>
+
+          <div class="status" data-ready={`/nests/${id}/ready`}>
+            <div><span class="cap">status</span><span class={`val ${props.live ? 'ok' : 'warn'}`} data-live="state">{props.live ? `answering on ${builtOn}` : `did not answer on ${builtOn}`}</span></div>
+            <div><span class="cap">at block</span><span class="val" data-live="block">{block(props.live?.lastBlock) ?? 'not read'}</span></div>
+            {props.live?.sealedThrough && <div><span class="cap">sealed through block</span><span class="val">{block(props.live.sealedThrough)}</span></div>}
+            {props.live?.startBlock && <div><span class="cap">from block</span><span class="val">{block(props.live.startBlock)}</span></div>}
+            {props.live?.version && <div><span class="cap">nuthatch</span><span class="val" data-live="version">{props.live.version}</span></div>}
+            {props.live?.address && <div><span class="cap">contract</span><span class="val">{props.live.address}</span></div>}
+            {props.live?.nid && <div><span class="cap">nid</span><span class="val">{props.live.nid}</span></div>}
+          </div>
+          <p class="muted fine">
+            Read when this page was built, on {builtOn}. If your browser can reach the nest, the status and block above
+            are replaced with what it says now.
+          </p>
+
+          <h2>Query it</h2>
+          <p class="muted">
+            The stock binary behind a read-only proxy: <code>GET</code> only, no key, no admin. Stood up for
+            <a href={props.nest.for.href} rel="noopener">{props.nest.for.label}</a>.
+          </p>
+          <CopyBlock command={props.nest.endpoint} prompt={false} label="Copy URL" />
+          <CopyBlock command={props.nest.example} size="md" />
+
+          {props.live && props.live.tables.length > 0 && (
+            <>
+              <h2>Tables</h2>
+              <p class="muted">One per contract event, as the nest listed them on {builtOn}. <a href={`/nests/${id}/schema`}>Its schema</a> describes the views as well.</p>
+              <div class="scroll">
+                <table>
+                  <thead><tr><th>table</th><th>event</th></tr></thead>
+                  <tbody>
+                    {props.live.tables.map((t) => <tr><td>{t.table}</td><td>{t.event ?? ''}</td></tr>)}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          <h2>Limits</h2>
+          <ul class="list">
+            <li>No uptime promise. It is one process on one box, and a nest you run yourself answers to nobody else’s outage.</li>
+            <li>Read-only. Anything that would write, or spend the operator’s RPC, is refused at the proxy.</li>
+          </ul>
+        </>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<script>
+  // Replace the build-time status with the nest's own word, if it can be reached. On any failure
+  // the build-time text stays, which already carries its date.
+  const box = document.querySelector<HTMLElement>('[data-ready]');
+  if (box) {
+    const set = (k: string, v: string, cls?: string) => {
+      const el = box.querySelector<HTMLElement>(`[data-live="${k}"]`);
+      if (!el) return;
+      el.textContent = v;
+      if (cls) el.className = `val ${cls}`;
+    };
+    fetch(box.dataset.ready!, { signal: AbortSignal.timeout(10000) })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => {
+        const at = d.last_block ?? d.head;
+        if (typeof at === 'number') set('block', at.toLocaleString('en-GB'));
+        if (typeof d.version === 'string') set('version', d.version);
+        if (d.ready === true && !d.stalled) set('state', 'answering now', 'ok');
+        else set('state', d.stalled ? 'answering, but stalled' : 'answering, not ready', 'warn');
+      })
+      .catch(() => set('state', 'not answering now', 'warn'));
+  }
+</script>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.3rem; overflow-wrap: anywhere; }
+  h2 { font-size: clamp(1.022rem, 2.2vw, 1.2rem); margin: 2.6rem 0 0.8rem; }
+  h3 { font-size: 0.9375rem; margin: 1.8rem 0 0.6rem; }
+  .dep { color: var(--text-muted); font-size: 0.75rem; overflow-wrap: anywhere; margin-bottom: 1.2rem; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .lede { color: var(--text-muted); font-size: 1rem; line-height: 1.7; max-width: 66ch; margin-bottom: 1.8rem; }
+  .muted { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; max-width: 72ch; margin-bottom: 0.8rem; }
+  .muted a, .val a { color: var(--accent); }
+  .fine { font-size: 0.75rem; margin-top: 0.7rem; }
+  .events { font-size: 0.75rem; color: var(--text); line-height: 1.7; max-width: 72ch; overflow-wrap: anywhere; margin-bottom: 0.8rem; }
+  code {
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em; overflow-wrap: anywhere;
+  }
+  .status {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: 1rem;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); padding: 1.1rem 1.25rem;
+  }
+  .cap {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 0.35rem;
+  }
+  .val { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text); overflow-wrap: anywhere; }
+  .val.ok { color: var(--ok); }
+  .val.warn { color: var(--warn); }
+  .go { margin: 1.1rem 0 0; }
+  .btn {
+    display: inline-block; background: var(--accent); color: var(--bg); text-decoration: none;
+    font-weight: 600; font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .view { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); margin-bottom: 0.5rem; }
+  .view summary {
+    cursor: pointer; padding: 0.55rem 0.9rem; font-size: 0.75rem; color: var(--text);
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; justify-content: space-between; overflow-wrap: anywhere;
+  }
+  .view-path { color: var(--text-faint); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; }
+  .view[open] summary { border-bottom: 1px solid var(--border); }
+  .view :global(.codecard) { margin: 0; border: 0; border-radius: 0; }
+  .scroll { overflow: auto; max-height: 28rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+  table { border-collapse: collapse; width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  th, td { padding: 0.35rem 0.8rem; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--bg-inset); color: var(--text-muted); font-weight: 600; }
+  .n { text-align: right; }
+  .list { color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; max-width: 72ch; margin-bottom: 1rem; }
+  .list li + li { margin-top: 0.4rem; }
+  :global(.copyblock) { margin-bottom: 0.6rem; }
+  :global(.copyblock-text) { overflow-wrap: anywhere; word-break: break-all; white-space: normal; }
+</style>
