@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 5.19.0 (2026-11-11)
+checked: 5.20.0 (2026-11-12)
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one

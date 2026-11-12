@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.19.0 (2026-11-11)
+checked: 5.20.0 (2026-11-12)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,26 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.20
+
+Replace the binary and restart. A 5.19 store is used as it is, with no storage migration, and no NID,
+registry hash or sealed segment changes. 5.20 moves the SQL engine to Burrmill 0.0.1 and DataFusion
+55.2, and a few `/sql` answers read differently:
+
+- **A statement refused for memory begins `limit exceeded:`** where it began `substrate error:`.
+  Change anything that matches on the old text. A statement stopped at its spill cap reads as it did.
+- **A cast to `TIMESTAMP` is microseconds.** `CAST(x AS TIMESTAMP)`, `TRY_CAST`, `::TIMESTAMP`
+  without a precision and `DATETIME` were nanoseconds, so a finer fraction is now cut off.
+  `block_timestamp` columns are integers and are not affected.
+- **`list_sum` over integers or decimals is exact.** It answered a `DOUBLE`, so `list_sum([1, 2, 3])`
+  was `6.0`. It now refuses past 38 digits. `list_min` exists.
+- **A statement reads at most 128 relations**, down from 256.
+- **A scan is charged for its segments as it opens them.** Under a tight `max_rss_mb` or tenant
+  share, a statement 5.19 let through can be refused.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.20.0) say how it was
+checked.
 
 ## Upgrading to 5.19
 

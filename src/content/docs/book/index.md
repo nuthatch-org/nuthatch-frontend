@@ -2,7 +2,7 @@
 title: "Nuthatch: the book"
 description: "A guided tour of how Nuthatch turns chain logs into durable, queryable data."
 order: 1
-checked: 5.19.0 (2026-11-11)
+checked: 5.20.0 (2026-11-12)
 ---
 
 This is the long-form companion to the Nuthatch documentation. The reference manual tells you
@@ -10,7 +10,7 @@ which command and setting to use. This book explains why the machine is shaped a
 invariants it protects, and what each boundary buys you when something goes wrong at three in the
 morning.
 
-It describes Nuthatch 5.19.0. It was checked against the source on 2026-11-01 for 5.16.0, against what 5.17.0 changed on 2026-11-04, and against what the five releases from 5.17.1 to 5.19.0 changed on 2026-11-11, when the commands and flags it names were also read against the 5.19.0 binary's help. It is deliberately grounded in the running
+It describes Nuthatch 5.20.0. It was checked against the source on 2026-11-01 for 5.16.0, against what 5.17.0 changed on 2026-11-04, and against what the five releases from 5.17.1 to 5.19.0 changed on 2026-11-11, when the commands and flags it names were also read against the 5.19.0 binary's help. 5.20.0 changed the SQL engine's revision and nothing a chapter narrates. It is deliberately grounded in the running
 implementation, not a design sketch for a future product: each mechanism a chapter narrates was read
 against the function that implements it, and the worked examples in the first two appendices were
 re-run on the 4.11.0 release binary. They were replayed again on a 5.9.0 build on 2026-10-23 and
