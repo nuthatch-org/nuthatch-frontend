@@ -2,7 +2,7 @@
 title: "Verifying a deployment"
 description: An acceptance runbook that proves a deployment works, step by falsifiable step - and an honest table of what we have verified ourselves and what we have not.
 order: 7
-checked: 5.19.0 (2026-11-11)
+checked: 5.20.0 (2026-11-12)
 ---
 
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
@@ -46,7 +46,7 @@ provenance attestation:
 
 ```sh
 gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nuthatch-org/nuthatch \
-  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.19.0
+  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.20.0
 ```
 
 It exits `0` when the file was built by the release workflow in that repository, at that tag. All
