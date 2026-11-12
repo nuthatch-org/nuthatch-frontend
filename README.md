@@ -4,8 +4,9 @@ The website for [Nuthatch](https://github.com/nuthatch-org/nuthatch) - a self-ho
 AI-native blockchain indexer in one Rust binary.
 
 Built with [Astro](https://astro.build), static output only. The site's pitch is "nothing
-phones home", so the site practises it: no third-party requests, no analytics, no external
-scripts, self-hosted fonts. The only client-side JavaScript is copy-to-clipboard on code
+phones home", so the site practises it: no third-party requests, no external scripts, self-hosted
+fonts. The one exception is Vercel Web Analytics: cookieless page views, served from this
+origin. The other client-side JavaScript is copy-to-clipboard on code
 blocks, the terminal typewriter and search, all of which degrade gracefully with JS disabled.
 
 Search is a command palette on every page: Cmd+K, Ctrl+K, or `/` outside a text field. It reads

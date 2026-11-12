@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Palette from '../components/Palette.astro';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title?: string;
@@ -55,6 +56,9 @@ const ogImage = new URL('/og.png', site).href;
     <link rel="preload" href="/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin />
 
     <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+
+    <!-- Vercel Web Analytics: cookieless page views, script and beacon both on this origin. -->
+    <Analytics />
 
     <!-- Theme persistence: the one thing a pure-CSS toggle can't do across page loads. Reads a local
          preference and applies it before paint (no flash). No network, no third party - just a
