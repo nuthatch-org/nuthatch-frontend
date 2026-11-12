@@ -20,7 +20,7 @@ case "$os" in
   Darwin)
     case "$arch" in
       arm64 | aarch64) target="aarch64-apple-darwin" ;;
-      x86_64) echo "nuthatch: no prebuilt binary for Intel Mac yet - build from source: cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" >&2; exit 1 ;;
+      x86_64) target="x86_64-apple-darwin" ;;
       *) echo "nuthatch: unsupported macOS architecture '$arch'" >&2; exit 1 ;;
     esac ;;
   Linux)

@@ -27,7 +27,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       </p>
 
       <h2 class="ih">Shell script</h2>
-      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS Apple Silicon and Linux x86_64, and Linux arm64 (<code>aarch64-unknown-linux-gnu</code>) from 4.12.0; on any other target it stops and prints the <code>cargo</code> command instead of installing something that will not run. On an Intel Mac it points at the source build: an Intel binary is published from 5.17.0 (below) but has not been run on Intel hardware by us. Both Linux binaries it installs are dynamically linked and need glibc 2.35 or newer and no C++ runtime: Debian 12 and Ubuntu 22.04 qualify. RHEL 9 and Amazon Linux 2023 ship glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build or, from 5.17.0, the static musl binary below.</p>
+      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS on Apple Silicon and on Intel, Linux x86_64, and Linux arm64 (<code>aarch64-unknown-linux-gnu</code>) from 4.12.0; on any other target it stops and prints the <code>cargo</code> command instead of installing something that will not run. The Intel Mac binary is cross-compiled, and is run on an Intel runner in CI each week: 5.19.0 went from <code>init</code> to a first row there in 11 s. Both Linux binaries it installs are dynamically linked and need glibc 2.35 or newer and no C++ runtime: Debian 12 and Ubuntu 22.04 qualify. RHEL 9 and Amazon Linux 2023 ship glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build or, from 5.17.0, the static musl binary below.</p>
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="note">
         Piping to a shell asks for trust. Read it first:
@@ -36,7 +36,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       </p>
 
       <h2 class="ih">Cargo</h2>
-      <p>Build from source straight from the repo, with Rust 1.95.0. This is the only route on a platform without a published binary, and the one we recommend on an Intel Mac, since the Intel binary has not been verified on Intel hardware. The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
+      <p>Build from source straight from the repo, with Rust 1.95.0. This is the only route on a platform without a published binary. The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
       <CopyBlock command="rustup toolchain install 1.95.0" />
       <CopyBlock command="cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" />
       <p class="note">
@@ -45,9 +45,9 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         <code>nuthatch-aarch64-apple-darwin.tar.gz</code>, <code>nuthatch-x86_64-unknown-linux-gnu.tar.gz</code>,
         <code>nuthatch-aarch64-unknown-linux-gnu.tar.gz</code> (from 4.12.0),
         or <code>nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz</code> for scaled mode. From 5.17.0 also
-        <code>nuthatch-x86_64-apple-darwin.tar.gz</code> for Intel Macs, built in CI and not yet run on Intel
-        hardware by us, and <code>nuthatch-x86_64-unknown-linux-musl.tar.gz</code>, a static Linux binary with
-        no glibc dependency whose behaviour under load has not been measured. The installer fetches neither.
+        <code>nuthatch-x86_64-apple-darwin.tar.gz</code> for Intel Macs, which the installer picks,
+        and <code>nuthatch-x86_64-unknown-linux-musl.tar.gz</code>, a static Linux binary with
+        no glibc dependency whose behaviour under load has not been measured. The installer does not fetch that one.
       </p>
 
       <h2 class="ih" id="flight-build">The flight build</h2>
