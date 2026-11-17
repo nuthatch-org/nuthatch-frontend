@@ -29,7 +29,10 @@ cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch
 if `ETHERSCAN_API_KEY` is set), vendors it locally, and generates the schema, views, and AI surface -
 no API key required for a verified contract.
 
+`init` writes `nuthatch.toml`, `abis/` and the rest into the current directory. Start in an empty one so that does not land in `$HOME`.
+
 ```sh
+mkdir weth-nest && cd weth-nest
 nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet
 ```
 
@@ -57,6 +60,23 @@ nuthatch dev --backfill 300
 `--backfill 300` starts 300 blocks behind the tip, about an hour of mainnet, so there are rows within
 seconds. Without the flag `dev` backfills from the contract's deployment block. For WETH that is millions of blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
 `nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
+
+### Bring your own RPC for real backfills
+
+The endpoints a new nest is given are for this try-out. On the bundled mainnet pair, `nuthatch doctor`
+reports `eth_getLogs` windows of 160 blocks (Tenderly) and 80 (mevblocker), and both are rate-limited.
+A 300-block window of USDC went over Tenderly's 20,000-log cap, so the same `--backfill 300` that
+finishes for WETH can stall on a busier contract.
+
+Use your own node or a paid endpoint. `--rpc` replaces the bundled pool. The first command keeps the
+recent window. The second backfills from the deployment block:
+
+```sh
+nuthatch dev --backfill 300 --rpc https://your-endpoint.example
+nuthatch dev --rpc https://your-endpoint.example
+```
+
+The same URL can live in `nuthatch.toml` as `rpc_urls` instead of `--rpc`.
 
 `--backfill` only chooses where a first run starts. Since 5.21.0, on a nest that has already indexed
 blocks, `dev` says the flag does not apply, resumes from its last block, and names what to remove to
