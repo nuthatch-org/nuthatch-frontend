@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
@@ -187,7 +187,11 @@ secret = "…"                      # optional; adds X-Nuthatch-Signature: sha25
 ```
 
 `since = "registration"` means a `--seal-direct` backfill won't fire history at your endpoint. A
-`table` or `where` that does not bind, or any other `since`, refuses the nest at start, by field. See
+`table` or `where` that does not bind, or any other `since`, refuses the nest at start, by field.
+Since 5.21.0 a webhook delivers only through the nest's sealed watermark; before it, a `"genesis"` or
+block-number `since` on a plain backfill skipped the rows sealed after the chain's finality had passed
+them. Rows already skipped are not re-sent: a new `name` starts again from its `since`, and changes
+the NID. See
 [Webhooks](/docs/build/webhooks/).
 
 ### Contract calls and IPFS documents
@@ -246,6 +250,9 @@ and `/metrics` (see [HTTP API](/docs/reference/http-api/#etherscan-shaped-api)).
 refused. It runs alone under `nuthatch dev`, not in a runtime, and refuses the event-indexing flags
 (`--backfill`, `--seal-direct`, `--window`, `--state-rpc`, `--ipfs` and the rest). `--trace-rpc`
 names a trace-capable endpoint for internal transactions; without it the nest's own RPCs are used.
+`--public-host`, `--local-host` and `--write-token-env` (since 5.21.0) say which `Host` names a
+loopback bind answers and what a write needs; see
+[HTTP API](/docs/reference/http-api/#etherscan-shaped-api).
 
 ```toml
 [nest]

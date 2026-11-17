@@ -2,8 +2,8 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.20.0**, released 2026-11-12, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.20.0 moves the SQL engine to Burrmill 0.0.1 and DataFusion 55.2 and adds no
+"Be your own indexer." Status: **v5.21.0**, released 2026-11-13, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.21.0 fixes what the cold audit of 2026-11-12 found and adds no feature: a loopback bind answers only a loopback or declared `Host` on every route, scans are memory-bounded, the MCP `balance` and `top_balances` results say whether they cover the whole history, and a webhook no longer skips a backfill's rows; there is no storage migration and no existing nest's NID changes. 5.20.0 moves the SQL engine to Burrmill 0.0.1 and DataFusion 55.2 and adds no
 nuthatch feature: a memory refusal on `/sql` begins `limit exceeded:`, a cast to `TIMESTAMP` is
 microseconds, `list_sum` over integers is exact and a statement reads at most 128 relations. 5.19.0 lets an address-history nest on Gnosis list the transactions of a contract,
 by `trace_filter` where the trace RPC serves it, and fixes a regression in 5.18.0 that failed an
@@ -46,7 +46,7 @@ status, factories, the runtime and hosting, the query guards, security, the road
 notes were checked against 5.15.0. On 2026-11-01 the status, the runtime and hosting and the upgrade
 notes were checked against 5.16.0, on 2026-11-04 the status, the install routes, the HTTP
 API and the upgrade notes against 5.17.0, on 2026-11-11 the status and the upgrade notes against
-5.19.0, and on 2026-11-12 the same against 5.20.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+5.19.0, on 2026-11-12 the same against 5.20.0, and on 2026-11-17 the same against 5.21.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -585,6 +585,16 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.21.0 is a binary swap from 5.20 with no storage migration, and no existing nest's NID changes; a nest
+scaffolded by 5.21 gets a different NID from the same contracts scaffolded by 5.20, because its `llms.txt`
+and `SKILL.md` describe only the tools it has. An agent reading the MCP `balance` or `top_balances` result
+should read `complete_history` rather than assume a key. The MCP `sql` text table puts a row count first,
+begins every row with `| ` and stops at 256 KiB with a notice. An address-history nest on a loopback bind
+behind a proxy that passes the client's `Host` answers 403 until started with `--public-host <name>`.
+`/ready` answers `503` at once when a quarantined provisional tail stops seals, and a statement the
+engine panics on answers `500`, not `400`. A restart no longer rehashes every segment before serving;
+a background pass does it a minute later and every 24 hours.
 
 5.20.0 is a binary swap from 5.19 with no storage migration and no NID, registry hash or sealed
 segment change. A memory refusal on `/sql` begins `limit exceeded:` where it began `substrate

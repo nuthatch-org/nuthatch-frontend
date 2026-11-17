@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,40 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.21
+
+Replace the binary and restart. A 5.20 store is used as it is, with no storage migration, and no
+existing nest's NID changes. 5.21 fixes what the cold audit of 2026-11-12 found, and several answers,
+statuses and MCP results read differently:
+
+- **An agent reading the MCP `balance` or `top_balances` result by key** should read
+  `complete_history` instead. A nest whose history began at its configured `start_block` keeps
+  `balance` and `holders`; one started with `--backfill`, or with no `start_block`, now returns
+  `net_flow_since_indexed_from` and `net_receivers`. The HTTP `/balance` and `/balances` routes are
+  unchanged.
+- **The MCP `sql` tool's text table** puts a line counting the rows first, begins every row with
+  `| `, and stops at 256 KiB with one notice saying what cut it.
+- **A nest scaffolded by 5.21 gets a different NID** from the same contracts scaffolded by 5.20,
+  because its `llms.txt` and `SKILL.md` describe only the tools it has. An existing nest keeps its
+  NID.
+- **An address-history nest on a loopback bind behind a proxy that passes the client's `Host`**
+  answers 403 until it is started with `--public-host <name>`. rotki in a container on Docker
+  Desktop needs `--local-host host.docker.internal`; a client on the same machine needs nothing.
+- **A seal-direct backfill with `--concurrency N` on one RPC endpoint** now runs N-way. Lower it
+  against a rate-limited public endpoint.
+- **A restart no longer rehashes every segment before serving.** Expect a `segment-verify` pass
+  reading at up to 64 MiB/s a minute after start, and again every 24 hours.
+- **`/ready` answers `503` at once** when a quarantined provisional tail stops seals, with
+  `integrity.seals_stopped: true`. A nest with nothing quarantined answers as before.
+- **A statement the engine panics on** is answered `500` and counted as
+  `nuthatch_sql_rejections_total{reason="internal"}`, not `400` and `invalid`.
+- **A `since = "genesis"` webhook on a plain backfill** skipped most of the history before 5.21. Rows
+  already skipped are not re-sent; register the webhook under a new name to replay them, which
+  changes the nest's NID.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.21.0) carry the rest,
+including the solo nest kept under a directory named `data`.
 
 ## Upgrading to 5.20
 

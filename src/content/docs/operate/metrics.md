@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -39,7 +39,7 @@ Process-level counters:
 | `nuthatch_reorgs_total` | Reorg detections (the hot store rolled back and converged). |
 | `nuthatch_http_requests_total` | Every served request - the operator's billing/usage signal. |
 | `nuthatch_sql_queries_total` | Analytical queries served. |
-| `nuthatch_sql_rejections_total` | Queries refused by the guards. The unlabelled series is the total; the `reason` label splits it into `busy`, `too_large`, `invalid`, `bounded`, `admission`, `timeout`, `out_of_memory` and, since 5.13.0, `tenant_share` (a runtime tenant at its own share, answered `429`). |
+| `nuthatch_sql_rejections_total` | Queries refused by the guards. The unlabelled series is the total; the `reason` label splits it into `busy`, `too_large`, `invalid`, `bounded`, `admission`, `timeout`, `out_of_memory`, since 5.13.0 `tenant_share` (a runtime tenant at its own share, answered `429`) and, since 5.21.0, `internal` (the engine panicked on the statement, a fault in nuthatch answered `500`; before, it counted as `invalid`). |
 | `nuthatch_sql_admission_wait_seconds{tenant}` | Since 5.14.0, a histogram of how long each `/sql` admission waited for a permit, zero waits included, for at most 256 tenant labels; the rest share `tenant="other"`. |
 | `nuthatch_sql_memo_hits_total`, `nuthatch_sql_memo_misses_total` | `/sql` answers served from the answer cache, and those computed. Since 4.11.0 the cache keys on the rows and segments a statement reads, so a repeated statement over unchanged data is a hit even while the cursor polls. |
 | `nuthatch_rpc_requests_total` | Outbound HTTP POSTs to RPC endpoints, one per request or batch, retries included. Not a method count. |
@@ -89,6 +89,8 @@ Health series (RFC-0026), which is where you look when *part* of a runtime is un
 | `nuthatch_nest_health{nest,chain}` | `1` while the nest is indexing, `0` while it is quarantined. |
 | `nuthatch_nest_quarantine_total{nest}` | Times this nest has been quarantined since start - a flapping nest shows up here before anyone notices. |
 | `nuthatch_cursor_live{chain}` | `1` while the chain's cursor is running, `0` once it has died. A mount that did not load adds no chain here (since 5.18.0; it used to report one named `unknown`). |
+| `nuthatch_quarantined_segments{nest}` | Since 5.21.0, sealed segments this nest names that an integrity pass quarantined and no seal has restored. Above `0`, the nest answers reduced; `/ready`'s `integrity` names them. |
+| `nuthatch_derived_state_stale{nest}` | Since 5.21.0, `1` when the derived state rebuilt at start read a segment quarantined since, until a restart rebuilds it. |
 
 How each nest on a chain advances, since 5.14.0 (see [Run many nests](/docs/operate/many-nests/#how-a-chains-nests-advance)):
 
@@ -146,7 +148,9 @@ the time from a commit to a follower being able to answer from it, on the writer
 corrects the measurement); `nuthatch_feed_delta_bytes{encoding}`, `nuthatch_feed_encode_seconds{encoding}` and
 `nuthatch_feed_connection_queue_bytes{conn}`. A follower serves its own
 `nuthatch_follower_apply_seconds`, `nuthatch_follower_seal_wait_seconds` and, on another host,
-`nuthatch_follower_mirror_{files,bytes,refused,missing}_total`.
+`nuthatch_follower_mirror_{files,bytes,refused,missing}_total`. Since 5.21.0 a follower also serves
+`nuthatch_follower_held_generation_seconds{dataset}`: how long it has answered from an earlier
+generation while the mirror lacks a file the next one names, `0` when it holds the latest.
 
 A writer with [failover](/docs/operate/hosting-nests/#writer-failover) on (since 5.16.0) adds, per
 nest holding a lease and labelled by nest:
@@ -225,6 +229,13 @@ groups:
         labels: { severity: ticket }
         annotations:
           summary: "A nest is counting logs that do not decode"
+
+      - alert: NuthatchSealedDataQuarantined
+        # A segment failed its hash and the nest answers reduced (5.21.0 and later).
+        expr: nuthatch_quarantined_segments{job="nuthatch"} > 0 or nuthatch_derived_state_stale{job="nuthatch"} == 1
+        labels: { severity: ticket }
+        annotations:
+          summary: "A nest has quarantined sealed data"
 
       - alert: NuthatchNearMemoryBudget
         expr: nuthatch_rss_bytes{job="nuthatch"} > 1800 * 1024 * 1024

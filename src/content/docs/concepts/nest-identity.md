@@ -2,7 +2,7 @@
 title: "Nest identity & reuse"
 description: "How immutable nest versions, mounts, dataset adoption, and shared segments avoid needless re-indexing."
 order: 5
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 A content-addressed nest is deliberately unforgiving: change its authored inputs and it becomes a
@@ -26,6 +26,13 @@ domain-separated SHA-256 of that manifest.
 
 Any authored edit produces a new NID. That includes a changed ABI, event selection, view, or README.
 The old package is not modified in place and a mount cannot silently start meaning something else.
+
+The scaffolded agent material counts too. Since 5.21.0 `init` writes an `llms.txt` and `SKILL.md`
+that describe the balance routes and the MCP `explain`, `queries` and `query` tools only where the
+nest has them, so the same contracts scaffolded by 5.21 and by 5.20 get different NIDs and the same
+data identity. An existing nest keeps its NID: `dev` no longer rewrites those two files when it
+regenerates a stale `schema.json`, and warns when they describe tables the schema no longer has;
+`nuthatch schema` regenerates them on request.
 
 What is not authored is not hashed. The hot store, `segments/`, `.admin-token`, `.git`, `.DS_Store`
 and a query's `nuthatch-spill-<pid>-<seq>` directory are left out at any depth. So, since 5.18.0, is a

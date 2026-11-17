@@ -2,7 +2,7 @@
 title: "llms.txt"
 description: "The machine-readable index scaffolded projects ship for coding agents."
 order: 2
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 Every nest `init` scaffolds includes an `llms.txt` - a one-page, plain-text index of the project
@@ -19,16 +19,21 @@ the MCP `schema` tool - it contains:
 - **The contracts**: every alias and address the nest indexes.
 - **The tables**: one line per `{alias}__{event}` table with its columns.
 - **The live HTTP API**: the handful of endpoints that matter (`/`, `/tables`,
-  `/table/{name}`, `/entity/{id}`, `/sql?q=…`, `/balances`, `/balance/{address}`, `/queries`,
-  `/derived`, `/diff`).
+  `/table/{name}`, `/entity/{id}`, `/sql?q=…`, `/queries`, `/derived`, `/diff`, and `/balances`
+  and `/balance/{address}` on a nest with an ERC-20 Transfer table, with how to read them as a net
+  flow unless `GET /` says `history_from_deployment: true`).
 - **The MCP pointer**: run `nuthatch mcp` for the [tool surface](/docs/reference/mcp/), fully
-  offline.
+  offline, with the tools this nest has. Since 5.21.0 `explain` is always listed and `balance` and
+  `top_balances` only where the nest has a Transfer table, as the MCP advertises them.
 
 ## Lifecycle
 
 - **Generated, not authored.** `init` and `add` both write it; `nuthatch schema` regenerates it
   (with `schema.json` and the `semantic.toml` footguns) after you hand-edit the config. Don't
-  maintain it by hand - it always reflects the tables the config actually produces.
+  maintain it by hand. Since 5.21.0 `dev` no longer rewrites it when it regenerates a stale
+  `schema.json`, because that would move the NID; it warns instead when `llms.txt` or the
+  scaffolded `SKILL.md` describe tables the schema no longer has, and `nuthatch schema` brings
+  them back in line.
 - **Pinned in the bundle.** A nest's `llms.txt` is part of its content-addressed inputs, so a
   published nest carries its own agent documentation, verified by hash like everything else in
   [the registry](/docs/operate/registry/).

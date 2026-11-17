@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -35,7 +35,8 @@ nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain ma
 
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `semantic.toml`, `views/`,
 `llms.txt`, a `.claude/skills/nuthatch/` skill for a coding agent and, from 5.18.0, a `.gitignore`
-for the store and the admin token.
+for the local state: since 5.21.0 it lists `nuthatch.redb` and `segments/` beside `data/` and the
+admin token.
 
 `--alias` is the table prefix, so this contract's events land in `weth__transfer`, `weth__approval`,
 and so on. Leave it out and the alias is the contract name from the ABI in snake_case
@@ -57,8 +58,12 @@ nuthatch dev --backfill 300
 seconds. Without the flag `dev` backfills from the contract's deployment block. For WETH that is millions of blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
 `nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
 
-Once caught up, `dev` asks for the tip every five minutes by default, so new rows can take that long
-to appear. Add `--poll-interval 12s` to follow mainnet's tip closely; every poll is an RPC call, so
+`--backfill` only chooses where a first run starts. Since 5.21.0, on a nest that has already indexed
+blocks, `dev` says the flag does not apply, resumes from its last block, and names what to remove to
+start over.
+
+When it reaches the tip, `dev` logs `caught up to tip`. From then on it asks for the tip every five
+minutes by default, so new rows can take that long to appear. Add `--poll-interval 12s` to follow mainnet's tip closely; every poll is an RPC call, so
 it costs more traffic.
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with

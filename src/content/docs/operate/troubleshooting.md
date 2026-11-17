@@ -2,7 +2,7 @@
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
 order: 13
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
@@ -31,11 +31,17 @@ small address-filtered `eth_getLogs` at the block you intend to start from.
 
 ## Backfill seems stuck
 
-The most common cause is high `--concurrency` against a **single** RPC endpoint - many concurrent
-requests to one host can stall the whole run. Use `--concurrency 1` for one endpoint, or configure
-several `rpc_urls` (then 8-16 is fine). Watch `nuthatch_rows_decoded_total` and
-`nuthatch_last_block` climb; on a TTY, `dev` shows a live progress line with events/sec and an ETA,
-and a frozen line is the concurrency stall above.
+The most common cause is an endpoint throttling more requests than it will serve. Since 5.21.0
+`--concurrency N` on a seal-direct backfill runs N windows at once on a single RPC endpoint as on
+several, where earlier releases held one endpoint to one window at a time; against a rate-limited
+public endpoint, lower it. Against your own node 8-16 is fine. Watch `nuthatch_rows_decoded_total`
+and `nuthatch_last_block` climb; on a TTY, `dev` shows a live progress line with events/sec and an
+ETA.
+
+`--backfill N` only chooses where a first run starts. Since 5.21.0 a nest that has already indexed
+a block says the flag does not apply and resumes from its last block. The same line names the files
+to remove to start over, or, where its segments sit outside its directory and may be shared, says a
+fresh nest directory is the way.
 
 A *sparse* contract over millions of blocks isn't stuck, just inefficient - each window comes back
 near-empty. Widen it: `--window 50000` turns tens of thousands of near-empty requests into a few.
@@ -143,9 +149,39 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
   bytes, so it was refused unevaluated, with its bound. Narrow its parameters.
 - **504, 30 s timeout** - the query is too heavy. Add a `WHERE`/`LIMIT`, aggregate with `GROUP BY`, or
   validate cheaply with [`/explain`](/docs/reference/http-api/) first.
+- **500, the fault is nuthatch's** *(since 5.21.0)* - the engine panicked on the statement. It is
+  counted as `nuthatch_sql_rejections_total{reason="internal"}`, not `invalid`, and the engine answers
+  the next statement. Rewriting the query is not the remedy; report it.
 - **Binder and parse errors come back with a fix hint** derived from the real schema: an unknown
   table suggests the nearest real one, a bare `from` suggests double-quoting, `sum(value)` suggests
-  `value_dec`. Follow the hint.
+  `value_dec`. Since 5.21.0 the hint gives the `information_schema` query that lists the tables or a
+  table's columns. Follow the hint.
+
+## `/ready` answers 503 with `integrity`
+
+Since 5.21.0 sealed segments are hashed again in the background, a minute after start and every 24
+hours after. A segment that no longer hashes to its address is moved to `quarantine/` beside
+`segments/` (in a runtime's shared store, `<root>/quarantine/<hash>.parquet`), its table answers
+reduced, and `/ready` carries `integrity`: `quarantined_segments`, `reduced_tables`,
+`seals_stopped`, `seals_stopped_tables` and `derived_state_stale`. The same shows as
+`nuthatch_quarantined_segments` and `nuthatch_derived_state_stale` on `/metrics`.
+
+- **`seals_stopped: true`, and `503`** - a quarantined provisional tail stops every later seal, so the
+  nest answers `503` as soon as it holds a block past the watermark. Restart it: the next start
+  records the tail as lost and sealing resumes.
+- **`derived_state_stale: true`** - balances, exposure, velocity and entities were rebuilt at start
+  from a segment since quarantined, and nothing retracts them. The nest stays ready; a restart
+  rebuilds them from what remains.
+- **A reduced table** stays reported across restarts, since the start reads what `quarantine/`
+  holds, until a seal writes the segment back. Restore the segment or re-index.
+
+## Address-history nest answers 403 behind a proxy
+
+Since 5.21.0 an address-history nest on a loopback bind answers only a loopback `Host`, or one it is
+told about, on every route. Behind a reverse proxy that passes the client's `Host`, every request is
+`403`, and the body names the `Host` it saw: start the nest with `--public-host <that name>`. rotki
+in a container on Docker Desktop needs `--local-host host.docker.internal`. A client on the same
+machine needs nothing. See [Security](/docs/operate/security/#exposure).
 
 ## RAM near the 2 GB budget
 

@@ -2,7 +2,7 @@
 title: Webhooks
 description: POST sealed rows to a URL - an optional delivery stage, past finality, at-least-once. The deposit sweep's webhook is separate, and carries retractions.
 order: 8
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 A webhook pushes rows out to a URL as they're indexed - feed a downstream service, a queue, a Slack
@@ -37,6 +37,15 @@ Webhooks fire on **sealed** rows - past finality, when history is immutable. Tha
 delivered before finality could be un-emitted by a reorg, forcing you to chase it with a retraction on the
 consumer side. By firing only past finality, nuthatch delivers rows that will never roll back.
 
+Since 5.21.0 a webhook delivers only through the nest's **sealed watermark**, not the chain's
+finality. Before it, a `since = "genesis"` (or block-number) webhook on a plain backfill moved its
+cursor past blocks the nest had not sealed yet, and the rows sealed afterwards were never queued:
+most of the history was skipped, with no warning. A `--seal-direct` backfill was not affected. Rows
+an affected webhook already skipped are not re-sent. To replay them, register the webhook under a
+new `name`, which starts again from its `since`, and expect the receiver to see the rows it already
+had a second time. The name is in `nuthatch.toml`, a data input, so the NID changes: a solo nest
+restarts, but a runtime mounts a new NID and re-indexes in full.
+
 > The tradeoff is latency: a webhook trails the tip by the chain's finality distance. If you need
 > tip-latency reads, poll the [live HTTP surface](/docs/operate/serving/) or the
 > [MCP](/docs/ai/mcp/) tools instead. Those see the hot store; webhooks are for durable downstream
@@ -47,7 +56,10 @@ consumer side. By firing only past finality, nuthatch delivers rows that will ne
 Delivery is at-least-once with host-managed retries and backoff - the host owns orchestration and state.
 Make your consumer **idempotent**: key on `(tx_hash,
 log_index)` (or `_seq`) and a redelivery is a no-op. On restart, delivery resumes from the last
-acknowledged seal, so a crash mid-batch doesn't drop rows.
+acknowledged seal, so a crash mid-batch doesn't drop rows. Since 5.21.0 each chunk is queued with the
+cursor position it leaves in one commit, on redb and Postgres alike,
+so a stop between chunks queues nothing twice, and a backlog held when the process stopped is
+delivered after a restart without waiting for the next seal.
 
 ## Not in the decode path
 
@@ -55,7 +67,11 @@ The POST is an effect, so it lives **after** sealing, never inside decode or ent
 failing endpoint can't stall or corrupt indexing - it only backs up its own delivery queue. Webhooks
 fill at most half the outbox, so compliance alerts keep room; when that half is full a webhook holds
 its cursor and resumes from it, rather than dropping deliveries (since 5.11.0). Each sink drains on
-its own (since 5.18.0), so one dead endpoint does not hold up deliveries to the others. This is the
+its own (since 5.18.0), so one dead endpoint does not hold up deliveries to the others. Since 5.21.0
+the webhook queries run on a collector task per nest rather than on the writer's seal hook, so a seal
+no longer waits on them; a query that keeps failing backs off from 5 s to 5 minutes and logs once
+when it starts failing and once when it recovers. `nuthatch_webhook_backlog_blocks` and
+`nuthatch_webhook_failures_total` carry a `nest` label. This is the
 same purity rule that governs enrichers and alerts (see [Determinism](/docs/concepts/determinism/)).
 
 ## The deposit sweep's webhook is a different one

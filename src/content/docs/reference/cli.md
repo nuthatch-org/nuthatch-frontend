@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -40,7 +40,15 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   (endpoints asked only while every other one is failing), `--poll-interval` (default five
   minutes, or the chain's block time if longer; `--poll-interval 12s` follows mainnet's tip closely,
   at the cost of more RPC calls), `--finality-only` (never index the unfinalised tip), `--cors`, and
-  `--state-rpc` (archive endpoints for declared `[[calls]]`).
+  `--state-rpc` (archive endpoints for declared `[[calls]]`). `--backfill` only chooses where a first
+  run starts: since 5.21.0 a nest that has already indexed a block says it does not apply and
+  resumes from its last block, so remove its store to start over. Since 5.21.0 `--concurrency` runs
+  N-way on one endpoint as on several; keep it low against a rate-limited public endpoint. For an
+  address-history nest on a loopback bind (since 5.21.0), `--public-host <name>` answers the name a
+  reverse proxy forwards with reads only, `--local-host <name>` answers a name as this machine
+  (`host.docker.internal` for a client in a container), and `--write-token-env <VAR>` names an
+  environment variable whose token watch, unwatch and the lent RPC then require. See
+  [HTTP API](/docs/reference/http-api/#etherscan-shaped-api).
 
 ## Everyday companions
 
@@ -50,8 +58,11 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   contract as a nest of its own.
 - **`nuthatch sql [query]`** - query the live tip ∪ sealed history; prints a table. No query opens
   a REPL (`.tables`, `.schema <t>`, history). `--json` emits NDJSON for piping to `jq`.
-- **`nuthatch schema`** - regenerate the derived artifacts (`schema.json`, `llms.txt`, the
-  `semantic.toml` footguns) after hand-editing `nuthatch.toml`.
+- **`nuthatch schema`** - regenerate the derived artifacts (`schema.json`, `llms.txt`, the skill's
+  `SKILL.md`, the `semantic.toml` footguns) after hand-editing `nuthatch.toml`. Since 5.21.0 `dev`
+  regenerating a stale `schema.json` leaves `llms.txt` and `SKILL.md` as they are, because they are
+  part of the NID, and warns when they describe tables the schema no longer has; `schema` rewrites
+  them.
 - **`nuthatch mcp`** - serve MCP over stdio, bridging to a running `dev` (`--url`).
   `--print-config` prints a copy-paste client config instead. `--token-env <VAR>` (since 5.13.0)
   names an environment variable whose value is sent as a bearer token on every request, for a nest

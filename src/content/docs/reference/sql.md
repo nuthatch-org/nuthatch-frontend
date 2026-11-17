@@ -2,7 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
@@ -39,7 +39,10 @@ Two footguns, both machine-tracked in [`semantic.toml`](/docs/build/semantic/):
   38 digits.
 
 Get either wrong and the error comes back with a fix hint derived from the real schema - the
-binder knows the nearest table name, the quoting rule, and the `_dec` convention.
+binder knows the nearest table name, the quoting rule, and the `_dec` convention. Since 5.21.0 the
+hint names what lists the tables where you are: on `/sql` and `/explain` the `information_schema`
+query for the tables or a table's columns, in the REPL `.tables` and `.schema`, and for an MCP agent
+the `schema` tool, which used to be named to every caller.
 
 ## Semantics & guards
 
@@ -77,6 +80,10 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   tip are capped at 2,000,000 rows and, separately, 64 MiB of stored row JSON (so a few wide rows
   can hit it well under the row count); either answers `503` naming the reason. A declared query
   (`/q/{name}`) is refused with `422` past 512 MiB of source bytes read. The full list is under [resource guards](/docs/operate/security/#resource-guards).
+  Since 5.21.0 a statement the engine panics on is answered `500`, saying the fault is nuthatch's
+  rather than the statement's, and the engine answers the next statement.
+- **No `ASOF JOIN`.** Since 5.21.0 it is refused by name, with a `row_number()` recipe for the
+  nearest row; `asof` still works as a column or alias.
 - **Provenance-stamped.** Results carry `as_of` (the block the answer is current to),
   `sealed_through`, `source`, the nest's `nid` and its `registry_hash`, plus each entity's own
   watermark when the query read one, so a number can be cited against a fixed watermark and
