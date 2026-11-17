@@ -67,8 +67,8 @@ mounts of the same dataset, compete for the same budget. The pool is sized by
 and the engine runs a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so the analytical path stays inside the
 [footprint budget](/docs/operate/metrics/).
 A hash join that needs more memory than the pool has left is refused with an out-of-memory error,
-because it cannot spill to disk. An aggregate or a sort can spill (since 5.21.0 for the aggregate,
-4.3.0 for the sort), but only with room to start: a GROUP BY of 3 million groups spilled 32 MB and
+because it cannot spill to disk. An aggregate or a sort can spill (the sort since 4.3.0), but only with room
+to start: a GROUP BY of 3 million groups spilled 32 MB and
 finished under a 64 MB limit, and was refused at 48 MB.
 Since 5.13.0 the values a statement computes count against the pool too, and any one of them is
 capped at 16 MiB. Since 5.21.0 the pool gives each operator that can spill its share, where the first
