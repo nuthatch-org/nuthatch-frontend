@@ -36,12 +36,13 @@ you fetch keyed by `(transactionHash, logIndex)` so retries do not duplicate it.
 ## What a nest does
 
 nuthatch reads the error body on an HTTP 400 as well as a 200, so this refusal is recognised as a
-range too large rather than a bad request. When the message names a range that starts where the
-request did and ends before it, the range is split exactly there: the first piece is what Alchemy
-said it would serve, and the rest is asked for separately. Otherwise the range is halved. The width
-that was served becomes the window's ceiling, and the backfill carries on without a restart. The same
-split is in [query returned more than 10000 results](/docs/errors/query-returned-more-than-10000-results/),
-which has a measured run.
+range too large rather than a bad request. `nuthatch dev` halves the window and asks again from the
+same block until it is served. A `--seal-direct` backfill uses the range in the message: when it
+starts where the request did and ends before it, the range is split exactly there, the first piece
+being what Alchemy said it would serve, and the rest is asked for separately. Either way the width that
+was served becomes the window's ceiling, and the backfill carries on without a restart.
+[query returned more than 10000 results](/docs/errors/query-returned-more-than-10000-results/) has a
+measured run of the same loop.
 
 `nuthatch doctor --rpc <your Alchemy URL> --address 0xADDR` measures the window your plan actually
 serves before a backfill finds it out, and prints a `--window` to start from.

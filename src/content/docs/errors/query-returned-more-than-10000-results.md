@@ -42,10 +42,11 @@ cap or your own node.
 ## What a nest does
 
 A nest's backfill is that loop, already written. Each `eth_getLogs` window aims at about 2,000 logs.
-When an endpoint refuses a range with this message, nuthatch splits the range and retries the
-pieces: at the end of the provider's suggested range when the message names one that starts where the
-request did, at the midpoint otherwise. The narrower width it was served becomes the window's ceiling,
-and it tries a doubled ceiling again after four windows served whole at it. Rows are keyed by block
+When an endpoint refuses a window with this message, `nuthatch dev` halves it and asks again from the
+same block until it is served. A `--seal-direct` backfill splits the refused range instead, at the end
+of the provider's suggested range when the message names one that starts where the request did, at
+the midpoint otherwise. Either way the width that was served becomes the window's ceiling, and a
+doubled ceiling is tried again after four windows served whole at it. Rows are keyed by block
 and log index, so a retried range writes nothing twice. A single block over the cap stops the backfill
 with `block N alone exceeds the provider's getLogs result cap - use a provider with a higher/no cap`
 rather than retrying it forever.

@@ -52,9 +52,9 @@ find in the years before it, and on a 2,000-block limit that is thousands of emp
 ## What a nest does
 
 nuthatch reads every message in the table above as a range too large; its test suite holds each of
-them, as answered on the day, to that. A refused window is split and the pieces retried, and the width
-that was served becomes the ceiling for the windows after it, so the backfill settles at the
-endpoint's limit without being told it.
+them, as answered on the day, to that. A refused window is halved and asked again (split, in a
+`--seal-direct` backfill), and the width that was served becomes the ceiling for the windows after it,
+so the backfill settles at the endpoint's limit without being told it.
 
 Two phrasings measured the same day are not recognised: `log query range must not exceed 25 blocks`
 (`eth.blockrazor.xyz`) and `maximum [from, to] blocks distance: 2000` (`evm.cronos.org`). nuthatch
