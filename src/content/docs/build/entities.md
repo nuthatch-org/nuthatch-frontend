@@ -2,7 +2,7 @@
 title: Authored incremental entities
 description: A bounded keyed relation that Nuthatch maintains as blocks arrive rather than recomputing per query.
 order: 4
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 An entity is a relation a nest elects to maintain while it indexes. Its source facts are still the
@@ -81,6 +81,11 @@ not fetch history from RPC again. On measured Horizon corpora, seeding 249,979 r
 took 1.9 seconds, and 346,288 rows across 2,985 segments took 2.4 seconds. Adding an `entities.toml`
 to an existing nest therefore has a one-off restart cost which should be measured for a latency-sensitive
 service.
+
+Since 5.21.0 that rebuild reads sealed segments before the background integrity pass has verified
+them. If one is quarantined afterwards, nothing retracts what was built from it: `/derived` carries
+`"derived_state_stale": true` and `/sql` lists a referenced entity in `degraded_tables` until a
+restart rebuilds the entity from what remains.
 
 Reorganised facts enter the same circuit with negative weight, so the relation retracts without an
 author-written rollback handler. A fault is terminal and deliberately quarantines the nest: a stale

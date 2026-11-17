@@ -2,7 +2,7 @@
 title: Runtimes & cursors
 description: One runtime, many nests, across one or more chains, with one isolated cursor per chain.
 order: 2
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 A **runtime** is one process hosting one nest or many. A **cursor** is a single chain's follow
@@ -38,7 +38,15 @@ See [Run many nests](/docs/operate/many-nests/#how-a-chains-nests-advance).
 Isolation is by construction: each nest keeps its own dataset directory (`data/<nid>/` - its own hot
 store and views), so one nest's bad view or runaway factory can't touch another's data. Sealed
 segments are the deliberate exception: they are content-addressed and shared in `segments/`, so two
-nests that decode the same contract hold one byte-identical copy between them rather than two.
+nests that decode the same contract hold one byte-identical copy between them rather than two. Since
+5.21.0 a shared segment that fails its hash is moved to `quarantine/<hash>.parquet` beside the store,
+and every dataset naming it answers reduced until the same rows are sealed again, where it used to be
+reported and left in place.
+
+A directory is a runtime's dataset only when it is named by a NID or its root holds a `mounts.toml`.
+Until 5.21.0 a solo nest kept under a directory that merely happened to be called `data` was taken
+for one and sealed into the parent's `segments/`; it now seals into its own, and keeps reading the
+earlier files where they are.
 
 ## Many chains, one runtime
 

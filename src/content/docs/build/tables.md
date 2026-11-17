@@ -2,7 +2,7 @@
 title: ABIs, events & tables
 description: How decoded events become SQL tables - one table per event, with implicit columns.
 order: 2
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 Nuthatch is a log indexer: it turns a contract's **events** into **SQL tables**. This page explains the
@@ -73,7 +73,10 @@ nuthatch schema
 The live registry is authoritative at runtime. Since 2.7.0, a stale `schema.json` no longer hides
 columns which the current config and ABI declare, and the startup message explaining why a hand edit
 did not regenerate the file is visible at the default log level. Regenerate it anyway. Consumers of
-the checked-in artifact should not have to depend on runtime repair.
+the checked-in artifact should not have to depend on runtime repair. Since 5.21.0, when `dev`
+regenerates a stale `schema.json` it leaves `llms.txt` and the scaffolded `SKILL.md` as they are,
+because they are part of the NID, and warns when they describe tables the schema no longer has;
+`nuthatch schema` regenerates them.
 
 ## Next
 

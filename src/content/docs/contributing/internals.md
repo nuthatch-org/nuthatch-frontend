@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -103,9 +103,11 @@ Entities are keyed `{block:012}-{log_index:06}`, zero-padded so lexicographic it
 chain-ordered - which makes "everything above block N" a range scan rather than a filter, and that is
 exactly what a reorg needs.
 
-Three tasks write it: the ingest loop (entities, checkpoints, meta and the outbox enqueue), the
-alert-delivery worker draining the outbox, and the IPFS resolver storing fetched documents and their
-typed rows. The resolver shares the ingest loop's key range, so it writes only in a transaction that
+Four tasks write it: the ingest loop (entities, checkpoints, meta and the alerts' outbox enqueue),
+the webhook collector (one per nest since 5.21.0, queueing each webhook's rows onto the outbox in the
+same commit as the cursor that covers them, so a seal only wakes it and never waits on a delivery
+query), the alert-delivery worker draining the outbox, and the IPFS resolver storing fetched
+documents and their typed rows. The resolver shares the ingest loop's key range, so it writes only in a transaction that
 finds the row naming the document still there from the same block; if a reorg rollback or a seal's
 prune has removed that row, the late write is a no-op. redb serialises write transactions, so each
 check and its write are atomic. What is single is the cursor: one ingestion task per chain advances
@@ -133,6 +135,17 @@ design is wrong and we go back rather than add a mutation path.
 
 All tables in a nest seal together per finalized range, so `sealed_through` stays a single global
 watermark - which is what lets hot and cold be unioned without deduplication.
+
+Sealing does not read its output back; the hash is taken from the bytes in memory. Checking is a
+separate job, and since 5.21.0 it is off the start path: a start rereads only the segment files whose
+length, times, inode or expected hash moved since a pass last hashed them (`segments/verified.json`),
+and a `segment-verify` thread hashes every segment a minute after start, at up to 64 MiB/s across the
+process, and every 24 hours after. A segment that does not hash to its address is quarantined: moved
+to the dataset's `quarantine/`, or, in a runtime's shared store, to `quarantine/<hash>.parquet`
+beside the store, reducing every dataset that names it. Where `segments/` is a link onto another
+filesystem the segment is copied aside and removed, and one that cannot be moved is refused in place.
+Nothing retracts derived state built from a segment quarantined later, so `/ready` reports
+`derived_state_stale` until a restart rebuilds it from what remains.
 
 ## Reorgs - `core/src/cursor.rs`, `redb_store.rs::rollback_to`
 

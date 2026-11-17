@@ -2,7 +2,7 @@
 title: "Agent-grade MCP"
 description: "Drive nuthatch from an agent - fully offline against the local instance."
 order: 1
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 A nest isn't just queryable by you - it's queryable by your agent, with the same two-minute setup.
@@ -60,7 +60,17 @@ name, never its value, and an error body that echoes the token reaches the agent
 The tools a nest advertises match what it actually indexes (RFC-0025). A token nest offers `balance`
 and `top_balances`; a nest with compliance configured adds `flags` and `exposure`;
 a bare event nest (say a Uniswap pool) offers neither, so an agent is never handed a tool that would
-just answer `{"count":0}`. The menu agrees with the data.
+just answer `{"count":0}`. A mount that declares named queries adds `queries` and `query`, and since
+5.21.0 a mount that answers only its declared queries no longer offers `sql`, `explain` or the
+prompts that would send the agent to SQL. The menu agrees with the data.
+
+Since 5.21.0 `balance` and `top_balances` also say what history they cover: `complete_history` is
+`true` only for a nest indexed from its configured `start_block` with no `--backfill`. Otherwise
+the figures are net flows since `indexed_from`, under `net_flow_since_indexed_from` and
+`net_receivers`, not balances.
+
+`--url` names one nest or one mount. Pointed at a runtime's root, which serves no data, the bridge
+offers one tool since 5.21.0, `mounts`, naming the mounts to point it at.
 
 ## Built agent-grade, not agent-tolerant
 
@@ -76,9 +86,11 @@ deliberate choices (RFC-0016):
 - **Check before you spend.** `explain` validates a query - binds every table, column, and type -
   without executing it, so an agent iterates on shape cheaply and runs `sql` once.
 - **Results are shaped for context windows.** The bridge caps rows (default 200) and returns
-  compact tables, not JSON walls.
+  compact tables, not JSON walls. Since 5.21.0 a `sql` answer says first how many rows follow, and
+  is held to 256 KiB with one notice saying what cut it.
 - **Answers carry provenance.** A `sql` result ends with the block it is current to, the sealed
-  watermark, the source and the registry hash, so an agent can cite a figure, and `verify-a-number` (a built-in prompt)
+  watermark, the source the node sent and the registry hash (led by a notice when the live tip could
+  not be read), so an agent can cite a figure, and `verify-a-number` (a built-in prompt)
   re-derives one from scratch.
 
 The tool-by-tool surface - plus the resources and the built-in prompts - is in the

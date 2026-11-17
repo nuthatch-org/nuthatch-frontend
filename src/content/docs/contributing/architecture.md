@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -33,11 +33,14 @@ The load-bearing properties:
 - **Single cursor.** Exactly one cursor per chain decides that chain's position, finality and reorgs.
   In a runtime since 5.14.0 it is one extraction stage feeding a window buffer, read by one ingest
   task per nest, each the only writer of its own dataset; a lone nest runs one loop. Other tasks do
-  write redb (the alert worker drains the outbox; the IPFS resolver stores a document only while the
-  row that named it is still there), but none of them advances the chain. Queries only read: the
+  write redb (since 5.21.0 a webhook collector per nest queues its webhooks' rows; the alert worker
+  drains the outbox; the IPFS resolver stores a document only while the row that named it is still
+  there), but none of them advances the chain. Queries only read: the
   analytical engine reads the sealed segments and the hot rows, and only ingestion writes segments.
 - **The hot/cold seam.** Reorgs only ever touch the hot store; a sealed segment is immutable and
-  content-addressed. The `/sql` surface unions both so queries never see the seam.
+  content-addressed. The `/sql` surface unions both so queries never see the seam. Since 5.21.0 a
+  background pass rehashes every segment a minute after start and every 24 hours, and quarantines
+  one that no longer matches its address.
 - **The footprint budget.** ≤2 GB RAM per active-chain cursor, CI-enforced. A design that
   threatens it must surface the tradeoff first.
 

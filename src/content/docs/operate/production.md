@@ -2,7 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -91,7 +91,9 @@ sudo -u nuthatch nuthatch dev --dir /opt/nuthatch/my-nest \
 For a nest with no `entities.toml`, add `--seal-direct`: it writes finalized history straight to
 Parquet instead of through the hot store, which avoids writing and later pruning the same rows in
 redb. A nest that declares authored entities refuses it, because those windows would never reach the
-entities, so it takes the ordinary path above. Its speedup over the ordinary path is being
+entities, so it takes the ordinary path above. `--concurrency` applies to it, and since 5.21.0 it
+runs that many windows at once on a single endpoint too; lower it against a rate-limited public
+one. Its speedup over the ordinary path is being
 re-measured on a deterministic replay rig after public-RPC runs disagreed, so do not plan from an old
 multiplier. Let it reach the tip, then stop it. The service you install next will resume rather than
 start over.
@@ -188,13 +190,20 @@ A frozen `nuthatch_last_poll_unixtime` means a stalled poller, which is the fail
 looks like "the data just stopped being interesting". In a runtime, add `nuthatch_nest_health` and
 `nuthatch_cursor_live`, because a *partly* unwell runtime still answers `/health` on the whole. Since
 5.13.0, `nuthatch_nest_logs_undecoded_total` is the one that fires when a nest keeps running and
-indexes less than it should, usually after a proxy upgrade. Full list in
-[metrics](/docs/operate/metrics/).
+indexes less than it should, usually after a proxy upgrade. Since 5.21.0,
+`nuthatch_quarantined_segments` above zero means a sealed segment failed its hash and the nest
+answers reduced. Full list in [metrics](/docs/operate/metrics/).
 
 `/ready` is the honest liveness signal for a load balancer: it answers *is this nest serving and making
 progress*, and reports `stalled` when every endpoint in the pool is refusing a window. A nest still
 backfilling is ready, so if "caught up" is what you need, add a `lag_blocks` threshold on top. Until
 the cursor first polls, `tip` and `lag_blocks` are `null`, so treat null as not yet caught up.
+Since 5.21.0 a nest whose quarantined provisional tail has stopped sealing answers `503` as soon as it
+holds a block past the watermark, with `integrity.seals_stopped: true`, where it used to stay `200`
+until the seal clock ran out; a restart clears it (see
+[troubleshooting](/docs/operate/troubleshooting/#ready-answers-503-with-integrity)). A restart also no longer rehashes every segment
+before serving: expect a `segment-verify` thread reading at up to 64 MiB/s a minute after start, and
+again every 24 hours.
 
 ## 7. Back it up
 

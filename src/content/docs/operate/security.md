@@ -2,7 +2,7 @@
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
 order: 4
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 ## Upgrade first
@@ -177,7 +177,10 @@ each other, 5.13.0 added two things (RFC-0073):
   pools and memo entries on every SQL route, even when two tenants mount the same dataset. `/sql`, and
   every authored view it reaches, is held to an allow-list of functions, every one the engine
   registers except `version`, `arrow_metadata` and `arrow_field`, and a test fails the build when the
-  engine registers a function the list does not name. Authored views must be `CREATE VIEW`. A
+  engine registers a function the list does not name. Since 5.21.0 the list reads a statement's
+  calls as the engine parses it, so `IGNORE NULLS` and `^@`, which it used to refuse as statements it
+  could not read, answer; what it refuses is unchanged, and a refusal names the function in lower
+  case as the engine resolves it (`version`, not `VERSION()`). Authored views must be `CREATE VIEW`. A
   `fuzz/sql` target runs in CI. Since 5.18.0 a mount's own `/metrics` carries only the series
   labelled with that mount, with its entity and snapshot series; before, every mount served the whole
   runtime's exposition, other tenants' mount names and contracts included. The root `/metrics` still
@@ -215,6 +218,15 @@ of what the request read and held, for a gateway to meter by if it chooses; nuth
   `nuthatch mcp --url … --token-env NEST_TOKEN` names the variable that holds it, or
   `NUTHATCH_MCP_TOKEN` is read by default. The token never reaches output, and a response that echoes
   it is redacted before the model sees it.
+- **An address-history nest on a loopback bind** answers only a loopback `Host`, or one declared
+  with `--local-host` or `--public-host`, on every route (since 5.21.0), so a web page that rebinds a
+  DNS name to 127.0.0.1 reads nothing. Watch, unwatch, the `proxy` module, tracing by hash and the
+  timestamp search are this machine's only: a loopback or `--local-host` name, no proxy header and no
+  other site's `Origin`. A `--public-host` name, the one a reverse proxy forwards, reads watched data
+  and changes nothing. A proxy that rewrites `Host` to loopback and adds no header, as nginx's plain
+  `proxy_pass` does, looks like this machine; for that one, `--write-token-env <VAR>` makes those
+  actions need the token as `Authorization: Bearer`, from this machine too. See
+  [HTTP API](/docs/reference/http-api/#etherscan-shaped-api).
 
 ## Running someone else's nest
 

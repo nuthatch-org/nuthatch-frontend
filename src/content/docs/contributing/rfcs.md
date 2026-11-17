@@ -2,7 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -136,8 +136,10 @@ are cited, and targets are labeled as targets, never as results.
   drop-in replacement, served only by the `graph` build. From 4.11.0 that build is a release download
   (`nuthatch-graph-<target>`) for the subgraph stopgap, which fixes what shipped and starts no new
   slices.
-- **0054 The head count** *(Accepted 2026-10-08, shipped in 4.15.0)* - an opt-in ping at `init`, off
-  until you say yes. The totals are at [/count](/count).
+- **0054 The head count** *(Accepted 2026-10-08, shipped in 4.15.0; amended 2026-11-12, shipped in
+  5.21.0)* - an opt-in ping at `init`, off until you say yes. Since 5.21.0 a yes given to the new
+  question also sends a weekly `alive` from a running nest with a bucketed query count, and an `init`
+  with no terminal prints one line saying how to be counted. The totals are at [/count](/count).
 - **0055 The Dune view emitter** *(Withdrawn)* - `emit dune`, DuneSQL models over a mirrored nest.
   Shipped in 3.7.0 and removed in 4.1 with DuckDB, whose parser it depended on.
 - **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Withdrawn)*. The three

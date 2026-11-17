@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional labels, flags, exposure and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 5.20.0 (2026-11-12)
+checked: 5.21.0 (2026-11-13)
 ---
 
 Some nests need more than raw rows: flag transfers that cross a threshold, measure an address's
@@ -82,6 +82,10 @@ or `?kind=velocity` - or the full sealed history in SQL:
 ```sql
 SELECT * FROM threshold_flag ORDER BY block_number DESC LIMIT 20;
 ```
+
+Since 5.21.0 an authored view over the imported `labels` answers; before it, such a view failed to
+define. And while the derived state rebuilt at start read a segment quarantined since, `/flags` and
+`/exposure` carry `"derived_state_stale": true` until a restart rebuilds them from what remains.
 
 ## Next
 

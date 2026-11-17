@@ -58,12 +58,13 @@ segment is written to a temporary name, fsynced, renamed into place and its dire
 only then is the catalogue rewritten the same way and swapped in with one rename. If a process
 dies at an inconvenient moment, the previous committed catalogue remains coherent and the orphaned
 file is just a file. What this path does not do is read its output back: the hash is computed
-from the bytes in memory before they are written. Verification is a separate job, done at every
-startup, when each catalogued segment is re-hashed and a damaged one of the nest's own is moved to
-`quarantine/`, and on demand by `nuthatch doctor --dir <nest> --catalogue`, which checks without
-moving anything. A damaged segment in a runtime's shared store is reported and left where it is,
-because other datasets may reference the same bytes; which of them to break is the operator's
-decision, not one nest's. Recovery may be boring, which is the highest compliment available to storage
+from the bytes in memory before they are written. Verification is a separate job. At startup only
+the segment files that changed since a pass last hashed them are reread (`segments/verified.json`
+remembers the rest), so a restart serves at once; a background pass then hashes every segment a
+minute later, at up to 64 MiB/s, and again every 24 hours, moving a damaged one to `quarantine/`.
+`nuthatch doctor --dir <nest> --catalogue` checks on demand without moving anything. A damaged
+segment in a runtime's shared store is quarantined too, and every dataset that names it answers
+reduced, with the table in `degraded_tables`, until the same rows are sealed again. Recovery may be boring, which is the highest compliment available to storage
 machinery.
 
 Because segments are immutable and named by their content, a runtime keeps them in one shared
