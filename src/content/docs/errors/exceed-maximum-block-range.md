@@ -56,11 +56,11 @@ them, as answered on the day, to that. A refused window is halved and asked agai
 `--seal-direct` backfill), and the width that was served becomes the ceiling for the windows after it,
 so the backfill settles at the endpoint's limit without being told it.
 
-Two phrasings measured the same day are not recognised: `log query range must not exceed 25 blocks`
-(`eth.blockrazor.xyz`) and `maximum [from, to] blocks distance: 2000` (`evm.cronos.org`). nuthatch
-treats those as a failing endpoint rather than a range too wide: it retries the same width, and the
-backfill can stop on it. Against such an endpoint, give the backfill a window under the limit with
-`--window`, which nuthatch never widens past.
+Two phrasings measured the same day, `log query range must not exceed 25 blocks`
+(`eth.blockrazor.xyz`) and `maximum [from, to] blocks distance: 2000` (`evm.cronos.org`), are
+narrowed from the release after 5.22.0. Up to 5.22.0 nuthatch treats them as a failing endpoint: it
+retries the same width, and the backfill can stop on it. On those versions give the backfill a window
+under the limit with `--window`, which nuthatch never widens past.
 
 `nuthatch doctor` measures the range limit directly, by doubling the span until the endpoint refuses,
 so you need not read it from the message:
