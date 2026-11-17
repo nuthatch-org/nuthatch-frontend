@@ -49,6 +49,20 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <li><a href="/docs/operate/verifying/">Verifying a deployment</a> - prove it works on your own hardware, and see what we have and have not verified ourselves.</li>
   </ul>
 
+  <h2>getLogs errors</h2>
+  <p>
+    One page per error an RPC or explorer sends back: why it happens, the fix without nuthatch, and
+    what a nest does.
+  </p>
+  <ul>
+    <li><a href="/docs/errors/query-returned-more-than-10000-results/"><code>query returned more than 10000 results</code></a> - a result cap, Infura and others.</li>
+    <li><a href="/docs/errors/log-response-size-exceeded/"><code>Log response size exceeded</code></a> - Alchemy's two-way cap.</li>
+    <li><a href="/docs/errors/exceed-maximum-block-range/"><code>exceed maximum block range: 10000</code></a> - block-range caps on public endpoints, with each one's wording.</li>
+    <li><a href="/docs/errors/query-timeout-exceeded/"><code>query timeout exceeded</code></a> - <code>eth_getLogs</code> from block 0.</li>
+    <li><a href="/docs/errors/bnb-chain-limit-exceeded/"><code>limit exceeded</code> on BNB Chain</a> - and the empty array for old blocks.</li>
+    <li><a href="/docs/errors/free-api-access-is-not-supported-for-this-chain/"><code>Free API access is not supported for this chain</code></a> - Etherscan's paid-only chains.</li>
+  </ul>
+
   <h2>Reference &amp; internals</h2>
   <ul>
     <li><a href="/docs/reference/cli/">CLI reference</a>, <a href="/docs/reference/http-api/">HTTP API</a>, <a href="/docs/reference/mcp/">MCP</a>.</li>
