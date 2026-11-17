@@ -6,7 +6,7 @@
   "description": "Website for Nuthatch - the self-hosted, AI-native blockchain indexer.",
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run lint:docs && node scripts/generate-sitemap.mjs && astro build && node scripts/stamp-build.mjs",
+    "build": "npm run lint:docs && node scripts/generate-sitemap.mjs && astro build && node scripts/check-markdown-twins.mjs && node scripts/stamp-build.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "lint:docs": "node scripts/lint-docs.mjs",

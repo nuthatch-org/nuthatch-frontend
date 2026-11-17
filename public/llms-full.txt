@@ -706,7 +706,7 @@ choice, not a property of the binary.
 
 - Website: https://www.nuthatch-indexer.com/
 - Short index for models: https://www.nuthatch-indexer.com/llms.txt
-- Documentation: https://www.nuthatch-indexer.com/docs/
+- Documentation: https://www.nuthatch-indexer.com/docs.md
 - Install: https://www.nuthatch-indexer.com/install
 - Worked example: https://www.nuthatch-indexer.com/example
 - Public mirror: https://www.nuthatch-indexer.com/mirror

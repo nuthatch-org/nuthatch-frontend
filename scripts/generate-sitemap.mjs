@@ -26,9 +26,11 @@ if (!catalogue.ok) throw new Error(`nests index fetch failed: ${catalogue.status
 for (const { id } of (await catalogue.json()).nests) routes.push(`/nests/${id}`);
 
 const docsRoot = join(root, 'src/content/docs');
+// `book/index.md` is the page at /docs/book, as the content collection ids it.
+const docsRoute = (file) => relative(docsRoot, file).split(sep).join('/').replace(/\.md$/, '').replace(/\/index$/, '');
 const docs = await markdownFiles(docsRoot);
 for (const file of docs) {
-  routes.push(`/docs/${relative(docsRoot, file).split(sep).join('/').replace(/\.md$/, '')}`);
+  routes.push(`/docs/${docsRoute(file)}`);
 }
 
 // Local, static documentation search. The client fetches this only when a reader searches, so the
@@ -55,7 +57,7 @@ const searchEntry = (source, href) => {
   };
 };
 const searchIndex = await Promise.all(docs.map(async (file) =>
-  searchEntry(await readFile(file, 'utf8'), `/docs/${relative(docsRoot, file).split(sep).join('/').replace(/\.md$/, '')}/`)
+  searchEntry(await readFile(file, 'utf8'), `/docs/${docsRoute(file)}/`)
 ));
 await writeFile(join(root, 'public/docs-search.json'), `${JSON.stringify(searchIndex)}\n`);
 

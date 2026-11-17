@@ -1,5 +1,6 @@
 ---
 import Layout from './Layout.astro';
+import { twinPath } from '../lib/markdown-twin';
 import { getCollection } from 'astro:content';
 
 interface Props {
@@ -20,7 +21,7 @@ const previous = chapterIndex > 0 ? chapters[chapterIndex - 1] : undefined;
 const next = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined;
 const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 100 : 0;
 ---
-<Layout path={`/docs/${slug}`} title={`${title} - Nuthatch`} description={description}>
+<Layout path={`/docs/${slug}`} title={`${title} - Nuthatch`} description={description} markdown={twinPath(`/docs/${slug}`)}>
   <section class="book-shell" style={`--book-progress: ${progress}%`}>
     <div class="book-top wrap">
       <a class="book-mark" href="/docs/book/">Nuthatch</a>
