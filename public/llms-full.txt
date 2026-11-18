@@ -12,7 +12,7 @@ event-derived index queried with SQL, HTTP or MCP; it is not a drop-in subgraph 
 
 ## Start with the task
 
-Run without installing: `npx nuthatch init <address>`.
+Run without installing: `npx -y nuthatch-indexer init <address>`.
 Scaffold into a chosen directory: `nuthatch init <address> --dir <dir>`.
 Run detached: `nuthatch dev --detach`.
 Query as newline-delimited JSON: `nuthatch sql --json 'SELECT * FROM transfers LIMIT 5'`.
