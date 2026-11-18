@@ -5,7 +5,7 @@
       "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }]
     },
     {
-      "source": "/docs.md",
+      "source": "/(docs|changelog).md",
       "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }]
     }
   ],
