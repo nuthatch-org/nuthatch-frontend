@@ -2,7 +2,7 @@
 title: "Agent-grade MCP"
 description: "Drive nuthatch from an agent - fully offline against the local instance."
 order: 1
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A nest isn't just queryable by you - it's queryable by your agent, with the same two-minute setup.
@@ -91,7 +91,9 @@ deliberate choices (RFC-0016):
 - **Answers carry provenance.** A `sql` result ends with the block it is current to, the sealed
   watermark, the source the node sent and the registry hash (led by a notice when the live tip could
   not be read), so an agent can cite a figure, and `verify-a-number` (a built-in prompt)
-  re-derives one from scratch.
+  re-derives one from scratch. Since 5.22.0 `sql` takes `at_block` or `at_time`, and the `at` tool,
+  on every nest, places a time against the nest's own blocks, so an agent can give a figure as it
+  stood at a report date.
 
 The tool-by-tool surface - plus the resources and the built-in prompts - is in the
 [MCP reference](/docs/reference/mcp/). A CI-gated eval harness scores a fixed set of questions against

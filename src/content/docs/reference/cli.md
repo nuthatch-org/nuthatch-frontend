@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -107,7 +107,10 @@ entity circuit.
 
 - **`nuthatch recipe list`** / **`recipe add <name>`** - add a derived view that computes a read
   (e.g. `total_supply`) from indexed events instead of an `eth_call`. No archive node,
-  deterministic, free.
+  deterministic, free. Since 5.22.0 `frozen`, `outstanding`, `mint_burn_daily` and
+  `fiat_threshold` cover an issuer's own token; `fiat_threshold` takes `--amount`, `--rates`,
+  `--decimals` and any number of `--unless-label`, which no other recipe accepts. See
+  [Compliance](/docs/build/compliance/#recipes-for-an-issuers-own-token).
 - **`nuthatch metadata fetch`** - fetch and cache a token's immutable `decimals`/`symbol`/`name`
   once; remembered in `metadata.json`.
 
@@ -115,7 +118,7 @@ entity circuit.
 
 - **`nuthatch nest bundle`** - package a nest's authored inputs into one portable,
   content-addressed `.bundle`; prints the content address. `--as-dir` writes an inspectable
-  directory instead.
+  directory instead. Since 5.22.0 it never packs label sets.
 - **`nuthatch nest load <bundle|url|dir>`** - verify a bundle (manifest format, every file's hash,
   and that the regenerated decode registry matches) and install it as a runnable nest. `--expect`
   asserts the hash; `--registry` resolves a `name[@version]` reference instead, or a NID, whose
@@ -179,6 +182,16 @@ entity circuit.
 - **`nuthatch audit report`** - summarise the threshold flags over a range (`--json`).
 - **`nuthatch audit sealed --rpc <url>`** - re-fetch a sample of sealed ranges from a second endpoint
   and compare them row by row; `dev --audit-rpc` does the same in the background.
+- **`nuthatch evidence make "<SELECT>" --at-block N | --at-time T`** - *since 5.22.0.* Ask a running
+  nest (`--url`, `http://127.0.0.1:8288` by default) for one answer as of a sealed block and write a
+  bundle to stdout or `--out <file>`. `--key <file>` signs it with a `pack keygen` key. A bundle
+  carries at most 10,000 rows, so aggregate the statement; it refuses an unsealed block and one whose
+  segments include a provisional tail.
+- **`nuthatch evidence verify <bundle> --url <nest>`** - ask a nest of the same NID the same
+  statement at the same block and print `match`, or a `MISMATCH` line naming each field that differs,
+  exiting non-zero. `--pubkey` checks the signature against the signer's key, given to you out of
+  band. `--dir <nest>` re-hashes that nest's own segment files first, which `serve` does not, and
+  names any that changed. See [Verifying](/docs/operate/verifying/#an-answer-someone-else-can-check).
 
 ## Measurement
 

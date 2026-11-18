@@ -2,7 +2,7 @@
 title: Runtimes & cursors
 description: One runtime, many nests, across one or more chains, with one isolated cursor per chain.
 order: 2
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A **runtime** is one process hosting one nest or many. A **cursor** is a single chain's follow

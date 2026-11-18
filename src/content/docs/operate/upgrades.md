@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,35 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.22
+
+Replace the binary and restart. A 5.21 store is used as it is, with no storage migration, and no
+sealed segment or registry hash moves. 5.22 answers as of a block or a time, adds recipes for an
+issuer's own token and adds evidence bundles. Three things read differently:
+
+- **A nest with a label set imported gets a new NID and data identity, once** (#2946). `labels/` and
+  `labels.manifest.json` no longer count toward either, so a label set can be deleted without the
+  nest becoming another one. A single-nest directory starts as before. A runtime whose mount record
+  was written with labels present logs `identity drift` for that mount and keeps serving the
+  `data/<nid>` the record names. A nest that publishes writes a full copy under the new data
+  identity on its next `nuthatch publish sync`; delete the old prefix once that lands. `nest bundle`
+  no longer packs label sets, and the mirror does not copy them. The operators guide's
+  [data lifecycle](https://github.com/nuthatch-org/nuthatch/blob/v5.22.0/docs/operators.md#data-lifecycle)
+  section has the detail.
+- **A nest whose `[[factories]]` give one announcing event's `child_param` two templates is refused
+  at load**, naming both (#2958). It loaded before, but a child takes one template, so the second
+  template's tables stayed empty. Declare one template whose ABI holds both contracts' events.
+- **A `/sql` client that rejects unknown provenance keys** may now see `labels_sha256`, when the
+  answer read `labels`, and `segments_sha256`, when it was asked at a block. `/nest` carries
+  `labels_sha256` too, `null` with no label set.
+
+What is new, none of which changes an existing answer: `GET /at?time=<unix seconds>` places a time
+against the nest's own stamped blocks; `at_block` or `at_time` on `/sql`, and on the MCP `sql` tool,
+answers over the facts as they stood then, with the label set as imported now; the MCP server gains
+an `at` tool on every nest; `nuthatch recipe add frozen`, `outstanding`, `mint_burn_daily` and
+`fiat_threshold`; and `nuthatch evidence make` and `evidence verify`. Every other nest has nothing to
+do. The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.22.0) carry the rest.
 
 ## Upgrading to 5.21
 

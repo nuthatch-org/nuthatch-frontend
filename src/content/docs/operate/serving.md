@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -93,7 +93,9 @@ off).
 Every result also carries `provenance`: `as_of` (the head the answer is current to), `sealed_through`,
 the `registry_hash` it was decoded under, the `nid` of the dataset that answered, and `source`.
 `source` is `hot+sealed` normally. When the hot store would not scan and the answer came from sealed
-segments alone, `tip_unavailable` is `true` and, since 4.11.0, `source` says `sealed` too.
+segments alone, `tip_unavailable` is `true` and, since 4.11.0, `source` says `sealed` too. Since
+5.22.0 it adds `labels_sha256` when the answer read `labels`, and `segments_sha256` when it was
+asked at a block (`at_block` or `at_time`).
 
 ## When cold data is damaged (2.2.0)
 

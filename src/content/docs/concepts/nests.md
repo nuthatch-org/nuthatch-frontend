@@ -2,7 +2,7 @@
 title: What is a nest?
 description: A nest is a content-addressed specification of a question about on-chain data - a spec, not a program.
 order: 1
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A **nest** is the unit of everything in nuthatch. It's a content-addressed, reproducible
