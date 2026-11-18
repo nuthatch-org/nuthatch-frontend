@@ -72,6 +72,6 @@ case ":$PATH:" in
     fi ;;
 esac
 echo ""
-echo "  next:  nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth"
-echo "         nuthatch dev --backfill 300"
-echo "         nuthatch sql \"SELECT count(*) FROM weth__transfer\""
+echo "  next:  nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --dir weth"
+echo "         nuthatch dev --dir weth --detach --backfill 300"
+echo "         nuthatch sql \"SELECT count(*) FROM weth__transfer\" --dir weth"
