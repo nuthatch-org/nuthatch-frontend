@@ -5,5 +5,6 @@ Allow: /
 # Machine-readable summaries for language models:
 #   /llms.txt       - concise overview
 #   /llms-full.txt  - full description
+#   /docs.md        - every docs page as Markdown; any docs page or post at its path plus .md
 
 Sitemap: https://nuthatch-indexer.com/sitemap.xml

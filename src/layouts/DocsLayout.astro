@@ -3,6 +3,7 @@ import Layout from './Layout.astro';
 import { getCollection } from 'astro:content';
 import DocsSearch from '../components/DocsSearch.astro';
 import DocsToc from '../components/DocsToc.astro';
+import { DOCS_GROUPS, twinPath } from '../lib/markdown-twin';
 
 interface Props {
   title: string;
@@ -15,21 +16,10 @@ const { title, description, slug, headings = [], checked } = Astro.props;
 // A page stamps the release it was checked against (frontmatter `checked`, #81). Until every
 // operate/ and reference/ page carries one, those sections keep the older section-wide line.
 
-// The docs IA: sidebar groups, in order. Each group's pages come from `src/content/docs/<dir>/`,
-// ordered by the page's `order` frontmatter. Single source of truth - add a page, it appears.
-const GROUPS = [
-  { dir: 'start', label: 'Start here' },
-  { dir: 'concepts', label: 'Concepts' },
-  { dir: 'build', label: 'Build a nest' },
-  { dir: 'operate', label: 'Operate' },
-  { dir: 'errors', label: 'getLogs errors' },
-  { dir: 'reference', label: 'Reference' },
-  { dir: 'ai', label: 'AI-native' },
-  { dir: 'contributing', label: 'Contributing' },
-  { dir: 'book', label: 'Read the book' },
-];
+// The docs IA lives in DOCS_GROUPS: each group's pages come from `src/content/docs/<dir>/`, ordered by
+// the page's `order` frontmatter. Single source of truth - add a page, it appears.
 const all = await getCollection('docs');
-const groups = GROUPS.map((g) => ({
+const groups = DOCS_GROUPS.map((g) => ({
   label: g.label,
   items: all
     .filter((d) => d.id.startsWith(`${g.dir}/`))
@@ -37,7 +27,7 @@ const groups = GROUPS.map((g) => ({
     .map((d) => ({ slug: d.id, title: d.data.title })),
 })).filter((g) => g.items.length > 0);
 ---
-<Layout path={`/docs/${slug}`} title={`${title} - Nuthatch docs`} description={description}>
+<Layout path={`/docs/${slug}`} title={`${title} - Nuthatch docs`} description={description} markdown={twinPath(`/docs/${slug}`)}>
   <section class="docs">
     <div class="wrap docs-grid">
       <!-- Closed in the HTML for mobile. Desktop CSS presents the contents as a fixed sidebar;

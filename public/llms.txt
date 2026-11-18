@@ -228,31 +228,34 @@ function name the guard did not match) and v0.6.2 fixed an arbitrary file write 
 
 ## Documentation
 
-- [Quickstart](https://www.nuthatch-indexer.com/docs/start/quickstart/): address to live API in under two minutes.
-- [Install](https://www.nuthatch-indexer.com/docs/start/install/): installer, images, source build, attestation.
-- [What is a nest?](https://www.nuthatch-indexer.com/docs/concepts/nests/): a content-addressed spec, not a program.
-- [Runtimes and cursors](https://www.nuthatch-indexer.com/docs/concepts/runtimes/): one cursor per chain, the single-cursor law.
-- [Storage and sealing](https://www.nuthatch-indexer.com/docs/concepts/storage/): redb tip, Parquet past finality, one SQL surface.
-- [Reorgs and finality](https://www.nuthatch-indexer.com/docs/concepts/reorgs/): reorgs touch only the hot store.
-- [Determinism](https://www.nuthatch-indexer.com/docs/concepts/determinism/): LLM output never sits in the data path.
-- [Nest identity and reuse](https://www.nuthatch-indexer.com/docs/concepts/nest-identity/): NID, data identity, dataset adoption.
-- [nuthatch.toml](https://www.nuthatch-indexer.com/docs/build/config/) and the [configuration reference](https://www.nuthatch-indexer.com/docs/reference/config/).
-- [ABIs, events and tables](https://www.nuthatch-indexer.com/docs/build/tables/): the column mapping and big integers.
-- [Authored SQL views](https://www.nuthatch-indexer.com/docs/build/views/) and [incremental entities](https://www.nuthatch-indexer.com/docs/build/entities/).
-- [Factories](https://www.nuthatch-indexer.com/docs/build/factories/), [recipes](https://www.nuthatch-indexer.com/docs/build/recipes/), [contract calls and IPFS](https://www.nuthatch-indexer.com/docs/build/contract-calls/).
-- [Compliance pack](https://www.nuthatch-indexer.com/docs/build/compliance/) and [webhooks](https://www.nuthatch-indexer.com/docs/build/webhooks/).
-- [Build a subgraph fallback](https://www.nuthatch-indexer.com/docs/build/subgraph-fallback/): the boundary of event-derived data.
-- [CLI guide](https://www.nuthatch-indexer.com/docs/reference/cli/); the generated full reference is `skills/nuthatch-builder/cli-reference.md` in the repository.
-- [HTTP API](https://www.nuthatch-indexer.com/docs/reference/http-api/), [the SQL surface](https://www.nuthatch-indexer.com/docs/reference/sql/), [MCP server](https://www.nuthatch-indexer.com/docs/reference/mcp/).
-- [Run it in production](https://www.nuthatch-indexer.com/docs/operate/production/), [deploy](https://www.nuthatch-indexer.com/docs/operate/deploy/), [security](https://www.nuthatch-indexer.com/docs/operate/security/).
-- [Metrics and footprint](https://www.nuthatch-indexer.com/docs/operate/metrics/), [performance](https://www.nuthatch-indexer.com/docs/operate/performance/), [what it costs](https://www.nuthatch-indexer.com/docs/operate/costs/).
-- [Run many nests](https://www.nuthatch-indexer.com/docs/operate/many-nests/), [host nests for others](https://www.nuthatch-indexer.com/docs/operate/hosting-nests/), [the registry](https://www.nuthatch-indexer.com/docs/operate/registry/).
-- [Upgrading a nest](https://www.nuthatch-indexer.com/docs/operate/upgrades/), [verifying a deployment](https://www.nuthatch-indexer.com/docs/operate/verifying/), [troubleshooting](https://www.nuthatch-indexer.com/docs/operate/troubleshooting/).
-- [Scaled mode](https://www.nuthatch-indexer.com/docs/operate/scaled/): the fleet.
-- getLogs errors, one page each, quoted as providers send them: [query returned more than 10000 results](https://www.nuthatch-indexer.com/docs/errors/query-returned-more-than-10000-results/), [Log response size exceeded](https://www.nuthatch-indexer.com/docs/errors/log-response-size-exceeded/), [exceed maximum block range](https://www.nuthatch-indexer.com/docs/errors/exceed-maximum-block-range/), [query timeout exceeded](https://www.nuthatch-indexer.com/docs/errors/query-timeout-exceeded/), [limit exceeded on BNB Chain](https://www.nuthatch-indexer.com/docs/errors/bnb-chain-limit-exceeded/), [Free API access is not supported for this chain](https://www.nuthatch-indexer.com/docs/errors/free-api-access-is-not-supported-for-this-chain/).
-- [Agent-grade MCP](https://www.nuthatch-indexer.com/docs/ai/mcp/), [llms.txt in a nest](https://www.nuthatch-indexer.com/docs/ai/llms-txt/), [the builder skill](https://www.nuthatch-indexer.com/docs/ai/builder-skill/).
-- [The book](https://www.nuthatch-indexer.com/docs/book/): why the machine is shaped as it is, read against 5.9.0.
-- [Architecture](https://www.nuthatch-indexer.com/docs/contributing/architecture/) and [RFCs](https://www.nuthatch-indexer.com/docs/contributing/rfcs/).
+Every docs page and blog post is also served as Markdown at its path plus `.md`, which is what the
+links below point at; [docs.md](https://www.nuthatch-indexer.com/docs.md) lists them all.
+
+- [Quickstart](https://www.nuthatch-indexer.com/docs/start/quickstart.md): address to live API in under two minutes.
+- [Install](https://www.nuthatch-indexer.com/docs/start/install.md): installer, images, source build, attestation.
+- [What is a nest?](https://www.nuthatch-indexer.com/docs/concepts/nests.md): a content-addressed spec, not a program.
+- [Runtimes and cursors](https://www.nuthatch-indexer.com/docs/concepts/runtimes.md): one cursor per chain, the single-cursor law.
+- [Storage and sealing](https://www.nuthatch-indexer.com/docs/concepts/storage.md): redb tip, Parquet past finality, one SQL surface.
+- [Reorgs and finality](https://www.nuthatch-indexer.com/docs/concepts/reorgs.md): reorgs touch only the hot store.
+- [Determinism](https://www.nuthatch-indexer.com/docs/concepts/determinism.md): LLM output never sits in the data path.
+- [Nest identity and reuse](https://www.nuthatch-indexer.com/docs/concepts/nest-identity.md): NID, data identity, dataset adoption.
+- [nuthatch.toml](https://www.nuthatch-indexer.com/docs/build/config.md) and the [configuration reference](https://www.nuthatch-indexer.com/docs/reference/config.md).
+- [ABIs, events and tables](https://www.nuthatch-indexer.com/docs/build/tables.md): the column mapping and big integers.
+- [Authored SQL views](https://www.nuthatch-indexer.com/docs/build/views.md) and [incremental entities](https://www.nuthatch-indexer.com/docs/build/entities.md).
+- [Factories](https://www.nuthatch-indexer.com/docs/build/factories.md), [recipes](https://www.nuthatch-indexer.com/docs/build/recipes.md), [contract calls and IPFS](https://www.nuthatch-indexer.com/docs/build/contract-calls.md).
+- [Compliance pack](https://www.nuthatch-indexer.com/docs/build/compliance.md) and [webhooks](https://www.nuthatch-indexer.com/docs/build/webhooks.md).
+- [Build a subgraph fallback](https://www.nuthatch-indexer.com/docs/build/subgraph-fallback.md): the boundary of event-derived data.
+- [CLI guide](https://www.nuthatch-indexer.com/docs/reference/cli.md); the generated full reference is `skills/nuthatch-builder/cli-reference.md` in the repository.
+- [HTTP API](https://www.nuthatch-indexer.com/docs/reference/http-api.md), [the SQL surface](https://www.nuthatch-indexer.com/docs/reference/sql.md), [MCP server](https://www.nuthatch-indexer.com/docs/reference/mcp.md).
+- [Run it in production](https://www.nuthatch-indexer.com/docs/operate/production.md), [deploy](https://www.nuthatch-indexer.com/docs/operate/deploy.md), [security](https://www.nuthatch-indexer.com/docs/operate/security.md).
+- [Metrics and footprint](https://www.nuthatch-indexer.com/docs/operate/metrics.md), [performance](https://www.nuthatch-indexer.com/docs/operate/performance.md), [what it costs](https://www.nuthatch-indexer.com/docs/operate/costs.md).
+- [Run many nests](https://www.nuthatch-indexer.com/docs/operate/many-nests.md), [host nests for others](https://www.nuthatch-indexer.com/docs/operate/hosting-nests.md), [the registry](https://www.nuthatch-indexer.com/docs/operate/registry.md).
+- [Upgrading a nest](https://www.nuthatch-indexer.com/docs/operate/upgrades.md), [verifying a deployment](https://www.nuthatch-indexer.com/docs/operate/verifying.md), [troubleshooting](https://www.nuthatch-indexer.com/docs/operate/troubleshooting.md).
+- [Scaled mode](https://www.nuthatch-indexer.com/docs/operate/scaled.md): the fleet.
+- getLogs errors, one page each, quoted as providers send them: [query returned more than 10000 results](https://www.nuthatch-indexer.com/docs/errors/query-returned-more-than-10000-results.md), [Log response size exceeded](https://www.nuthatch-indexer.com/docs/errors/log-response-size-exceeded.md), [exceed maximum block range](https://www.nuthatch-indexer.com/docs/errors/exceed-maximum-block-range.md), [query timeout exceeded](https://www.nuthatch-indexer.com/docs/errors/query-timeout-exceeded.md), [limit exceeded on BNB Chain](https://www.nuthatch-indexer.com/docs/errors/bnb-chain-limit-exceeded.md), [Free API access is not supported for this chain](https://www.nuthatch-indexer.com/docs/errors/free-api-access-is-not-supported-for-this-chain.md).
+- [Agent-grade MCP](https://www.nuthatch-indexer.com/docs/ai/mcp.md), [llms.txt in a nest](https://www.nuthatch-indexer.com/docs/ai/llms-txt.md), [the builder skill](https://www.nuthatch-indexer.com/docs/ai/builder-skill.md).
+- [The book](https://www.nuthatch-indexer.com/docs/book.md): why the machine is shaped as it is, read against 5.9.0.
+- [Architecture](https://www.nuthatch-indexer.com/docs/contributing/architecture.md) and [RFCs](https://www.nuthatch-indexer.com/docs/contributing/rfcs.md).
 
 ## Links
 
