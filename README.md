@@ -71,6 +71,16 @@ npm run preview    # serve the built site locally
 
 `dist/` is plain static files and works on any static host.
 
+## Release checklist
+
+After a Nuthatch release:
+
+1. Run `node scripts/sync-releases.mjs` to refresh the release data and changelog.
+2. Set the site to vX, including `public/llms.txt`, `public/llms-full.txt` and the pages checked by
+   `scripts/version-check.sh`.
+3. Run `scripts/version-check.sh X` and `scripts/command-check.sh X`.
+4. Run `npm run build`, then deploy with `vercel --prod` and check the live site.
+
 ## Deploy - Vercel
 
 Production is Vercel, and a deploy is one command from a linked checkout:
