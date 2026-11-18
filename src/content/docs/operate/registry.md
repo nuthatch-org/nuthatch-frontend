@@ -2,7 +2,7 @@
 title: The nest registry
 description: Publish and pull nests by name - a filesystem folder or an S3 bucket, with private nests, decoupled and never mandatory.
 order: 9
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be

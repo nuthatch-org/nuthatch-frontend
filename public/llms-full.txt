@@ -2,8 +2,8 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.21.0**, released 2026-11-13, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.21.0 fixes what the cold audit of 2026-11-12 found and adds no feature: a loopback bind answers only a loopback or declared `Host` on every route, scans are memory-bounded, the MCP `balance` and `top_balances` results say whether they cover the whole history, and a webhook no longer skips a backfill's rows; there is no storage migration and no existing nest's NID changes. 5.20.0 moves the SQL engine to Burrmill 0.0.1 and DataFusion 55.2 and adds no
+"Be your own indexer." Status: **v5.22.0**, released 2026-11-17, on the stable 5.x line. Licence:
+MIT OR Apache-2.0. 5.22.0 answers as of a block or a time (`/at?time=`, and `at_block` or `at_time` on `/sql`), adds the issuer recipes `frozen`, `outstanding`, `mint_burn_daily` and `fiat_threshold`, and adds `nuthatch evidence make` and `verify`, an answer as of a sealed block that another nest of the same NID re-executes to the same rows; label sets are no longer part of a nest's NID or data identity, so a nest that imported one gets a new NID once, a factory configuration that gives one announced address two templates is refused at load, and there is no storage migration. 5.21.0 fixes what the cold audit of 2026-11-12 found and adds no feature: a loopback bind answers only a loopback or declared `Host` on every route, scans are memory-bounded, the MCP `balance` and `top_balances` results say whether they cover the whole history, and a webhook no longer skips a backfill's rows; there is no storage migration and no existing nest's NID changes. 5.20.0 moves the SQL engine to Burrmill 0.0.1 and DataFusion 55.2 and adds no
 nuthatch feature: a memory refusal on `/sql` begins `limit exceeded:`, a cast to `TIMESTAMP` is
 microseconds, `list_sum` over integers is exact and a statement reads at most 128 relations. 5.19.0 lets an address-history nest on Gnosis list the transactions of a contract,
 by `trace_filter` where the trace RPC serves it, and fixes a regression in 5.18.0 that failed an
@@ -46,7 +46,7 @@ status, factories, the runtime and hosting, the query guards, security, the road
 notes were checked against 5.15.0. On 2026-11-01 the status, the runtime and hosting and the upgrade
 notes were checked against 5.16.0, on 2026-11-04 the status, the install routes, the HTTP
 API and the upgrade notes against 5.17.0, on 2026-11-11 the status and the upgrade notes against
-5.19.0, on 2026-11-12 the same against 5.20.0, and on 2026-11-17 the same against 5.21.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+5.19.0, on 2026-11-12 the same against 5.20.0, on 2026-11-17 the same against 5.21.0, and on 2026-11-18 the status, the upgrade notes, labels, the as-of routes and evidence bundles against 5.22.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -116,7 +116,10 @@ operational weight of the tooling, which is an engineering problem.
    plain Parquet, so DuckDB or Trino can still read them. `GET /explain` validates a query without
    running it, and a failed query returns a fix hint computed from the real schema. Solidity's
    `from` is a reserved word and must be double-quoted. Results carry a provenance stamp: `as_of`,
-   `sealed_through`, `source`, `nid`, `registry_hash` and a `columns` array in the query's order.
+   `sealed_through`, `source`, `nid`, `registry_hash` and a `columns` array in the query's order,
+   and since 5.22.0 `labels_sha256` when it read `labels` and `segments_sha256` when it was asked at
+   a block. `at_block=N` or `at_time=<unix seconds>` answers over the rows at or below that block,
+   and `GET /at?time=` places a time against the nest's own stamped blocks.
 4. **Built-in derived state.** Balances are an incrementally maintained view (DBSP, i128 base
    units serialised as decimal strings) at `/balances` and `/balance/{address}`; a reorg is a
    retraction, and the view replays from stored facts on restart. `nuthatch recipe add
@@ -169,7 +172,12 @@ operational weight of the tooling, which is an engineering problem.
    (`pack build|verify`, ed25519; `pack verify --pubkey <hex|file>` checks against a key the
    operator supplies, never the one inside the pack) with `audit report`. Live sanctions screening was removed in
    5.0.0 with the WASM layer: a `[screening]` table is refused at load, and `sanction_hit` rows a
-   4.x nest already sealed stay queryable.
+   4.x nest already sealed stay queryable. Since 5.22.0 label sets are part of neither the NID nor
+   the data identity, so one can be deleted without the nest becoming another; `nuthatch recipe add
+   frozen|outstanding|mint_burn_daily|fiat_threshold` covers an issuer's own token; and `nuthatch
+   evidence make "<SELECT>" --at-block N` writes an answer as of a sealed block, with the NID, the rows'
+   hash and the segments' hash, that `nuthatch evidence verify b.json --url <nest>` re-asks of a nest
+   with the same NID, printing `match` or the field that differs.
 10. **Webhooks and the admin UI** (RFC-0010). `[[webhooks]]` POST sealed rows matching a `where`
     predicate to a URL, at least once, HMAC-signed with `X-Nuthatch-Signature` when a `secret` is
     set; they fire past finality, so a delivered row never rolls back. `/_admin/` is an embedded
@@ -180,16 +188,16 @@ operational weight of the tooling, which is an engineering problem.
     removes it. A webhook whose `table`, `where` or `since` cannot work refuses the nest at start.
 11. **A built-in MCP server.** `nuthatch mcp` speaks stdio and bridges to a running `dev`
     (`--url`); `nuthatch mcp --print-config` prints a copy-paste `.mcp.json` and the `claude mcp
-    add` one-liner. Twelve tools in all: `status`, `schema`, `tables`, `table`, `sql`, `explain`,
-    `entity` and `diff` on every nest; `balance` and `top_balances` where the nest decodes transfers;
+    add` one-liner. Thirteen tools in all: `status`, `schema`, `tables`, `table`, `sql`, `at`,
+    `explain`, `entity` and `diff` on every nest; `balance` and `top_balances` where the nest decodes transfers;
     `flags` and `exposure` where compliance is configured (RFC-0025: a nest
     advertises only what it can answer, read from `GET /shape`). Three resources
     (`nuthatch://schema`, `nuthatch://tables`, `nuthatch://status`) and three prompts
     (`profile-contract`, `verify-a-number`, and `investigate-address` where compliance is
-    configured). A plain token nest therefore lists ten tools and two prompts. The bridge caps rows
+    configured). A plain token nest therefore lists eleven tools and two prompts. The bridge caps rows
     (200 by default) and returns compact tables with the provenance stamp.
 12. **Nests as packages** (RFC-0012, RFC-0019). `nuthatch nest bundle <dir>` writes a portable,
-    content-addressed `.bundle` and refuses one whose `nuthatch.toml` visibly holds a credential;
+    content-addressed `.bundle` (never carrying label sets, since 5.22.0) and refuses one whose `nuthatch.toml` visibly holds a credential;
     `nuthatch nest load <bundle | url | dir>` verifies every file's hash and that the decode
     registry regenerated from the inputs matches before installing, and warns about every
     non-loopback endpoint the nest declares; `nuthatch nest publish <bundle> --registry <dir |
@@ -585,6 +593,15 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.22.0 is a binary swap from 5.21 with no storage migration, and no sealed segment or registry hash
+moves. A nest that holds a label set gets a new NID and data identity once, because `labels/` and
+`labels.manifest.json` no longer count toward either; a runtime whose mount record was written with
+labels present logs `identity drift` and keeps serving the `data/<nid>` the record names, and a
+publishing nest writes a full copy under the new data identity on its next `publish sync`. A nest
+whose `[[factories]]` give one announcing event's `child_param` two templates is refused at load,
+naming both: declare one template whose ABI holds both contracts' events. A `/sql` client that
+rejects unknown provenance keys may see `labels_sha256` and `segments_sha256`.
 
 5.21.0 is a binary swap from 5.20 with no storage migration, and no existing nest's NID changes; a nest
 scaffolded by 5.21 gets a different NID from the same contracts scaffolded by 5.20, because its `llms.txt`
