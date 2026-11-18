@@ -29,6 +29,10 @@ pinned `eth_call` works but a log backfill is unproven, because an empty answer 
 logs were pruned or never emitted. Neither probe is your deploy block, so before a long backfill, run a
 small address-filtered `eth_getLogs` at the block you intend to start from.
 
+An endpoint's refusal in its own words, such as `query returned more than 10000 results` or `exceed
+maximum block range`, has a page of its own under getLogs errors, starting with
+[query returned more than 10000 results](/docs/errors/query-returned-more-than-10000-results/).
+
 ## Backfill seems stuck
 
 The most common cause is an endpoint throttling more requests than it will serve. Since 5.21.0
