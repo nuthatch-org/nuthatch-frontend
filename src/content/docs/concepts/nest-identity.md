@@ -2,7 +2,7 @@
 title: "Nest identity & reuse"
 description: "How immutable nest versions, mounts, dataset adoption, and shared segments avoid needless re-indexing."
 order: 5
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A content-addressed nest is deliberately unforgiving: change its authored inputs and it becomes a
@@ -33,6 +33,15 @@ nest has them, so the same contracts scaffolded by 5.21 and by 5.20 get differen
 data identity. An existing nest keeps its NID: `dev` no longer rewrites those two files when it
 regenerates a stale `schema.json`, and warns when they describe tables the schema no longer has;
 `nuthatch schema` regenerates them on request.
+
+Label sets are not part of the nest. Since 5.22.0 `labels/` and `labels.manifest.json`, which
+`nuthatch labels import` writes, count toward neither the NID nor the data identity, so an operator
+can delete a label set, which may name people, without the nest becoming another one. No sealed byte
+is derived from one, `nest bundle` does not pack one and the mirror does not copy one. A nest that
+held a label set before 5.22.0 moves to a new NID and data identity once, and a bundle packed before
+it that lists label files names the nest without them. Since the NID no longer pins a label set, an
+answer that read `labels` names the set it read, as `labels_sha256` in its provenance, and `/nest`
+reports the set the nest holds now.
 
 What is not authored is not hashed. The hot store, `segments/`, `.admin-token`, `.git`, `.DS_Store`
 and a query's `nuthatch-spill-<pid>-<seq>` directory are left out at any depth. So, since 5.18.0, is a
@@ -88,7 +97,9 @@ this package store the same bytes?”
 For the latter Nuthatch computes a separate **data identity**. It includes the decode registry and all
 authored inputs that can affect indexed data. It excludes only inputs the indexing path cannot read:
 views, entity declarations, `maintained.toml`, `queries.toml`, `semantic.toml`, documentation,
-scaffolded agent material, and any hidden file or directory.
+scaffolded agent material, and any hidden file or directory. Label sets are in neither identity
+(since 5.22.0), although exposure reads them, because they are rebuilt in memory at start and no
+stored byte comes from them.
 
 When a staged nest has a new NID, the runtime looks across existing runtime datasets. It may adopt one
 only when all of the following hold:

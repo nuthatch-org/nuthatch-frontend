@@ -2,7 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
@@ -89,7 +89,17 @@ the `schema` tool, which used to be named to every caller.
   watermark when the query read one, so a number can be cited against a fixed watermark and
   re-derived by anyone. A separate `tip_unavailable` flag says when the hot tail could not be read,
   and since 4.11.0 `source` then says `sealed` rather than `hot+sealed`. The stamp does not list the
-  individual segments read.
+  individual segments read. Since 5.22.0 it adds `labels_sha256`, the hash of the label set, when the
+  query read `labels`, because the NID does not pin one, and `segments_sha256`, one hash over the
+  sealed segments the query could read, when it was asked at a block and none of them is a
+  provisional tail.
+- **As of a block or a time** *(since 5.22.0)*. `at_block=N` or `at_time=<unix seconds>` answers over
+  the rows at or below that block, sealed and hot; a time is placed as
+  [`/at`](/docs/reference/http-api/#as-of-a-block-or-a-time) places it, at the newest block at or
+  before it that the nest holds a timestamp for. Authored entities and offchain tables are not bound
+  then, since they hold only the present; `labels` is bound as imported now. A block past the last
+  one indexed is refused `409`, and giving both is `400`. [Evidence bundles](/docs/operate/verifying/#an-answer-someone-else-can-check)
+  are built on it.
 - **Answers are remembered, never stale.** A repeated statement is answered from a process-local
   cache, marked `"cached": true`. The entry is keyed on what the answer depends on: the statement and
   its row cap, the sealed segments it can read, the hot rows, each entity's watermark and the authored

@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -76,7 +76,7 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
 - **Meaning & agents**: `semantic` (the governed semantic layer), `mcp`, `skill` (the generated
   CLI reference), `metadata`.
 - **Compliance**: `labels`, `lists`, `flags`, `velocity`, `exposure`, `alerts`, `webhooks`, `pack`,
-  `audit`, `sealed_audit`.
+  `audit`, `sealed_audit`, `evidence` (`nuthatch evidence make|verify`, since 5.22.0).
 - **Maintained views & diff**: `maintained` (stored copies of declared views, keyed by every input
   they read), `diff` + `story` (`nuthatch diff`: a transaction, block or range told by fixed rules
   over the served rows, no model).

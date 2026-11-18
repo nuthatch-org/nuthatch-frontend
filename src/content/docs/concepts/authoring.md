@@ -2,7 +2,7 @@
 title: Authoring modes
 description: Incremental entities and request-time SQL views - both declarative, both deterministic.
 order: 6
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 There are two ways to author what a nest computes, and both are declarative. One is maintained as

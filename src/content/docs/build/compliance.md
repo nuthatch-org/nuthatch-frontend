@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional labels, flags, exposure and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 Some nests need more than raw rows: flag transfers that cross a threshold, measure an address's
@@ -37,7 +37,12 @@ url = "https://your-service/alerts"
   <file>` and listed with `labels list`. They feed the **exposure** view: an address's direct
   counterparty exposure to the labeled set, served at `/exposure/{addr}` and by the `exposure` MCP
   tool. `nuthatch lists fetch` still snapshots a published list (built-in `ofac-sdn`,
-  `eu-consolidated`, or your own via `--url`/`--file`) as a pinned, hashed address set.
+  `eu-consolidated`, or your own via `--url`/`--file`) as a pinned, hashed address set. Since
+  5.22.0 a label set is **not part of the nest**: `labels/` and `labels.manifest.json` count toward
+  neither the [NID nor the data identity](/docs/concepts/nest-identity/), no sealed byte comes from
+  them, `nest bundle` does not pack them and the mirror does not copy them. To delete a set, remove
+  its `labels/<sha256>.json` and its entry in `labels.manifest.json`, then restart; every chain table
+  and the NID stay as they were.
 - **`[flags]`** - two built-in rules, not arbitrary SQL. `threshold` flags any single transfer at or
   above an amount; each match becomes a sealed, append-only **`threshold_flag`** annotation, on the tip path and, since
   5.11.0, under a `--seal-direct` backfill too (a dataset sealed directly before 5.11.0 has no flags for
@@ -86,6 +91,51 @@ SELECT * FROM threshold_flag ORDER BY block_number DESC LIMIT 20;
 Since 5.21.0 an authored view over the imported `labels` answers; before it, such a view failed to
 define. And while the derived state rebuilt at start read a segment quarantined since, `/flags` and
 `/exposure` carry `"derived_state_stale": true` until a restart rebuilds them from what remains.
+
+## As of a block or a time
+
+Since 5.22.0 a figure can be asked as it stood at a report date. `GET /at?time=<unix seconds>`
+places a time against the nest's own stamped blocks, and `at_block` or `at_time` on `/sql` answers
+over the rows at or below that block (see the [HTTP API](/docs/reference/http-api/#as-of-a-block-or-a-time)).
+An as-of read binds the label set **as imported now**, so import a set as it stood at the date you
+are asking about. An answer that read `labels` carries the set's `labels_sha256` in its provenance.
+
+## Recipes for an issuer's own token
+
+Four [recipes](/docs/build/recipes/) arrived in 5.22.0 for a FiatToken-style stablecoin, one whose
+contract emits `Blacklisted`, `UnBlacklisted`, `Mint` and `Burn`:
+
+- **`frozen`** - every address blacklisted now, with its balance and the block it was frozen at.
+- **`outstanding`** - total supply less frozen balances and the balances of addresses labelled
+  `treasury`, as an attestation counts it. It needs a label set, which may hold no `treasury` row:
+  `recipe add outstanding` refuses a nest without one.
+- **`mint_burn_daily`** - per UTC day, what zero-address transfers minted and burned, the `Mint` and
+  `Burn` event amounts beside them, and supply at the day's end.
+- **`fiat_threshold`** - transfers above a fiat amount at their UTC day's rate, from an
+  [offchain](/docs/reference/cli/#offchain-data-rfc-0045) table of `day` and `rate` (currency per whole token), to
+  recipients in none of the given label sets. Mints and burns are left out. A day with no rate, or
+  two different ones, lists its transfers with `priced = false` rather than leaving them out.
+
+```sh
+nuthatch recipe add frozen
+nuthatch labels import treasury.csv && nuthatch recipe add outstanding
+nuthatch offchain drop eur.csv --table eur
+nuthatch recipe add fiat_threshold --amount 1000 --rates eur --decimals 6 --unless-label vasp
+```
+
+Each is an ordinary view, so `at_time` on `/sql` gives supply and freezes at a report date. The
+nuthatch repo's [`examples/mica-art22`](https://github.com/nuthatch-org/nuthatch/tree/v5.22.0/examples/mica-art22)
+computes the four MiCA Art 22(1) figures over EURC with each deduction of the EBA's RTS as its own
+view. It is a worked example, not regulatory advice.
+
+## Evidence bundles
+
+`nuthatch evidence make` (5.22.0) asks a running nest for one answer as of a sealed block and writes
+a bundle: the chain, NID, registry hash, statement, block, rows, a hash of the rows in canonical
+order, the label set's hash when the rows read `labels`, and a hash of the final segments they were
+read from. `--key` signs it with a [pack key](#the-shape). `nuthatch evidence verify` asks a nest of
+the same NID the same statement at the same block and says `match`, or names the field that
+differs. [Verifying](/docs/operate/verifying/#an-answer-someone-else-can-check) has the walkthrough.
 
 ## Next
 
