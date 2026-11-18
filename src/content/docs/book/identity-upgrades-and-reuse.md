@@ -34,8 +34,11 @@ data identity, because none of them is read on the indexing path. (That last one
 hard way: a stray `.cache/` made two copies of one nest compute different identities, so neither
 could find the other's mirror. A few hidden files are in neither identity, because they are not
 inputs at all: `.git`, `.DS_Store`, the `.admin-token` the binary writes for itself and, since 5.18.0, a
-`.gitignore` at any depth, which `init` and `add` now write.) Vendored ABIs and address labels stay in, because the decode and
-the exposure annotations do read them.
+`.gitignore` at any depth, which `init` and `add` now write.) Vendored ABIs stay in, because the decode
+reads them. Address labels stayed in too until 5.22.0, for the exposure annotations; they are now in
+neither identity, because a label set may name people and an operator must be able to delete one
+without the nest becoming another. Exposure is rebuilt from them in memory at start, and no sealed
+byte is derived from them, so the data identity loses nothing it needed.
 
 On mounting a new identity, or on migration, Nuthatch compares that data identity with the datasets
 it already holds. If one matches, and its store records the same registry hash, it adopts that data

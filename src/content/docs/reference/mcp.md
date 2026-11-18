@@ -2,7 +2,7 @@
 title: "MCP server"
 description: "The built-in MCP surface - schema discovery, SQL, entity lookup, and provenance."
 order: 4
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 The protocol reference for the built-in Model Context Protocol server. For the experience - wiring
@@ -26,7 +26,7 @@ longer breaks the routes.
 
 ## Tools
 
-The eight generic tools below are advertised on every nest. The capability-gated ones are advertised
+The nine generic tools below are advertised on every nest (eight before 5.22.0, which added `at`). The capability-gated ones are advertised
 only where they will return data (RFC-0025): `balance`/`top_balances` where the nest has a
 transfer-shaped decoder, `flags`/`exposure` where compliance is configured, and `queries`/`query`
 where the mount declares named queries. Since 5.21.0 a mount that answers only declared queries
@@ -42,6 +42,12 @@ where the mount declares named queries. Since 5.21.0 a mount that answers only d
   many rows follow comes first, every table line begins with `| ` (chain data cannot start a line),
   and the whole answer is held to 256 KiB, with one notice saying what cut it. The provenance line
   names the source the node sent, and leads with a notice when the live tip could not be read.
+  Since 5.22.0 it also takes `at_block` or `at_time` (unix seconds, UTC), and answers over the facts
+  as they stood then, as `/sql` does; authored entities are not available as of a block.
+- `at` (`time`) - since 5.22.0: where the nest stood at a time, in unix seconds UTC, as
+  [`GET /at`](/docs/reference/http-api/#as-of-a-block-or-a-time) answers it: `block`, the newest block
+  at or before it the nest holds a timestamp for, `next_block`, the oldest after it, `exact` and
+  `final`. Refused for a time the nest has not indexed past.
 - `explain` (`query`) - validate a query **without executing it**; returns `{valid: true}` or an error
   with a fix hint. Cheaper than `sql` - check before you spend.
 - `entity` (`id`) - one row by id (`{block:012}-{logindex:06}`).

@@ -2,7 +2,7 @@
 title: "Verifying a deployment"
 description: An acceptance runbook that proves a deployment works, step by falsifiable step - and an honest table of what we have verified ourselves and what we have not.
 order: 7
-checked: 5.21.0 (2026-11-13)
+checked: 5.22.0 (2026-11-17)
 ---
 
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
@@ -46,13 +46,45 @@ provenance attestation:
 
 ```sh
 gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nuthatch-org/nuthatch \
-  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.21.0
+  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.22.0
 ```
 
 It exits `0` when the file was built by the release workflow in that repository, at that tag. All
 three flags bind it: `--repo` alone accepts an attestation from any workflow on any ref of the
 repository, so since 5.18.0 the documented command pins the workflow and the tag. `--source-ref`
 names the tag of the release you downloaded.
+
+## An answer someone else can check
+
+A deployment that works is one thing; a figure someone else can reproduce is another. Since 5.22.0
+`nuthatch evidence` turns one answer into a file another machine can check:
+
+```sh
+nuthatch evidence make "SELECT count(*) AS n FROM usdc__transfer" --at-time 1735689599 \
+  --key ~/.nuthatch/nuthatch-key.json --out b.json
+nuthatch evidence verify b.json --url http://127.0.0.1:8288 --pubkey <signer's key> --dir ./usdc
+```
+
+`make` asks the running nest for the statement as of a sealed block (`--at-block N`, or `--at-time`
+placed as [`/at`](/docs/reference/http-api/#as-of-a-block-or-a-time) places it) and writes the chain,
+NID, registry hash, statement, block, rows, a hash of the rows in canonical order, the label set's
+hash when the rows read `labels`, and a hash of the final segments they were read from. It refuses
+an unsealed block, one whose segments include a provisional tail, and an answer of more than 10,000
+rows. `verify` checks the rows against their hash, the signature against the key you were given,
+the nest's identity against the bundle's, then asks the same statement at the same block and prints
+`match`, or a `MISMATCH` line naming each field that differs. `--dir` re-hashes the verifier's own
+segment files first, which `serve` does not, and names any that changed.
+
+The verifying nest need not be the one that made it: any nest of the same NID will do, a
+mirror-seeded one with no RPC included. For 5.22.0 a bundle made on one machine's EURC nest verified
+on another against a clone seeded from the public mirror and run with `serve` and no RPC, and a fresh
+full index of the same nest sealed the same 13,133 final segments through block 26,000,000, byte for
+byte. [nuthatch-org/eurc-nest](https://github.com/nuthatch-org/eurc-nest) is that nest, and its README
+is the walkthrough.
+
+The NID does not pin a label set, so a bundle whose rows read `labels`, directly or through a view,
+verifies only against a nest holding the same set, and fails as `labels:` otherwise. Keep
+chain-only statements in evidence that must outlive a label set's deletion.
 
 ## Level 5 is worth reading before you trust it
 
