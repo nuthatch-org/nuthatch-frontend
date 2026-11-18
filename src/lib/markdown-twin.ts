@@ -11,6 +11,7 @@ export const DOCS_GROUPS = [
   { dir: 'concepts', label: 'Concepts' },
   { dir: 'build', label: 'Build a nest' },
   { dir: 'operate', label: 'Operate' },
+  { dir: 'errors', label: 'getLogs errors' },
   { dir: 'reference', label: 'Reference' },
   { dir: 'ai', label: 'AI-native' },
   { dir: 'contributing', label: 'Contributing' },

@@ -78,6 +78,12 @@
   <url><loc>https://nuthatch-indexer.com/docs/contributing/architecture</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/contributing/internals</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/contributing/rfcs</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/bnb-chain-limit-exceeded</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/exceed-maximum-block-range</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/free-api-access-is-not-supported-for-this-chain</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/log-response-size-exceeded</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/query-returned-more-than-10000-results</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/query-timeout-exceeded</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/operate/costs</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/operate/deploy</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/operate/hosting-nests</loc></url>
