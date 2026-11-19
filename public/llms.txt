@@ -19,6 +19,12 @@ Start MCP authoring: `nuthatch mcp --authoring`.
 
 The MCP server also answers over HTTP at `/mcp`.
 
+Try it without installing anything: two live read-only nests, no key, rate-limited per address.
+Arc testnet USDC at https://nuthatch-indexer.com/nests/arc-usdc and Base USDC at https://nuthatch-indexer.com/nests/base-usdc.
+SQL: `curl -sG https://nuthatch-indexer.com/nests/base-usdc/sql --data-urlencode 'q=SELECT count(*) FROM usdc__transfer'`.
+MCP: `claude mcp add --transport http base-usdc https://nuthatch-indexer.com/nests/base-usdc/mcp`, or
+`claude mcp add --transport http arc-usdc https://nuthatch-indexer.com/nests/arc-usdc/mcp`.
+
 Release history: https://nuthatch-indexer.com/changelog.md
 
 Embedded mode is one process with no external services: no Postgres, no Docker, no IPFS, no account.
