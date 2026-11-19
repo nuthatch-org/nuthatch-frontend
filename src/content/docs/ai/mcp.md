@@ -23,6 +23,22 @@ Then ask questions:
 
 > "What were the ten largest transfers this week, and were any of the senders flagged?"
 
+## Try it against a live nest, with nothing installed
+
+Two nests run in public, read-only, with no key and no sign-up: Circle's USDC on Arc testnet and on Base.
+Each speaks MCP over HTTP, so an agent can connect to one without a local nest or a binary:
+
+```sh
+claude mcp add --transport http arc-usdc https://arc.nuthatch-indexer.com/mcp
+claude mcp add --transport http base-usdc https://base.nuthatch-indexer.com/mcp
+```
+
+Then ask: *"What were the five largest USDC transfers on Base in the last hour?"* They answer `SELECT` and
+`WITH` only, with no admin routes, at most 30 queries a minute per address, and each query is cut off at
+10 seconds and 5,000 rows. The Base nest holds the seven days before 19 November 2026 and everything since, not all of
+Base's history; its `provenance` says what block a figure is current to. How they run is in
+[docs/public-nests.md](https://github.com/nuthatch-org/nuthatch/blob/main/docs/public-nests.md).
+
 ## Per-client setup
 
 Every client uses the same server entry - only where you put it differs. The entry is:
