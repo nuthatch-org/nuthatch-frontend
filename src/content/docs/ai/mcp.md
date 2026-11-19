@@ -29,8 +29,8 @@ Two nests run in public, read-only, with no key and no sign-up: Circle's USDC on
 Each speaks MCP over HTTP, so an agent can connect to one without a local nest or a binary:
 
 ```sh
-claude mcp add --transport http arc-usdc https://arc.nuthatch-indexer.com/mcp
-claude mcp add --transport http base-usdc https://base.nuthatch-indexer.com/mcp
+claude mcp add --transport http arc-usdc https://nuthatch-indexer.com/nests/arc-usdc/mcp
+claude mcp add --transport http base-usdc https://nuthatch-indexer.com/nests/base-usdc/mcp
 ```
 
 Then ask: *"What were the five largest USDC transfers on Base in the last hour?"* They answer `SELECT` and

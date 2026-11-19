@@ -1,5 +1,5 @@
 // Nests we run that anyone can query, listed under Hosted on /nests. Each is the stock binary, read-only
-// behind a proxy: GET only, no admin, so nobody can add accounts at the operator's cost.
+// behind a proxy: queries only (GET, plus POST to /sql and /mcp), no admin, so nobody can add accounts at the operator's cost.
 // An endpoint is this site's own /nests/<id>, which vercel.json rewrites to the box that runs it,
 // so a new entry needs its rewrite too.
 export interface PublicNest {
@@ -69,5 +69,27 @@ export const publicNests: PublicNest[] = [
     endpoint: 'https://nuthatch-indexer.com/nests/gnosis-history',
     example:
       "curl 'https://nuthatch-indexer.com/nests/gnosis-history/api?module=account&action=tokentx&address=0x10497611ee6524d75fc45e3739f472f83e282ad5&startblock=32100000&endblock=48900000&page=1&offset=10'",
+  },
+  {
+    id: 'base-usdc',
+    name: 'Base USDC',
+    chain: 'base',
+    for: { label: 'anyone trying Nuthatch', href: '/docs/ai/mcp' },
+    summary:
+      "Every Circle USDC event on Base for the seven days before 19 November 2026 and everything since, about 28 million transfers at the time of writing, following the tip. Not all of Base's history. SQL at /sql and MCP over HTTP at /mcp, with a balances view per holder.",
+    endpoint: 'https://nuthatch-indexer.com/nests/base-usdc',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/base-usdc/sql' --data-urlencode 'q=SELECT count(*) FROM usdc__transfer'",
+  },
+  {
+    id: 'arc-usdc',
+    name: 'Arc testnet USDC',
+    chain: 'arc-testnet',
+    for: { label: 'anyone trying Nuthatch', href: '/docs/ai/mcp' },
+    summary:
+      "USDC on Circle's Arc testnet from block 72,550,000, the native-token Transfer and every other USDC event, following the tip every 2 seconds. SQL at /sql and MCP over HTTP at /mcp, with a balances view per holder.",
+    endpoint: 'https://nuthatch-indexer.com/nests/arc-usdc',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/arc-usdc/sql' --data-urlencode 'q=SELECT count(*) FROM usdc__transfer'",
   },
 ];
