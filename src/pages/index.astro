@@ -101,6 +101,68 @@ const rows: { p: string; c: string[] }[] = [
     <div class="wrap">
       <p class="section-label">How it works</p>
       <h2 class="how-h narrow">One process, from RPC to a query you can trust.</h2>
+      <figure class="how-diagram">
+        <svg class="pl pl-wide" viewBox="0 0 1080 88" role="img" aria-label="The pipeline: RPC, decode, redb, sealed Parquet, Burrmill, then SQL, HTTP and MCP.">
+          <rect class="pl-node" x="0.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="75.0" y="32" text-anchor="middle">RPC</text>
+          <text class="pl-sub" x="75.0" y="78" text-anchor="middle">your endpoint</text>
+          <path class="pl-edge" d="M154 26.5H181" />
+          <path class="pl-head" d="M176 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="186.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="261.0" y="32" text-anchor="middle">decode</text>
+          <text class="pl-sub" x="261.0" y="78" text-anchor="middle">from the ABI</text>
+          <path class="pl-edge" d="M340 26.5H367" />
+          <path class="pl-head" d="M362 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="372.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="447.0" y="32" text-anchor="middle">redb</text>
+          <text class="pl-sub" x="447.0" y="78" text-anchor="middle">hot store, at the tip</text>
+          <path class="pl-edge" d="M526 26.5H553" />
+          <path class="pl-head" d="M548 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="558.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="633.0" y="32" text-anchor="middle">sealed Parquet</text>
+          <text class="pl-sub" x="633.0" y="78" text-anchor="middle">past finality</text>
+          <path class="pl-edge" d="M712 26.5H739" />
+          <path class="pl-head" d="M734 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="744.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="819.0" y="32" text-anchor="middle">Burrmill</text>
+          <text class="pl-sub" x="819.0" y="78" text-anchor="middle">SQL on DataFusion</text>
+          <path class="pl-edge" d="M898 26.5H925" />
+          <path class="pl-head" d="M920 22l5 4.5-5 4.5" />
+          <rect class="pl-node pl-out" x="930.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="1005.0" y="32" text-anchor="middle">SQL · HTTP · MCP</text>
+          <text class="pl-sub" x="1005.0" y="78" text-anchor="middle">your app or agent</text>
+        </svg>
+        <svg class="pl pl-tall" viewBox="0 0 340 419" role="img" aria-label="The pipeline: RPC, decode, redb, sealed Parquet, Burrmill, then SQL, HTTP and MCP.">
+          <rect class="pl-node" x="0.5" y="0.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="29" text-anchor="middle">RPC</text>
+          <text class="pl-sub" x="186" y="29">your endpoint</text>
+          <path class="pl-edge" d="M85.5 51V70" />
+          <path class="pl-head" d="M81 65l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="74.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="103" text-anchor="middle">decode</text>
+          <text class="pl-sub" x="186" y="103">from the ABI</text>
+          <path class="pl-edge" d="M85.5 125V144" />
+          <path class="pl-head" d="M81 139l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="148.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="177" text-anchor="middle">redb</text>
+          <text class="pl-sub" x="186" y="177">hot store, at the tip</text>
+          <path class="pl-edge" d="M85.5 199V218" />
+          <path class="pl-head" d="M81 213l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="222.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="251" text-anchor="middle">sealed Parquet</text>
+          <text class="pl-sub" x="186" y="251">past finality</text>
+          <path class="pl-edge" d="M85.5 273V292" />
+          <path class="pl-head" d="M81 287l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="296.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="325" text-anchor="middle">Burrmill</text>
+          <text class="pl-sub" x="186" y="325">SQL on DataFusion</text>
+          <path class="pl-edge" d="M85.5 347V366" />
+          <path class="pl-head" d="M81 361l4.5 5 4.5-5" />
+          <rect class="pl-node pl-out" x="0.5" y="370.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="399" text-anchor="middle">SQL · HTTP · MCP</text>
+          <text class="pl-sub" x="186" y="399">your app or agent</text>
+        </svg>
+      </figure>
       <div class="how-cols">
         <div>
           <h3>Two engines, one binary</h3>
@@ -299,7 +361,15 @@ const rows: { p: string; c: string[] }[] = [
 
   /* HOW */
   .how-h { margin-bottom: 2.2rem; }
-  .how-diagram { margin-bottom: 2.8rem; }
+  .how-diagram { margin: 0 0 2.8rem; }
+  .pl { display: block; width: 100%; height: auto; overflow: visible; }
+  .pl-tall { display: none; max-width: 22rem; }
+  @media (max-width: 60rem) { .pl-wide { display: none; } .pl-tall { display: block; } }
+  .pl-node { fill: var(--bg-code); stroke: var(--border-hi); stroke-width: 1; }
+  .pl-out { stroke: var(--accent); }
+  .pl-edge, .pl-head { fill: none; stroke: var(--accent); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
+  .pl-label { fill: var(--text); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em; }
+  .pl-sub { fill: var(--text-muted); font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.04em; }
   .how-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem 2.5rem; }
   .how-cols h3 { margin-bottom: 0.6rem; }
   .how-cols p { color: var(--text-muted); font-size: 0.875rem; }
