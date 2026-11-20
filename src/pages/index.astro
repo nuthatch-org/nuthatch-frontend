@@ -52,28 +52,23 @@ const rows: { p: string; c: string[] }[] = [
   </section>
 
   <!-- 2. PROOF BAND -->
-  <section class="proof" aria-label="Measured">
+  <section class="proof" aria-label="Measured figures">
     <div class="wrap">
       <div class="fd-stats">
         <div class="fd-stat">
-          <p class="fd-stat-l">Peak memory, measured</p>
-          <p class="fd-stat-n">&lt; 1.8 <span class="u">GiB peak</span></p>
-          <p class="fd-stat-s">The largest nest we run, answering the 74 statements its dashboard and jobs send, two at a time under its production limits on Linux: 1,595 to 1,788 MiB over four runs of 4.4.0, inside the 2 GB budget. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0" rel="noopener">Release notes</a>.</p>
+          <p class="fd-stat-l">Peak memory</p>
+          <p class="fd-stat-n">&lt; 1.8 <span class="u">GiB</span></p>
+          <p class="fd-stat-s">The largest nest we run, answering its 74 production statements two at a time: 1,595 to 1,788 MiB over four runs. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0" rel="noopener">4.4.0 release notes ↗</a></p>
         </div>
         <div class="fd-stat">
-          <p class="fd-stat-l">OBIB case 6, measured</p>
+          <p class="fd-stat-l">OBIB case 6</p>
           <p class="fd-stat-n">4.67 <span class="u">s</span></p>
-          <p class="fd-stat-s">Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a> case 6, the Uniswap V2 factory over 10,001 blocks with 232 pairs discovered as it ran: 35,271 events in 14 RPC requests and 229 MB, median of five runs of the published 4.7.0 binary against a keyless public gateway. Someone else's benchmark, not a ranking. <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The run's record</a>.</p>
+          <p class="fd-stat-s">Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">benchmark ↗</a>: Uniswap V2 over 10,001 blocks, 35,271 events, median of five runs. Not a ranking. <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The 4.7.0 record ↗</a></p>
         </div>
         <div class="fd-stat">
-          <p class="fd-stat-l">Address to API, measured</p>
+          <p class="fd-stat-l">Address to API</p>
           <p class="fd-stat-n">10 to 11 <span class="u">s</span></p>
-          <p class="fd-stat-s">Contract address to a live indexed API: the README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes</a>.</p>
-        </div>
-        <div class="fd-stat">
-          <p class="fd-stat-l">Phone-home</p>
-          <p class="fd-stat-n">Opt-in only</p>
-          <p class="fd-stat-s">No gateway, no tokens, no account. The one thing it can send is a <a href="/count">head count</a>, and only after you say yes. It reads from an RPC endpoint you choose, which can be your own node.</p>
+          <p class="fd-stat-s">The README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes ↗</a></p>
         </div>
       </div>
     </div>

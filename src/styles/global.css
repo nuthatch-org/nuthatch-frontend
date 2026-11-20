@@ -204,11 +204,11 @@ section { padding-block: clamp(3.5rem, 8vw, 6rem); }
   text-transform: uppercase; color: var(--accent); margin: 0 0 6px;
 }
 .fd-stat-n {
-  font-family: var(--font-display); font-weight: 500; font-size: clamp(1.6rem, 4vw, 2rem);
+  font-family: var(--font-display); font-weight: 500; font-size: clamp(2rem, 4.5vw, 3rem);
   letter-spacing: -0.035em; line-height: 1.05; margin: 0; font-variant-numeric: tabular-nums;
 }
 .fd-stat-n .u { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); letter-spacing: 0.02em; margin-left: 4px; }
-.fd-stat-s { color: var(--text-muted); font-size: 0.75rem; margin: 6px 0 0; line-height: 1.5; }
+.fd-stat-s { color: var(--text-muted); font-size: 0.889rem; margin: 6px 0 0; line-height: 1.5; }
 
 /* --- Ambient scenery: a fixed canvas behind the content, drawn for dark ----- */
 #ambient { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
