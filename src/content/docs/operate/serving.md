@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -66,10 +66,16 @@ mounts of the same dataset, compete for the same budget. The pool is sized by
 `NUTHATCH_BURRMILL_MEMORY_LIMIT`, falling back to `NUTHATCH_ANALYTICS_MEMORY_LIMIT` (512 MB by default),
 and the engine runs a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so the analytical path stays inside the
 [footprint budget](/docs/operate/metrics/).
-A statement that needs more memory than the pool has left is refused with an out-of-memory error, not
-spilled: since 4.1 a hash join or final aggregate cannot spill to disk, though a sort can (4.3.0).
+A hash join that needs more memory than the pool has left is refused with an out-of-memory error,
+because it cannot spill to disk. An aggregate or a sort can spill (the sort since 4.3.0), but only with room
+to start: a GROUP BY of 3 million groups spilled 32 MB and
+finished under a 64 MB limit, and was refused at 48 MB.
 Since 5.13.0 the values a statement computes count against the pool too, and any one of them is
-capped at 16 MiB.
+capped at 16 MiB. Since 5.21.0 the pool gives each operator that can spill its share, where the first
+to ask could take it all and leave the next refused. A large scan no longer holds metrics for every
+segment it opens, and one that cannot get its bookkeeping from the pool is refused by name, rather
+than leaving the refusal to a sort beside it. A statement the engine panics on is answered
+`500`, saying the fault is nuthatch's, and the engine answers the next one.
 
 ## Repeated statements
 
@@ -87,7 +93,9 @@ off).
 Every result also carries `provenance`: `as_of` (the head the answer is current to), `sealed_through`,
 the `registry_hash` it was decoded under, the `nid` of the dataset that answered, and `source`.
 `source` is `hot+sealed` normally. When the hot store would not scan and the answer came from sealed
-segments alone, `tip_unavailable` is `true` and, since 4.11.0, `source` says `sealed` too.
+segments alone, `tip_unavailable` is `true` and, since 4.11.0, `source` says `sealed` too. Since
+5.22.0 it adds `labels_sha256` when the answer read `labels`, and `segments_sha256` when it was
+asked at a block (`at_block` or `at_time`).
 
 ## When cold data is damaged (2.2.0)
 
@@ -113,11 +121,25 @@ This is the same principle as the unsealed-row ceiling above: never quietly retu
 The difference is that a reduced table is recoverable and worth serving, so here nuthatch answers *and*
 tells you, rather than refusing.
 
+Since 5.21.0 a restart serves at once and hashes only the segment files that changed since a pass
+last hashed them; a background pass hashes every segment a minute after start, at up to 64 MiB/s,
+and every 24 hours after. A segment that fails is quarantined and its table answers reduced, as
+above. `/ready` then carries `integrity`, naming the quarantined segments and the tables they
+reduce, and once a quarantined provisional tail has stopped sealing it answers `503` as soon as the
+nest holds a block past the watermark. Derived
+state rebuilt at start from a segment since quarantined is not retracted: until a restart,
+`/balances`, `/balance`, `/exposure`, `/flags` and `/derived` carry `"derived_state_stale": true`,
+and `/sql` lists a referenced entity in `degraded_tables`.
+
 ## Exposure
 
 **The API has no authentication.** Bound to localhost (the default) that's the point. Bound off
 localhost, `dev` logs a loud warning, which names the SQL concurrency in force: the guards bound *how much* a query can cost, but *who* may
 query is your gateway's job. Put a reverse proxy with auth in front before exposing a nest publicly.
+An address-history nest on a loopback bind is stricter (since 5.21.0): it answers only a loopback
+`Host` or one named by `--public-host` or `--local-host`, so behind a proxy that passes the client's
+`Host` it answers `403`, naming that `Host`, until started with `--public-host <name>`. See
+[Security](/docs/operate/security/#exposure).
 
 Shutdown is graceful: on SIGTERM/SIGINT axum drains in-flight requests, the ingest task checkpoints
 its progress, and a restart resumes cleanly.

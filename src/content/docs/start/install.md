@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -29,12 +29,12 @@ something that will not run. From 5.0.0 the release binaries are built with fat 
 profile), which makes them smaller than a `cargo install` build from the same tag. Measured on macOS
 before the WASM layer was removed, fat LTO took the binary from 158.9 MB to 106.7 MB.
 
-From 5.17.0 two more default binaries are attached, for download by hand; the installer does not pick
-either. `nuthatch-x86_64-apple-darwin.tar.gz` is for **Intel Macs**. It is built in CI and **has not
-been run on Intel hardware by us**, which is why the installer still sends an Intel Mac to the source
-build. `nuthatch-x86_64-unknown-linux-musl.tar.gz` is a **static Linux binary with no glibc
-dependency**. It uses musl's allocator rather than jemalloc, and **its behaviour under load has not
-been measured**. The scaled, graph and flight builds are not made for either target.
+From 5.17.0 two more default binaries are attached. `nuthatch-x86_64-apple-darwin.tar.gz` is for
+**Intel Macs**, and the installer picks it. It is cross-compiled on Apple Silicon and run on an Intel
+runner in CI each week: 5.19.0 went from `init` to a first row there in 11 s. It has not been
+measured under load. `nuthatch-x86_64-unknown-linux-musl.tar.gz` is a **static Linux binary with no
+glibc dependency**, for download by hand; the installer does not pick it. It uses musl's allocator
+rather than jemalloc, and **its behaviour under load has not been measured**. The scaled, graph and flight builds are not made for either target.
 
 The Linux binaries are dynamically linked and need **glibc 2.35 or newer**, measured off the published
 artifact with `objdump -T`: from 4.1.0 the x86_64 binary references `hypot` at `GLIBC_2.35`, and the
@@ -49,7 +49,7 @@ repository and workflow rather than merely the integrity of bytes in transit:
 
 ```sh
 gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nuthatch-org/nuthatch \
-  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.19.0
+  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.22.0
 ```
 
 All three flags matter. `--repo` alone accepts an attestation from any workflow on any ref of the
@@ -80,14 +80,14 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 
 From 5.17.0 every release also carries `nuthatch-flight-<target>.tar.gz` for `aarch64-apple-darwin`,
 `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, built with `--features flight` and attested
-like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.19.0-flight`, never tagged `latest`.
+like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.22.0-flight`, never tagged `latest`.
 It serves Arrow Flight SQL beside the HTTP API with `nuthatch dev --flight 127.0.0.1:8815`. The default
 binary needs none of it to answer [in Arrow over HTTP](/docs/reference/http-api/#answers-in-arrow).
 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nuthatch-org/nuthatch:5.19.0 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.22.0 --version
 ```
 
 `:latest` is the newest stable release, and from 5.18.0 a pre-release or a patch on an older line
@@ -95,7 +95,7 @@ never moves it; pin the version for anything you care about. From 5.18.0 the ima
 after the release has passed its gates, and each carries a build-provenance attestation too. `linux/amd64`
 only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
 binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`5.19.0-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`5.22.0-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source

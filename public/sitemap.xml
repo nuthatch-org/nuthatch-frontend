@@ -8,6 +8,8 @@
   <url><loc>https://nuthatch-indexer.com/blog/closing-the-subgraph-parity-gap</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/content-addressed-nests-and-data-reuse</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/ensv2-went-live-and-our-nest-saw-the-switch</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/graph-sentinel</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/handing-over-a-synced-subgraph-with-waxwing</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/hosted-nests-are-open</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/index-uniswap-v3-with-nuthatch</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/keeping-duckdb</loc></url>
@@ -18,6 +20,7 @@
   <url><loc>https://nuthatch-indexer.com/blog/nuthatch-as-a-wasm-blob</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/nuthatch-at-a-hackathon</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/nuthatch-data-service-on-graph-horizon</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/on-datafusions-list</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/one-engine</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/replacing-duckdb-after-all</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/robinhood-chain-uniswap-v4-without-studio</loc></url>
@@ -41,10 +44,10 @@
   <url><loc>https://nuthatch-indexer.com/docs/ai/builder-skill</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/ai/llms-txt</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/ai/mcp</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/book</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/a-lease-handover-walked-through</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/a-reorganisation-walked-through</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/identity-upgrades-and-reuse</loc></url>
-  <url><loc>https://nuthatch-indexer.com/docs/book/index</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/maintaining-an-answer</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/one-log-end-to-end</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/operating-a-truthful-index</loc></url>
@@ -75,6 +78,12 @@
   <url><loc>https://nuthatch-indexer.com/docs/contributing/architecture</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/contributing/internals</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/contributing/rfcs</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/bnb-chain-limit-exceeded</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/exceed-maximum-block-range</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/free-api-access-is-not-supported-for-this-chain</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/log-response-size-exceeded</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/query-returned-more-than-10000-results</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/errors/query-timeout-exceeded</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/operate/costs</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/operate/deploy</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/operate/hosting-nests</loc></url>
@@ -106,8 +115,11 @@
   <url><loc>https://nuthatch-indexer.com/nests/aave-v3-arbitrum</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/aave-v3-base</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/aerodrome</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/arc-usdc</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/arcaidia</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/aztec-staking</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/base-history</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/base-usdc</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/betswirl-bnb</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/bounty-nest</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/compound</loc></url>
@@ -122,6 +134,7 @@
   <url><loc>https://nuthatch-indexer.com/nests/ens</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/erc20-token</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/erc721-nft</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/eurc</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/forsage-bsc</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/gmx</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/gnosis-history</loc></url>
@@ -150,6 +163,8 @@
   <url><loc>https://nuthatch-indexer.com/nests/peeranha</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/perpl</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/poa</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/polymarket</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/pwnpot</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/qos-reo</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/request-payments</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/rewards-eligibility-oracle</loc></url>
@@ -164,7 +179,10 @@
   <url><loc>https://nuthatch-indexer.com/nests/uniswap-v3</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/uniswap-v4</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/uniswap-v4-base</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/usdc</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/usdc-base</loc></url>
   <url><loc>https://nuthatch-indexer.com/nests/velodrome</loc></url>
+  <url><loc>https://nuthatch-indexer.com/nests/weth</loc></url>
   <url><loc>https://nuthatch-indexer.com/platform</loc></url>
   <url><loc>https://nuthatch-indexer.com/play/</loc></url>
   <url><loc>https://nuthatch-indexer.com/play/build/</loc></url>

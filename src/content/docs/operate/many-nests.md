@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
@@ -59,6 +59,10 @@ shares when you change them live; each change is written to the file before it t
 keys are in the [config reference](/docs/reference/config/#mountstoml).
 
 A nest cannot tell it is co-hosted: its config, storage, and routes are identical to a solo `dev`.
+A dataset is taken as a runtime's only when its directory is named by a NID or its root has a
+`mounts.toml` (since 5.21.0). A solo nest that merely sits in a directory named `data` seals into
+its own `segments/`; one that 5.20 or earlier sealed into `<parent of data>/segments` keeps reading
+those files where they are.
 
 **Two mounts may name the same nest identity, and that is the point.** They share one dataset: one
 store, one place in the cursor, one backfill, two routes. Two tenants running the same nest never
@@ -220,7 +224,10 @@ for a new runtime.
 
 Chain identity is shared per cursor; **hot stores are per-nest and isolated**, while sealed Parquet
 segments are content-addressed in the runtime-wide shared store. A reorg rolls back every affected
-nest's hot store on that cursor; sealed history is immutable everywhere. The roster and
+nest's hot store on that cursor; sealed history is immutable everywhere. Since 5.21.0 a segment in
+the shared store that fails its hash is moved to `<root>/quarantine/<hash>.parquet` rather than
+served: its bytes are wrong for every dataset naming that hash, so every such mount answers reduced,
+with the table in `degraded_tables`, until any of them seals the same rows again. The roster and
 [per-nest metrics](/docs/operate/metrics/) let you see each nest's own progress and footprint
 rather than one blended number.
 

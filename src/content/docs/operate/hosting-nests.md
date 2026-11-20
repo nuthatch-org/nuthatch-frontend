@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -227,7 +227,11 @@ nh -XPOST localhost:8288/_admin/nests -d '{"name":"usdc","nid":"9f2c…","seed":
 
 The job reads `seeding` with `seed_progress`, checks every file against its content address exactly
 as `nuthatch seed` does, and then follows the chain from the block after the mirror ends. A corrupt
-segment fails it `verification_failed`; posting the same body again fetches only what is missing. A
+segment fails it `verification_failed`; posting the same body again fetches only what is missing.
+Since 5.21.0 a publisher hashes each segment as it uploads it and stores nothing for one that does
+not match, and a segment quarantined before the mirror held it stays catalogued with no file behind
+it: seeding then fails `not_found`, naming the segment and its blocks, rather than leave the nest
+short. A
 dataset that has already indexed, or that another mount already serves, is not seeded again. S3
 credentials come from the runtime's `AWS_*` environment, never the request.
 
@@ -371,12 +375,16 @@ naming the ceiling. They are kept under `[mounts.limits]`, outside the NID, so t
 dataset may carry different ones. `{"limits": {}}` returns a mount to the process values. Requests
 already running finish under the limits they started with. `analytics_memory_bytes` is approximate:
 two mounts of one NID share the dataset's engine pool, so one mount's cap can refuse its query while
-the other is busy.
+the other is busy. Since 5.21.0 that pool gives each operator that can spill its share, borrowing
+from idle ones while one share stays free, where the first statement to ask could take it all.
 
 **Strict isolation.** By default every mount of one dataset shares its SQL session, engine memory
 pool and answer cache, which is right when one operator owns every mount. `[runtime] isolation =
 "strict"` gives each tenant label its own of all three, holds `/sql` and the views it reaches to a
-function allow-list, and runs only `CREATE VIEW` from a nest's `views/*.sql`. Since 5.18.0 a mount's
+function allow-list, and runs only `CREATE VIEW` from a nest's `views/*.sql`. Since 5.21.0 the
+allow-list reads a statement's calls as the engine parses it, so `IGNORE NULLS` and `^@`, and the
+views that use them, answer where they were refused as unreadable; what it refuses is unchanged, and
+a refusal names the function in lower case (`version`). Since 5.18.0 a mount's
 own `/<name>/metrics` carries only the series labelled with that mount, with its entity and snapshot
 series, where it used to serve every tenant's; the root `/metrics` still carries everything. **The isolation
 guarantee is not claimed**: the threat model,
@@ -450,6 +458,12 @@ between the network and a mount.
   bounded window buffer, with one ingest task per nest reading it from its own position, so a nest
   whose windows are slow delays only itself; see [Run many nests](/docs/operate/many-nests/).
   `window_deadline_ms` ([step 9](#9-shares-and-limits)) bounds how long one of its windows may take.
+- **A corrupt shared segment is quarantined, not served.** Since 5.21.0 sealed segments are hashed
+  again in the background, a minute after start and every 24 hours after, at up to 64 MiB/s across
+  the process. One in the shared store that fails moves to `<root>/quarantine/<hash>.parquet`, and
+  every mount of every dataset naming that hash answers reduced until the same rows are sealed
+  again; `/<name>/ready`'s `integrity` and `nuthatch_quarantined_segments` say so. Before, it was
+  reported and left in place, and every mount kept answering from the bad bytes.
 - **Restart** at any time. Mounts come back from `mounts.toml`, suspended mounts stay suspended,
   unfinished jobs resume, and a fetch a killed process left half-staged is cleared first.
 - **Upgrade the binary** by replacing it and restarting. NIDs are independent of the nuthatch version,
@@ -489,7 +503,11 @@ It takes sealed segments from the writer's mirror, each checked against the hash
 and each nest's config from the registry by NID. The mirror must publish for followers, which is off by
 default because it uploads offchain snapshots too and needs delete permission: set `followers = true`
 in `[runtime.publish]` or `[mounts.publish]`, and publish each nest's bundle to the registry. A slow
-mirror shows as lag, never as a short answer. Cross-region latency has not been measured.
+mirror shows as lag, never as a short answer. Since 5.21.0 a follower holding an earlier generation
+while the mirror lacks a file says so on `/ready` (`follower.holding_earlier_generation`) and in
+`nuthatch_follower_held_generation_seconds`, and stays ready, since what it serves is whole; one
+waiting on its first snapshot names the file it is fetching. Cross-region latency has not been
+measured.
 
 To upgrade with no outage, roll the followers first, one at a time, waiting for each to report
 `"writer": "connected"` and `"lag_generations": 0`, then the writer last; while it restarts the

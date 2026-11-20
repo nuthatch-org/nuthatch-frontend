@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -40,7 +40,15 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   (endpoints asked only while every other one is failing), `--poll-interval` (default five
   minutes, or the chain's block time if longer; `--poll-interval 12s` follows mainnet's tip closely,
   at the cost of more RPC calls), `--finality-only` (never index the unfinalised tip), `--cors`, and
-  `--state-rpc` (archive endpoints for declared `[[calls]]`).
+  `--state-rpc` (archive endpoints for declared `[[calls]]`). `--backfill` only chooses where a first
+  run starts: since 5.21.0 a nest that has already indexed a block says it does not apply and
+  resumes from its last block, so remove its store to start over. Since 5.21.0 `--concurrency` runs
+  N-way on one endpoint as on several; keep it low against a rate-limited public endpoint. For an
+  address-history nest on a loopback bind (since 5.21.0), `--public-host <name>` answers the name a
+  reverse proxy forwards with reads only, `--local-host <name>` answers a name as this machine
+  (`host.docker.internal` for a client in a container), and `--write-token-env <VAR>` names an
+  environment variable whose token watch, unwatch and the lent RPC then require. See
+  [HTTP API](/docs/reference/http-api/#etherscan-shaped-api).
 
 ## Everyday companions
 
@@ -50,8 +58,11 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   contract as a nest of its own.
 - **`nuthatch sql [query]`** - query the live tip ∪ sealed history; prints a table. No query opens
   a REPL (`.tables`, `.schema <t>`, history). `--json` emits NDJSON for piping to `jq`.
-- **`nuthatch schema`** - regenerate the derived artifacts (`schema.json`, `llms.txt`, the
-  `semantic.toml` footguns) after hand-editing `nuthatch.toml`.
+- **`nuthatch schema`** - regenerate the derived artifacts (`schema.json`, `llms.txt`, the skill's
+  `SKILL.md`, the `semantic.toml` footguns) after hand-editing `nuthatch.toml`. Since 5.21.0 `dev`
+  regenerating a stale `schema.json` leaves `llms.txt` and `SKILL.md` as they are, because they are
+  part of the NID, and warns when they describe tables the schema no longer has; `schema` rewrites
+  them.
 - **`nuthatch mcp`** - serve MCP over stdio, bridging to a running `dev` (`--url`).
   `--print-config` prints a copy-paste client config instead. `--token-env <VAR>` (since 5.13.0)
   names an environment variable whose value is sent as a bearer token on every request, for a nest
@@ -96,7 +107,10 @@ entity circuit.
 
 - **`nuthatch recipe list`** / **`recipe add <name>`** - add a derived view that computes a read
   (e.g. `total_supply`) from indexed events instead of an `eth_call`. No archive node,
-  deterministic, free.
+  deterministic, free. Since 5.22.0 `frozen`, `outstanding`, `mint_burn_daily` and
+  `fiat_threshold` cover an issuer's own token; `fiat_threshold` takes `--amount`, `--rates`,
+  `--decimals` and any number of `--unless-label`, which no other recipe accepts. See
+  [Compliance](/docs/build/compliance/#recipes-for-an-issuers-own-token).
 - **`nuthatch metadata fetch`** - fetch and cache a token's immutable `decimals`/`symbol`/`name`
   once; remembered in `metadata.json`.
 
@@ -104,7 +118,7 @@ entity circuit.
 
 - **`nuthatch nest bundle`** - package a nest's authored inputs into one portable,
   content-addressed `.bundle`; prints the content address. `--as-dir` writes an inspectable
-  directory instead.
+  directory instead. Since 5.22.0 it never packs label sets.
 - **`nuthatch nest load <bundle|url|dir>`** - verify a bundle (manifest format, every file's hash,
   and that the regenerated decode registry matches) and install it as a runnable nest. `--expect`
   asserts the hash; `--registry` resolves a `name[@version]` reference instead, or a NID, whose
@@ -168,6 +182,16 @@ entity circuit.
 - **`nuthatch audit report`** - summarise the threshold flags over a range (`--json`).
 - **`nuthatch audit sealed --rpc <url>`** - re-fetch a sample of sealed ranges from a second endpoint
   and compare them row by row; `dev --audit-rpc` does the same in the background.
+- **`nuthatch evidence make "<SELECT>" --at-block N | --at-time T`** - *since 5.22.0.* Ask a running
+  nest (`--url`, `http://127.0.0.1:8288` by default) for one answer as of a sealed block and write a
+  bundle to stdout or `--out <file>`. `--key <file>` signs it with a `pack keygen` key. A bundle
+  carries at most 10,000 rows, so aggregate the statement; it refuses an unsealed block and one whose
+  segments include a provisional tail.
+- **`nuthatch evidence verify <bundle> --url <nest>`** - ask a nest of the same NID the same
+  statement at the same block and print `match`, or a `MISMATCH` line naming each field that differs,
+  exiting non-zero. `--pubkey` checks the signature against the signer's key, given to you out of
+  band. `--dir <nest>` re-hashes that nest's own segment files first, which `serve` does not, and
+  names any that changed. See [Verifying](/docs/operate/verifying/#an-answer-someone-else-can-check).
 
 ## Measurement
 

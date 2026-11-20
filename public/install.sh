@@ -20,7 +20,7 @@ case "$os" in
   Darwin)
     case "$arch" in
       arm64 | aarch64) target="aarch64-apple-darwin" ;;
-      x86_64) echo "nuthatch: no prebuilt binary for Intel Mac yet - build from source: cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" >&2; exit 1 ;;
+      x86_64) target="x86_64-apple-darwin" ;;
       *) echo "nuthatch: unsupported macOS architecture '$arch'" >&2; exit 1 ;;
     esac ;;
   Linux)
@@ -72,6 +72,6 @@ case ":$PATH:" in
     fi ;;
 esac
 echo ""
-echo "  next:  nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth"
-echo "         nuthatch dev --backfill 300"
-echo "         nuthatch sql \"SELECT count(*) FROM weth__transfer\""
+echo "  next:  nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --dir weth"
+echo "         nuthatch dev --dir weth --detach --backfill 300"
+echo "         nuthatch sql \"SELECT count(*) FROM weth__transfer\" --dir weth"

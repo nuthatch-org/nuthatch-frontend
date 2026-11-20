@@ -11,12 +11,15 @@ interface Props {
   path?: string;
   /** Dim machine parts drifting in the margins: marketing pages only, never pages for reading. */
   ambient?: boolean;
+  /** The page's .md twin, linked as rel=alternate for agents (#2980). */
+  markdown?: string;
 }
 const {
   title = 'Nuthatch - be your own indexer',
   description = "Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres, no subgraph to write, and an MCP server built in.",
   path = '/',
   ambient = false,
+  markdown,
 } = Astro.props;
 const site = Astro.site ?? 'https://nuthatch-indexer.com';
 const canonical = new URL(path, site).href;
@@ -56,6 +59,7 @@ const ogImage = new URL('/og.png', site).href;
     <link rel="preload" href="/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin />
 
     <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    {markdown && <link rel="alternate" type="text/markdown" href={markdown} />}
 
     <!-- Vercel Web Analytics: cookieless page views, script and beacon both on this origin. -->
     <Analytics />

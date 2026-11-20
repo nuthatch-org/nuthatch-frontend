@@ -2,7 +2,7 @@
 title: "Agent-grade MCP"
 description: "Drive nuthatch from an agent - fully offline against the local instance."
 order: 1
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A nest isn't just queryable by you - it's queryable by your agent, with the same two-minute setup.
@@ -22,6 +22,22 @@ Any MCP client works the same way: the server speaks stdio and bridges to the ru
 Then ask questions:
 
 > "What were the ten largest transfers this week, and were any of the senders flagged?"
+
+## Try it against a live nest, with nothing installed
+
+Two nests run in public, read-only, with no key and no sign-up: Circle's USDC on Arc testnet and on Base.
+Each speaks MCP over HTTP, so an agent can connect to one without a local nest or a binary:
+
+```sh
+claude mcp add --transport http arc-usdc https://nuthatch-indexer.com/nests/arc-usdc/mcp
+claude mcp add --transport http base-usdc https://nuthatch-indexer.com/nests/base-usdc/mcp
+```
+
+Then ask: *"What were the five largest USDC transfers on Base in the last hour?"* They answer `SELECT` and
+`WITH` only, with no admin routes, at most 30 queries a minute per address, and each query is cut off at
+10 seconds and 5,000 rows. The Base nest holds the seven days before 19 November 2026 and everything since, not all of
+Base's history; its `provenance` says what block a figure is current to. How they run is in
+[docs/public-nests.md](https://github.com/nuthatch-org/nuthatch/blob/main/docs/public-nests.md).
 
 ## Per-client setup
 
@@ -60,7 +76,17 @@ name, never its value, and an error body that echoes the token reaches the agent
 The tools a nest advertises match what it actually indexes (RFC-0025). A token nest offers `balance`
 and `top_balances`; a nest with compliance configured adds `flags` and `exposure`;
 a bare event nest (say a Uniswap pool) offers neither, so an agent is never handed a tool that would
-just answer `{"count":0}`. The menu agrees with the data.
+just answer `{"count":0}`. A mount that declares named queries adds `queries` and `query`, and since
+5.21.0 a mount that answers only its declared queries no longer offers `sql`, `explain` or the
+prompts that would send the agent to SQL. The menu agrees with the data.
+
+Since 5.21.0 `balance` and `top_balances` also say what history they cover: `complete_history` is
+`true` only for a nest indexed from its configured `start_block` with no `--backfill`. Otherwise
+the figures are net flows since `indexed_from`, under `net_flow_since_indexed_from` and
+`net_receivers`, not balances.
+
+`--url` names one nest or one mount. Pointed at a runtime's root, which serves no data, the bridge
+offers one tool since 5.21.0, `mounts`, naming the mounts to point it at.
 
 ## Built agent-grade, not agent-tolerant
 
@@ -76,10 +102,14 @@ deliberate choices (RFC-0016):
 - **Check before you spend.** `explain` validates a query - binds every table, column, and type -
   without executing it, so an agent iterates on shape cheaply and runs `sql` once.
 - **Results are shaped for context windows.** The bridge caps rows (default 200) and returns
-  compact tables, not JSON walls.
+  compact tables, not JSON walls. Since 5.21.0 a `sql` answer says first how many rows follow, and
+  is held to 256 KiB with one notice saying what cut it.
 - **Answers carry provenance.** A `sql` result ends with the block it is current to, the sealed
-  watermark, the source and the registry hash, so an agent can cite a figure, and `verify-a-number` (a built-in prompt)
-  re-derives one from scratch.
+  watermark, the source the node sent and the registry hash (led by a notice when the live tip could
+  not be read), so an agent can cite a figure, and `verify-a-number` (a built-in prompt)
+  re-derives one from scratch. Since 5.22.0 `sql` takes `at_block` or `at_time`, and the `at` tool,
+  on every nest, places a time against the nest's own blocks, so an agent can give a figure as it
+  stood at a report date.
 
 The tool-by-tool surface - plus the resources and the built-in prompts - is in the
 [MCP reference](/docs/reference/mcp/). A CI-gated eval harness scores a fixed set of questions against

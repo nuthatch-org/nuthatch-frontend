@@ -2,7 +2,7 @@
 title: "Performance"
 description: What has been measured, what has not, and the three things that actually decide your backfill's wall clock.
 order: 12
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 ## The number
@@ -111,6 +111,11 @@ shared, and frequently lack archive history. A deep backfill on one will crawl o
 repeatable and nuthatch round-robins with per-endpoint health tracking, so two or three endpoints buy
 failover as well as throughput.
 
+Since 5.21.0 `--concurrency N` on a seal-direct backfill runs N windows at once on one endpoint as on
+several. Earlier releases held a single endpoint to one window at a time, against a stall whose
+causes have since been fixed. No full-history backfill on one real endpoint has been measured since
+the cap went, so the gain is yours to measure; against a rate-limited public endpoint, keep it low.
+
 ## Footprint
 
 **≤2 GB RAM per active-chain cursor**, enforced in CI rather than aspired to. A runtime's total is the
@@ -130,6 +135,9 @@ an earlier band of 387 to 481 MB. The same release measured what the buffered cu
 nest slowed tenfold, its siblings' p50 tip lag was 8 to 9.5 ms, against 541 to 802 ms on the shared
 cursor, and the tip's after-seen p50 was 28 to 33 ms on either cursor on a laptop
 ([RFC-0076](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0076-scaling-the-shared-runtime.md) §9).
+Since 5.21.0 what the windows in flight may hold is bounded whatever the concurrency, and CI fails a
+16-way seal-direct backfill on one endpoint over 512 MB; it measured 410 MB with the bound and 722 MB
+without.
 The 2 GB budget is the default ceiling; an operator may set a higher `max_rss_mb` by choice since
 5.13.0, and nothing measures a cursor above it for you.
 
@@ -160,6 +168,14 @@ change was not made for speed: measured on a production nest on 2026-10-01, Burr
 2.5× DuckDB's time per statement and needs more memory for the same joins. What it buys is one
 language in the binary and exact arithmetic that refuses rather than wraps. See
 [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
+
+5.21.0 made a large nest's queries cheaper without changing an answer. The segment catalogue is
+parsed once per version instead of up to four times a request, and imported labels are bound only for
+a statement that reads them. A scan no longer holds about 4.6 KB of per-file metrics for every
+segment it opens (89 MB at 15,108 segments), and statements sharing a pool now share it fairly. A
+credit/debit fold (a `SUM` of signed amounts grouped by holder) is no longer swapped for Burrmill's
+own fold operator, which could only refuse where DataFusion's aggregate can spill, so its time and
+memory are now DataFusion's.
 
 ## A repeated statement
 

@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -15,11 +15,13 @@ listener holds at most 256 connections and cuts off a request body that has been
 
 - `GET /` - the index summary: contract(s), chain, rows indexed, last and sealed block.
 - `GET /health` - liveness; returns `ok`.
-- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that. `tip` and `lag_blocks` are `null` until the cursor first polls (since 5.11.0), never `0`, which would read as "at the tip". Since 5.13.0 it carries `undecoded`, `{"total", "top"}`: logs a declared event claimed that did not decode against its ABI, `top` the five largest `{"contract", "topic0", "logs"}` pairs. A nest whose ABI no longer fits keeps answering and stays ready.
+- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that. `tip` and `lag_blocks` are `null` until the cursor first polls (since 5.11.0), never `0`, which would read as "at the tip". Since 5.13.0 it carries `undecoded`, `{"total", "top"}`: logs a declared event claimed that did not decode against its ABI, `top` the five largest `{"contract", "topic0", "logs"}` pairs. A nest whose ABI no longer fits keeps answering and stays ready. Since 5.21.0 it carries `integrity` once an integrity pass has quarantined a segment the nest names, and only then: `quarantined_segments`, `reduced_tables`, `seals_stopped`, `seals_stopped_tables` and `derived_state_stale`. A quarantined provisional tail with blocks still to seal behind it (`seals_stopped: true`) answers `503` at once, where it used to stay `200` until the seal clock ran out; a restart clears it.
 - `GET /metrics` - Prometheus text. See [Metrics & footprint](/docs/operate/metrics/).
-- `GET /nest` - the nest's identity: name, chain, content-addressed registry hash, and the same `undecoded` block.
+- `GET /nest` - the nest's identity: name, chain, content-addressed registry hash, and the same `undecoded` block. Since 5.22.0 it carries `labels_sha256`, the hash of the label set the nest holds now, read live, or `null` with none: the NID no longer pins one.
 - `GET /shape` - which capabilities this nest can actually answer for (balances, flags, exposure,
-  …). The MCP bridge reads it to advertise only live tools; it fails open if the probe fails.
+  …), and since 5.21.0 `free_form` (whether it answers arbitrary SQL) and `queries`, the number of
+  declared queries. The MCP bridge reads it to advertise only live tools; it fails open if the probe
+  fails.
 - `GET /tables` - every decoded table with its columns, Solidity types, and topic0.
 - `GET /schema` - the human/agent-readable data model, composed from the decode registry and
   [`semantic.toml`](/docs/build/semantic/).
@@ -34,11 +36,15 @@ listener holds at most 256 connections and cuts off a request body that has been
   Guarded: 30 s timeout, row cap (50,000 max; `max_rows` asks for less), 64 MiB result-byte cap, 2 concurrent.
   A query cut off by the timeout is answered with 504, one that spills more than the analytics spill
   cap to temporary storage (`NUTHATCH_ANALYTICS_MAX_TEMP_SIZE`, 2 GB by default) with 507, and a malformed one
-  with 400. Results
+  with 400. Since 5.21.0 a statement the engine panics on is answered 500, saying the fault is
+  nuthatch's, and counted as `nuthatch_sql_rejections_total{reason="internal"}`. Results
   carry a **provenance stamp**: `as_of`, `sealed_through`, `source`, `nid` and `registry_hash`,
-  so a figure can be cited against a fixed watermark. It does not list the segments read. See
-  [The SQL surface](/docs/reference/sql/).
-- `POST /sql` *(since 5.13.0)* - the same, with `{"q": "…", "max_rows": n}` as a JSON body, so the
+  so a figure can be cited against a fixed watermark. Since 5.22.0 it adds `labels_sha256` when the
+  answer read `labels`, and `segments_sha256`, a hash of the sealed segments read, when it was asked
+  at a block with no provisional tail among them. `at_block` or `at_time` answers as of a block or a
+  time ([below](#as-of-a-block-or-a-time)). See [The SQL surface](/docs/reference/sql/).
+- `POST /sql` *(since 5.13.0)* - the same, with `{"q": "…", "max_rows": n}` as a JSON body (and
+  `at_block` or `at_time` since 5.22.0), so the
   statement need not sit in proxy and CDN logs. The answer is byte for byte the `GET` answer.
 - `GET /explain?q=…`, `POST /explain` - validate a query **without executing it**: binds every table, column, and
   type and returns `{valid: true}` or an error with a fix hint. Cheaper than `/sql`; agents use it
@@ -59,6 +65,29 @@ listener holds at most 256 connections and cuts off a request body that has been
   provisional; `format` is `json` (default), `text`, `markdown`, and for a flow `dot` or `mermaid`. It runs under the same permit, 30 s budget and hot-tip bounds as
   `/sql` (`504` past the budget), and refuses rather than truncates past 2,000,000 flow rows or
   500,000 distinct edges. A mount bounded to named queries refuses it, since a diff reads every table.
+
+### As of a block or a time
+
+*(Since 5.22.0.)* `GET /at?time=<unix seconds>` says where the nest stood at a time, placed against
+its own stamped blocks, sealed rows and hot rows alike, and the window checkpoints at the tip. The
+answer carries `time`, `block`, `block_timestamp`, `next_block`, `next_block_timestamp`, `exact` and
+`final`.
+
+- `block` is the newest block at or before the time that the nest holds a timestamp for, and
+  `next_block` the oldest after it, which proves the nest indexed past the time. Nothing the nest
+  derives changes between the two, so its state at the time is its state at `block`.
+- `exact` says the two are adjacent, so `block` is also the chain's last block before the time.
+  `final` says `next_block` is sealed.
+- A time the nest has not indexed past is refused `409`, naming its newest stamped block. So is a
+  time before its first stamped block, unless its history starts at deployment, in which case
+  `block` is `null`: it held nothing then. A nest with `block_timestamps = false` is refused `422`.
+
+`/sql` takes `at_block=N` or `at_time=<unix seconds>` (or either in a `POST` body) and answers over
+the rows at or below that block, sealed and hot, with a time placed as `/at` places it. Both at once
+is `400`; a block past the last one indexed is `409`. Authored entities and offchain tables are not
+bound as of a block, since they hold only the present; the label set is bound as imported now. The
+MCP `sql` tool takes the same two arguments, and the `at` tool asks `/at`. The embeddable engine
+refuses both: they are answered by a node.
 
 **The cost header** *(since 5.13.0)*. A request to `/sql`, `/q/{name}`, GraphQL or a typed route
 (`/table/{name}`, `/entities`, `/entity/{id}`, the `/derived` routes, `/balances`,
@@ -127,6 +156,10 @@ with ADBC's Go Flight SQL driver (v1.12.0) and arrow-flight's Rust client. JDBC,
 - `GET /flags?kind=threshold|velocity` - compliance flags: single transfers over the configured
   amount, or addresses over the windowed-volume threshold.
 
+Since 5.21.0, while the derived state rebuilt at start read a segment quarantined since, `/balances`,
+`/balance`, `/exposure`, `/flags` and `/derived` carry `"derived_state_stale": true`, and `/sql` lists
+a referenced entity in `degraded_tables`, until a restart rebuilds them from what remains.
+
 - `GET /ipfs/gave-up` - the `[[ipfs]]` documents resolution gave up on, in block order. Each is
   absent from sealed history.
 
@@ -167,7 +200,21 @@ event nest also answers `GET /api`, but only to say it has no `[address_history]
     when every address asked is watched.
 - `GET /api/watch` lists the watched set. `POST /api/watch` and `POST /api/unwatch` take a JSON body
   of `{"address"}`, `{"validator"}` or, to add only, `{"addresses": [...]}`. They change what the nest
-  asks its RPC for, so they answer `403` on any bind but loopback.
+  asks its RPC for, so they answer `403` to any caller not on this machine.
+
+**Who is on this machine** *(since 5.21.0)*. A loopback bind answers only a loopback `Host`, or one
+declared with `--local-host` or `--public-host`, on every route; any other `Host` answers `403`
+naming the `Host` it saw. A request is this machine's only with a loopback or `--local-host` name,
+no proxy header (`X-Forwarded-For`, `Forwarded`, `Via` and the like) and no other site's `Origin`.
+A `--public-host` name, the name a reverse proxy forwards, reads watched data and changes nothing:
+watch, unwatch, `module=proxy`, `logs` and unwatched balances, `txlistinternal` by the `txhash` of
+a transaction no watched account holds, and `getblocknobytime`'s RPC search stay with callers on
+this machine. `--local-host
+host.docker.internal` admits a client in a container on Docker Desktop. For a proxy that rewrites
+`Host` to loopback and adds no header, `--write-token-env <VAR>` names an environment variable whose
+token those actions then need as `Authorization: Bearer`, from this machine too; reads need none, and
+the token never makes a public caller local. A token shorter than 16 characters, or the flag off a
+loopback bind, stops the nest at start.
 
 A directory of chain nests serves the same routes at one listener, choosing the chain by `chainid`;
 it serves no `/diff`. There `POST /api/watch` and `/api/unwatch` change every chain or, since 5.17.0,

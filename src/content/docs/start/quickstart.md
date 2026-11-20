@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -29,13 +29,17 @@ cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch
 if `ETHERSCAN_API_KEY` is set), vendors it locally, and generates the schema, views, and AI surface -
 no API key required for a verified contract.
 
+`init` writes `nuthatch.toml`, `abis/` and the rest into the current directory. Start in an empty one so that does not land in `$HOME`.
+
 ```sh
+mkdir weth-nest && cd weth-nest
 nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet
 ```
 
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `semantic.toml`, `views/`,
 `llms.txt`, a `.claude/skills/nuthatch/` skill for a coding agent and, from 5.18.0, a `.gitignore`
-for the store and the admin token.
+for the local state: since 5.21.0 it lists `nuthatch.redb` and `segments/` beside `data/` and the
+admin token.
 
 `--alias` is the table prefix, so this contract's events land in `weth__transfer`, `weth__approval`,
 and so on. Leave it out and the alias is the contract name from the ABI in snake_case
@@ -57,8 +61,29 @@ nuthatch dev --backfill 300
 seconds. Without the flag `dev` backfills from the contract's deployment block. For WETH that is millions of blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
 `nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
 
-Once caught up, `dev` asks for the tip every five minutes by default, so new rows can take that long
-to appear. Add `--poll-interval 12s` to follow mainnet's tip closely; every poll is an RPC call, so
+### Bring your own RPC for real backfills
+
+The endpoints a new nest is given are for this try-out. On the bundled mainnet pair, `nuthatch doctor`
+reports `eth_getLogs` windows of 160 blocks (Tenderly) and 80 (mevblocker), and both are rate-limited.
+A 300-block window of USDC went over Tenderly's 20,000-log cap, so the same `--backfill 300` that
+finishes for WETH can stall on a busier contract.
+
+Use your own node or a paid endpoint. `--rpc` replaces the bundled pool. The first command keeps the
+recent window. The second backfills from the deployment block:
+
+```sh
+nuthatch dev --backfill 300 --rpc https://your-endpoint.example
+nuthatch dev --rpc https://your-endpoint.example
+```
+
+The same URL can live in `nuthatch.toml` as `rpc_urls` instead of `--rpc`.
+
+`--backfill` only chooses where a first run starts. Since 5.21.0, on a nest that has already indexed
+blocks, `dev` says the flag does not apply, resumes from its last block, and names what to remove to
+start over.
+
+When it reaches the tip, `dev` logs `caught up to tip`. From then on it asks for the tip every five
+minutes by default, so new rows can take that long to appear. Add `--poll-interval 12s` to follow mainnet's tip closely; every poll is an RPC call, so
 it costs more traffic.
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with

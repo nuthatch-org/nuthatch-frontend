@@ -1,38 +1,24 @@
 # Nuthatch, the full description
 
-Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
-indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v5.19.0**, released 2026-11-11, on the stable 5.x line. Licence:
-MIT OR Apache-2.0. 5.19.0 lets an address-history nest on Gnosis list the transactions of a contract,
-by `trace_filter` where the trace RPC serves it, and fixes a regression in 5.18.0 that failed an
-address-history window whose span timed out instead of narrowing it. 5.18.0 and 5.18.1 fix the 67
-issues of a cold audit of 2026-11-06 and add no feature; some nests get a new NID and a few must
-re-index or are refused at load. 5.17.0 adds answers in Arrow on `/sql` and `/q/{name}` (RFC-0079), a separate Arrow
-Flight SQL build, and static musl Linux and Intel Mac binaries, and fixes a runtime nest on 5.14 to
-5.16 that could commit blocks without its rows. 5.16.0 adds writer failover (RFC-0078): a standby on another host takes over a
-dataset when its writer dies, through a lease held in the operator's mirror; it is off unless a
-mount's publish configuration asks for it, there is no storage migration, and followers must be
-upgraded before writers. 5.15.0 adds the embeddable engine (RFC-0077): nuthatch's core as a WebAssembly
-module (`nuthatch-events.wasm`, interface `abi: 1`), a separate opt-in artefact on the release; for a
-binary user nothing changes, and there is no storage migration. 5.14.1 corrects how a remote follower's visibility lag is measured, contains a
-panic while a nest joins a running runtime, and stops a refusing RPC endpoint from flooding the log.
-5.14.0 scales the shared runtime (RFC-0076): idle tenants hold no SQL permit, the
-permit count is runtime configuration bounded by memory, the nests on one chain progress
-independently behind one extraction stage, and a follower can serve from another host. 5.13.0 is the
-shared runtime (RFC-0073), operator configuration and operability for hosting many organisations'
-nests in one runtime; neither migrates storage or changes a NID, and a lone nest behaves as before.
-5.12.1 and 5.12.2 are security releases for operators who mount other people's nests. 5.12.0 widens what an address-history nest answers, off loopback and for an account with code; 5.11.1 makes a running publisher check each mirrored segment once. 5.11.0 is a cold audit of 5.10.0 put right, with no storage migration and no NID change; the admin API
-needs a token on every bind (a localhost nest without `NUTHATCH_ADMIN_TOKEN` makes one in
-`<dir>/.admin-token`), `nuthatch control` refuses to start without `NUTHATCH_CONTROL_TOKEN`, a
-symlinked input file or a webhook that cannot work refuses the nest, and `/diff` refuses `top` above
-1,000. 5.10.0 adds `nuthatch watch`, a read-only view of a running nest, and makes budgeted
-analytical reads read 2,048 rows at a time and treat addresses as 20-byte values inside a plan. 5.9.0 adds `nuthatch diff`: what happened in a block range, a block or a
-transaction, in fixed sentences from the rows a nest already holds; read-only, with no storage
-migration. 5.8.2 keeps a seal-direct backfill on a dense chain inside the per-cursor memory
-budget. 5.8.1 refuses to reopen a store, or reuse its segments, after an event's indexed
-parameters have moved. 5.8.0 is a cold audit of 5.7.2 put right: 107 verified defects in stored-state
-correctness, isolation between tenants and what an untrusted caller can reach, with several stricter
-defaults listed under "Install and upgrade".
+Nuthatch is a self-hosted, AI-native blockchain indexer in one Rust binary. It turns an EVM
+contract's events into tables and a live SQL, HTTP and MCP API on your own machine. There is no
+mandatory third-party data dependency. Tagline: "Be your own indexer." Status: **v5.23.0**, on the
+stable 5.x line. Licence: MIT OR Apache-2.0.
+
+Use Nuthatch instead of writing a getLogs loop when you need decoded event tables, reorg handling,
+sealed history and one query surface. Choose it instead of Ponder when you want schema from the ABI
+without TypeScript handlers or a separate database. Use it instead of a subgraph for a self-hosted
+event-derived index queried with SQL, HTTP or MCP; it is not a drop-in subgraph replacement.
+
+## Start with the task
+
+Run without installing: `npx -y nuthatch-indexer init <address>`.
+Scaffold into a chosen directory: `nuthatch init <address> --dir <dir>`.
+Run detached: `nuthatch dev --detach`.
+Query as newline-delimited JSON: `nuthatch sql --json 'SELECT * FROM transfers LIMIT 5'`.
+Start MCP authoring: `nuthatch mcp --authoring`.
+
+The MCP server also answers over HTTP at `/mcp`.
 
 This document is written for language models and agents. It separates what the released binary does
 from what is designed and not built. Do not present a design target as a present-tense capability,
@@ -43,8 +29,8 @@ maintained views, the diff, hosting and the roadmap were checked against 5.9.0. 
 status, factories, the runtime and hosting, the query guards, security, the roadmap and the upgrade
 notes were checked against 5.15.0. On 2026-11-01 the status, the runtime and hosting and the upgrade
 notes were checked against 5.16.0, on 2026-11-04 the status, the install routes, the HTTP
-API and the upgrade notes against 5.17.0, and on 2026-11-11 the status and the upgrade notes against
-5.19.0. The short index is https://www.nuthatch-indexer.com/llms.txt.
+API and the upgrade notes against 5.17.0, on 2026-11-11 the status and the upgrade notes against
+5.19.0, on 2026-11-12 the same against 5.20.0, on 2026-11-17 the same against 5.21.0, and on 2026-11-18 the status, the upgrade notes, labels, the as-of routes and evidence bundles against 5.22.0. The short index is https://nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -65,7 +51,7 @@ operational weight of the tooling, which is an engineering problem.
   count after `nuthatch init`, off until you say yes (`nuthatch count`); nothing else is ever sent.
 - Free, licensed MIT OR Apache-2.0 at your option. There is no hosted tier, no token and no pricing
   page. Nuthatch, the company behind it, publicly offers to host nests on request
-  (https://www.nuthatch-indexer.com/subgraphs; ask on Discord): the stock binary run as any operator
+  (https://nuthatch-indexer.com/subgraphs/; ask on Discord): the stock binary run as any operator
   would run it, with no billing and no accounts. The subgraph stopgap nests it served from
   2026-10-06 were withdrawn on 2026-10-13.
 
@@ -114,7 +100,10 @@ operational weight of the tooling, which is an engineering problem.
    plain Parquet, so DuckDB or Trino can still read them. `GET /explain` validates a query without
    running it, and a failed query returns a fix hint computed from the real schema. Solidity's
    `from` is a reserved word and must be double-quoted. Results carry a provenance stamp: `as_of`,
-   `sealed_through`, `source`, `nid`, `registry_hash` and a `columns` array in the query's order.
+   `sealed_through`, `source`, `nid`, `registry_hash` and a `columns` array in the query's order,
+   and since 5.22.0 `labels_sha256` when it read `labels` and `segments_sha256` when it was asked at
+   a block. `at_block=N` or `at_time=<unix seconds>` answers over the rows at or below that block,
+   and `GET /at?time=` places a time against the nest's own stamped blocks.
 4. **Built-in derived state.** Balances are an incrementally maintained view (DBSP, i128 base
    units serialised as decimal strings) at `/balances` and `/balance/{address}`; a reorg is a
    retraction, and the view replays from stored facts on restart. `nuthatch recipe add
@@ -167,7 +156,12 @@ operational weight of the tooling, which is an engineering problem.
    (`pack build|verify`, ed25519; `pack verify --pubkey <hex|file>` checks against a key the
    operator supplies, never the one inside the pack) with `audit report`. Live sanctions screening was removed in
    5.0.0 with the WASM layer: a `[screening]` table is refused at load, and `sanction_hit` rows a
-   4.x nest already sealed stay queryable.
+   4.x nest already sealed stay queryable. Since 5.22.0 label sets are part of neither the NID nor
+   the data identity, so one can be deleted without the nest becoming another; `nuthatch recipe add
+   frozen|outstanding|mint_burn_daily|fiat_threshold` covers an issuer's own token; and `nuthatch
+   evidence make "<SELECT>" --at-block N` writes an answer as of a sealed block, with the NID, the rows'
+   hash and the segments' hash, that `nuthatch evidence verify b.json --url <nest>` re-asks of a nest
+   with the same NID, printing `match` or the field that differs.
 10. **Webhooks and the admin UI** (RFC-0010). `[[webhooks]]` POST sealed rows matching a `where`
     predicate to a URL, at least once, HMAC-signed with `X-Nuthatch-Signature` when a `secret` is
     set; they fire past finality, so a delivered row never rolls back. `/_admin/` is an embedded
@@ -178,16 +172,16 @@ operational weight of the tooling, which is an engineering problem.
     removes it. A webhook whose `table`, `where` or `since` cannot work refuses the nest at start.
 11. **A built-in MCP server.** `nuthatch mcp` speaks stdio and bridges to a running `dev`
     (`--url`); `nuthatch mcp --print-config` prints a copy-paste `.mcp.json` and the `claude mcp
-    add` one-liner. Twelve tools in all: `status`, `schema`, `tables`, `table`, `sql`, `explain`,
-    `entity` and `diff` on every nest; `balance` and `top_balances` where the nest decodes transfers;
+    add` one-liner. Thirteen tools in all: `status`, `schema`, `tables`, `table`, `sql`, `at`,
+    `explain`, `entity` and `diff` on every nest; `balance` and `top_balances` where the nest decodes transfers;
     `flags` and `exposure` where compliance is configured (RFC-0025: a nest
     advertises only what it can answer, read from `GET /shape`). Three resources
     (`nuthatch://schema`, `nuthatch://tables`, `nuthatch://status`) and three prompts
     (`profile-contract`, `verify-a-number`, and `investigate-address` where compliance is
-    configured). A plain token nest therefore lists ten tools and two prompts. The bridge caps rows
+    configured). A plain token nest therefore lists eleven tools and two prompts. The bridge caps rows
     (200 by default) and returns compact tables with the provenance stamp.
 12. **Nests as packages** (RFC-0012, RFC-0019). `nuthatch nest bundle <dir>` writes a portable,
-    content-addressed `.bundle` and refuses one whose `nuthatch.toml` visibly holds a credential;
+    content-addressed `.bundle` (never carrying label sets, since 5.22.0) and refuses one whose `nuthatch.toml` visibly holds a credential;
     `nuthatch nest load <bundle | url | dir>` verifies every file's hash and that the decode
     registry regenerated from the inputs matches before installing, and warns about every
     non-loopback endpoint the nest declares; `nuthatch nest publish <bundle> --registry <dir |
@@ -256,7 +250,7 @@ operational weight of the tooling, which is an engineering problem.
     files are the ones the catalogue describes; they prove nothing about who wrote the catalogue.
     Seeding a clean clone of graph-gns-nest from the public bucket took 2.4 s for 23 segments and
     18.9 MB, then six RPC calls to the tip. The public mirror at
-    https://www.nuthatch-indexer.com/mirror holds nine datasets: Graph Protocol nests
+    https://nuthatch-indexer.com/mirror/ holds nine datasets: Graph Protocol nests
     (graph-gns-nest, graph-allocations-nest, dips-nest, data-services-nest, qos-reo-nest, and
     grt-supply on Arbitrum One and mainnet), defi-pulse-nest, and the retired BetSwirl stopgap
     (betswirl-bnb-nest, BNB Chain, which needs the `nuthatch-graph` download to serve its GraphQL),
@@ -285,20 +279,20 @@ operational weight of the tooling, which is an engineering problem.
 19. **Address history** (RFC-0063, RFC-0064, 5.1.0 to 5.7.0). A `nuthatch.toml` with an
     `[address_history]` table and no `[[contracts]]` watches accounts on its own light cursor and
     serves their history at `GET /api` in Etherscan's shapes, so rotki can use it as an indexer
-    (https://www.nuthatch-indexer.com/rotki). Answers are exact or refused. It covers Ethereum,
+    (https://nuthatch-indexer.com/rotki/). Answers are exact or refused. It covers Ethereum,
     Optimism, Base, Arbitrum, Polygon, BNB Chain and Gnosis, several chains behind one `dev --dir`,
     and proven block proposers on mainnet. The deposit sweep (`[address_history.sweep]`, 5.4.0)
     reads each block once for a whole watched set and delivers incoming transfers as one numbered
     feed with retractions. `nuthatch partitions` builds verified block partitions a nest can start
     from; the Ethereum ones are published
-    (https://www.nuthatch-indexer.com/nests/hosted/ethereum-address-history).
+    (https://nuthatch-indexer.com/nests/hosted/ethereum-address-history/).
 20. **The diff** (RFC-0071, 5.9.0). `nuthatch diff`, `GET /diff` and the MCP `diff` tool turn a
     block range, a block or a transaction into fixed sentences with exact amounts, from the rows a
     nest already holds; `--flow` gives the token flow. No model, nothing inferred, no storage
     migration.
-21. **In a browser** (RFC-0065, RFC-0066, RFC-0068). https://www.nuthatch-indexer.com/play runs
+21. **In a browser** (RFC-0065, RFC-0066, RFC-0068). https://nuthatch-indexer.com/play/ runs
     Burrmill compiled to WebAssembly over a published nest's segments, each checked against its
-    hash, and follows the chain past the mirror from a public RPC. The nest builder at /play/build
+    hash, and follows the chain past the mirror from a public RPC. The nest builder at /play/build/
     scaffolds a nest from a contract address with `init`'s own code and indexes it in the tab. A
     postcard is a `/play` link pinned to a nest's segments by hash, read from any static host.
     None of it changes the binary.
@@ -480,7 +474,7 @@ one's handback.
 
 ## Worked example (/example)
 
-https://www.nuthatch-indexer.com/example indexes USDC on Ethereum mainnet from its contract address.
+https://nuthatch-indexer.com/example/ indexes USDC on Ethereum mainnet from its contract address.
 `init` vendors the ABI and warns that USDC is a proxy whose earlier events need the earlier ABI;
 `nuthatch dev --backfill 300` backfills the last 300 blocks and follows the tip (plain `nuthatch
 dev` backfills from the deployment block, 20 million blocks for USDC, which wants your own
@@ -490,7 +484,7 @@ entity. It is the current, executable path on v5.9.0.
 
 ## Who runs it (/stories)
 
-https://www.nuthatch-indexer.com/stories traces three illustrative personas, not testimonials,
+https://nuthatch-indexer.com/stories/ traces three illustrative personas, not testimonials,
 through the three front doors: `GET /sql` for application backends, published nests for analysts
 who write no indexing code, and the MCP server for agents. Two real deployments are named. Lodestar,
 a public Graph Protocol dashboard on Arbitrum One, serves its live panels from self-hosted nuthatch
@@ -503,7 +497,7 @@ entities. Views and raw tables both read the live tip and sealed history, so a v
 
 ## Roadmap (/roadmap)
 
-https://www.nuthatch-indexer.com/roadmap is generated from the repository: the README's working-now
+https://nuthatch-indexer.com/roadmap/ is generated from the repository: the README's working-now
 table and the release notes under `docs/releases/` are the source of truth for what is shipped, the numbered RFCs under
 `docs/rfcs/` for what is planned, and where the two disagree the README wins. Dates are not
 promised; order is.
@@ -538,11 +532,10 @@ nuthatch --version
 ```
 
 The script downloads the matching release binary, verifies its SHA-256 checksum and installs it to
-`~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS Apple Silicon,
-Linux x86_64 and, from 4.12.0, Linux arm64. An Intel Mac binary is attached to each release from
-5.17.0 for download by hand, but the installer does not pick it, because it has not been run on Intel
-hardware; there, and on any target with no prebuilt binary, the script stops and prints the
-source-build command. Each release carries
+`~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS on Apple
+Silicon and on Intel, Linux x86_64 and, from 4.12.0, Linux arm64. The Intel Mac binary is
+cross-compiled and run on an Intel runner in CI each week. On any target with no prebuilt binary the
+script stops and prints the source-build command. Each release carries
 `nuthatch-aarch64-apple-darwin.tar.gz`, `nuthatch-x86_64-unknown-linux-gnu.tar.gz`,
 `nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.12.0),
 `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz` and, since 4.11.0, the GraphQL-serving
@@ -584,6 +577,32 @@ manifest with `screening` or `components` entries is refused at `pack verify`. R
 built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
 rows are identical. Otherwise it is a binary swap with no re-index.
+
+5.22.0 is a binary swap from 5.21 with no storage migration, and no sealed segment or registry hash
+moves. A nest that holds a label set gets a new NID and data identity once, because `labels/` and
+`labels.manifest.json` no longer count toward either; a runtime whose mount record was written with
+labels present logs `identity drift` and keeps serving the `data/<nid>` the record names, and a
+publishing nest writes a full copy under the new data identity on its next `publish sync`. A nest
+whose `[[factories]]` give one announcing event's `child_param` two templates is refused at load,
+naming both: declare one template whose ABI holds both contracts' events. A `/sql` client that
+rejects unknown provenance keys may see `labels_sha256` and `segments_sha256`.
+
+5.21.0 is a binary swap from 5.20 with no storage migration, and no existing nest's NID changes; a nest
+scaffolded by 5.21 gets a different NID from the same contracts scaffolded by 5.20, because its `llms.txt`
+and `SKILL.md` describe only the tools it has. An agent reading the MCP `balance` or `top_balances` result
+should read `complete_history` rather than assume a key. The MCP `sql` text table puts a row count first,
+begins every row with `| ` and stops at 256 KiB with a notice. An address-history nest on a loopback bind
+behind a proxy that passes the client's `Host` answers 403 until started with `--public-host <name>`.
+`/ready` answers `503` at once when a quarantined provisional tail stops seals, and a statement the
+engine panics on answers `500`, not `400`. A restart no longer rehashes every segment before serving;
+a background pass does it a minute later and every 24 hours.
+
+5.20.0 is a binary swap from 5.19 with no storage migration and no NID, registry hash or sealed
+segment change. A memory refusal on `/sql` begins `limit exceeded:` where it began `substrate
+error:`, a cast to `TIMESTAMP` without a precision is microseconds where it was nanoseconds,
+`list_sum` over integers or decimals is exact where it was a `DOUBLE`, a statement reads at most 128
+relations where it read 256, and a scan is charged for its segments as it opens them, so a tight
+memory budget can refuse a statement 5.19 let through.
 
 5.19.0 is a binary swap from 5.18 with no storage migration and no NID, registry hash or sealed
 segment change. An address-history window that failed with `timed out` on 5.18.0 is narrowed and
@@ -686,16 +705,16 @@ choice, not a property of the binary.
 
 ## Links
 
-- Website: https://www.nuthatch-indexer.com/
-- Short index for models: https://www.nuthatch-indexer.com/llms.txt
-- Documentation: https://www.nuthatch-indexer.com/docs/
-- Install: https://www.nuthatch-indexer.com/install
-- Worked example: https://www.nuthatch-indexer.com/example
-- Public mirror: https://www.nuthatch-indexer.com/mirror
-- Who runs Nuthatch: https://www.nuthatch-indexer.com/stories
-- Roadmap: https://www.nuthatch-indexer.com/roadmap
-- Manifesto: https://www.nuthatch-indexer.com/manifesto
-- Nuthatch and The Graph: https://www.nuthatch-indexer.com/the-graph
+- Website: https://nuthatch-indexer.com/
+- Short index for models: https://nuthatch-indexer.com/llms.txt
+- Documentation: https://nuthatch-indexer.com/docs.md
+- Install: https://nuthatch-indexer.com/install/
+- Worked example: https://nuthatch-indexer.com/example/
+- Public mirror: https://nuthatch-indexer.com/mirror/
+- Who runs Nuthatch: https://nuthatch-indexer.com/stories/
+- Roadmap: https://nuthatch-indexer.com/roadmap/
+- Manifesto: https://nuthatch-indexer.com/manifesto/
+- Nuthatch and The Graph: https://nuthatch-indexer.com/the-graph/
 - Source, releases, RFCs, security advisories: https://github.com/nuthatch-org/nuthatch
 - Burrmill, the query engine: https://github.com/nuthatch-org/burrmill
 - Licence: MIT OR Apache-2.0

@@ -2,7 +2,7 @@
 title: "What it costs to run"
 description: "RPC requests are the bill RAM doesn't show - what following tip costs, what block_timestamps adds, and how to measure the number for your own nest."
 order: 6
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 [Metrics & footprint](/docs/operate/metrics/) covers RAM. This page covers a different bill: **RPC
@@ -85,6 +85,10 @@ Two practical consequences, neither of them a recommendation to change a default
   statement about your provider.
 - **A paid endpoint can be cheaper than a free one**, because the retry loop above never starts. That
   is an uncomfortable thing to put on our own page and it appears to be true.
+
+Since 5.21.0 `--concurrency N` on a seal-direct backfill sends N windows at once to a single endpoint
+as well as to several; earlier releases held one endpoint to one window at a time. On a
+rate-limited endpoint that is a faster way into the loop above, so lower `--concurrency` there.
 
 Tracked as [RFC-0040](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0040-the-freshness-dial.md),
 which argues for letting an operator trade freshness for money rather than paying a production-sized

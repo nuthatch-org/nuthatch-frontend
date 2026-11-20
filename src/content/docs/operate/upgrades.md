@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -31,6 +31,89 @@ build's internal schema. The full contract is in the operator guide's
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
+
+## Upgrading to 5.22
+
+Replace the binary and restart. A 5.21 store is used as it is, with no storage migration, and no
+sealed segment or registry hash moves. 5.22 answers as of a block or a time, adds recipes for an
+issuer's own token and adds evidence bundles. Three things read differently:
+
+- **A nest with a label set imported gets a new NID and data identity, once** (#2946). `labels/` and
+  `labels.manifest.json` no longer count toward either, so a label set can be deleted without the
+  nest becoming another one. A single-nest directory starts as before. A runtime whose mount record
+  was written with labels present logs `identity drift` for that mount and keeps serving the
+  `data/<nid>` the record names. A nest that publishes writes a full copy under the new data
+  identity on its next `nuthatch publish sync`; delete the old prefix once that lands. `nest bundle`
+  no longer packs label sets, and the mirror does not copy them. The operators guide's
+  [data lifecycle](https://github.com/nuthatch-org/nuthatch/blob/v5.22.0/docs/operators.md#data-lifecycle)
+  section has the detail.
+- **A nest whose `[[factories]]` give one announcing event's `child_param` two templates is refused
+  at load**, naming both (#2958). It loaded before, but a child takes one template, so the second
+  template's tables stayed empty. Declare one template whose ABI holds both contracts' events.
+- **A `/sql` client that rejects unknown provenance keys** may now see `labels_sha256`, when the
+  answer read `labels`, and `segments_sha256`, when it was asked at a block. `/nest` carries
+  `labels_sha256` too, `null` with no label set.
+
+What is new, none of which changes an existing answer: `GET /at?time=<unix seconds>` places a time
+against the nest's own stamped blocks; `at_block` or `at_time` on `/sql`, and on the MCP `sql` tool,
+answers over the facts as they stood then, with the label set as imported now; the MCP server gains
+an `at` tool on every nest; `nuthatch recipe add frozen`, `outstanding`, `mint_burn_daily` and
+`fiat_threshold`; and `nuthatch evidence make` and `evidence verify`. Every other nest has nothing to
+do. The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.22.0) carry the rest.
+
+## Upgrading to 5.21
+
+Replace the binary and restart. A 5.20 store is used as it is, with no storage migration, and no
+existing nest's NID changes. 5.21 fixes what the cold audit of 2026-11-12 found, and several answers,
+statuses and MCP results read differently:
+
+- **An agent reading the MCP `balance` or `top_balances` result by key** should read
+  `complete_history` instead. A nest whose history began at its configured `start_block` keeps
+  `balance` and `holders`; one started with `--backfill`, or with no `start_block`, now returns
+  `net_flow_since_indexed_from` and `net_receivers`. The HTTP `/balance` and `/balances` routes are
+  unchanged.
+- **The MCP `sql` tool's text table** puts a line counting the rows first, begins every row with
+  `| `, and stops at 256 KiB with one notice saying what cut it.
+- **A nest scaffolded by 5.21 gets a different NID** from the same contracts scaffolded by 5.20,
+  because its `llms.txt` and `SKILL.md` describe only the tools it has. An existing nest keeps its
+  NID.
+- **An address-history nest on a loopback bind behind a proxy that passes the client's `Host`**
+  answers 403 until it is started with `--public-host <name>`. rotki in a container on Docker
+  Desktop needs `--local-host host.docker.internal`; a client on the same machine needs nothing.
+- **A seal-direct backfill with `--concurrency N` on one RPC endpoint** now runs N-way. Lower it
+  against a rate-limited public endpoint.
+- **A restart no longer rehashes every segment before serving.** Expect a `segment-verify` pass
+  reading at up to 64 MiB/s a minute after start, and again every 24 hours.
+- **`/ready` answers `503` at once** when a quarantined provisional tail stops seals, with
+  `integrity.seals_stopped: true`. A nest with nothing quarantined answers as before.
+- **A statement the engine panics on** is answered `500` and counted as
+  `nuthatch_sql_rejections_total{reason="internal"}`, not `400` and `invalid`.
+- **A `since = "genesis"` webhook on a plain backfill** skipped most of the history before 5.21. Rows
+  already skipped are not re-sent; register the webhook under a new name to replay them, which
+  changes the nest's NID.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.21.0) carry the rest,
+including the solo nest kept under a directory named `data`.
+
+## Upgrading to 5.20
+
+Replace the binary and restart. A 5.19 store is used as it is, with no storage migration, and no NID,
+registry hash or sealed segment changes. 5.20 moves the SQL engine to Burrmill 0.0.1 and DataFusion
+55.2, and a few `/sql` answers read differently:
+
+- **A statement refused for memory begins `limit exceeded:`** where it began `substrate error:`.
+  Change anything that matches on the old text. A statement stopped at its spill cap reads as it did.
+- **A cast to `TIMESTAMP` is microseconds.** `CAST(x AS TIMESTAMP)`, `TRY_CAST`, `::TIMESTAMP`
+  without a precision and `DATETIME` were nanoseconds, so a finer fraction is now cut off.
+  `block_timestamp` columns are integers and are not affected.
+- **`list_sum` over integers or decimals is exact.** It answered a `DOUBLE`, so `list_sum([1, 2, 3])`
+  was `6.0`. It now refuses past 38 digits. `list_min` exists.
+- **A statement reads at most 128 relations**, down from 256.
+- **A scan is charged for its segments as it opens them.** Under a tight `max_rss_mb` or tenant
+  share, a statement 5.19 let through can be refused.
+
+The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.20.0) say how it was
+checked.
 
 ## Upgrading to 5.19
 

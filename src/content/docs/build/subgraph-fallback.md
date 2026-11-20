@@ -2,7 +2,7 @@
 title: "Build a subgraph fallback"
 description: "Keep the event-derived part of a GraphQL data path available when a subgraph is unavailable."
 order: 6
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 Nuthatch is not automatically a drop-in GraphQL replacement. It indexes deterministic on-chain event
@@ -66,7 +66,10 @@ then copies in `graph/schema.graphql` and writes `[[calls]]`, a view per exact f
 README naming every field it did not emit. It reads
 the AssemblyScript mappings, so point it at the subgraph's source repository: a deployment CID carries
 only compiled WASM, and since 4.11.0 `port-emit` says nothing was classified and exits non-zero rather
-than reporting full coverage.
+than reporting full coverage. Since 5.21.0 the `nuthatch-graph` build's `port-emit` also renders the
+`event.transaction.hash.concatI32(event.logIndex.toI32())` id a stock `graph init --from-contract`
+scaffold gives every entity, so such a subgraph ports with its ids; the default build's `port-emit`
+is unchanged.
 
 In `nuthatch.toml`, use each contract's `events` list to avoid indexing unrelated ABI events. Vendor
 the ABI with the nest. The ABI is part of the authored package, so anyone running the fallback decodes

@@ -2,7 +2,7 @@
 title: Authored SQL views
 description: General SQL authored with a nest and evaluated when a reader asks for it.
 order: 3
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A nest's **logic layer** is authored SQL: `CREATE VIEW` statements over your decoded tables, kept in the
@@ -32,7 +32,9 @@ into `views/` is read on the next query; a running `dev` needs no restart.
 Authored views aren't just dropped in and hoped over. They're a first-class layer:
 
 - **Validated** - each view binds against the schema at load, so a column that moves out from under it
-  is a loud `nuthatch check` failure, not a silent wrong number.
+  is a loud `nuthatch check` failure, not a silent wrong number. Since 5.21.0 a view over `labels` or
+  an offchain snapshot binds too: both are now bound before the authored views, where before such a
+  view failed to define, and `nuthatch check` no longer reports a view over `offchain__*` as broken.
 - **Described** - a view's meaning lives beside it in [`semantic.toml`](/docs/build/semantic/), surfaced
   through `/schema` and the MCP so an agent knows what it computes.
 - **Drift-gated** - CI catches a view that no longer matches the schema.

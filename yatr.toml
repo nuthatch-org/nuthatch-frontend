@@ -14,7 +14,8 @@ cache = true
 [tasks.install]
 desc = "Install dependencies from the lockfile"
 run = ["npm ci"]
-sources = ["package.json", "package-lock.json"]
+# node_modules is not an output yatr can restore, so a hit would install nothing.
+no_cache = true
 
 [tasks.dev]
 desc = "Run the Astro dev server"
@@ -30,12 +31,12 @@ sources = ["src/**/*", "scripts/lint-docs.mjs"]
 [tasks.types]
 desc = "astro check (types and content collections)"
 run = ["npm run check"]
-sources = ["src/**/*", "tsconfig.json", "astro.config.mjs"]
+sources = ["src/**/*", "middleware.ts", "tsconfig.json", "astro.config.mjs", "package-lock.json"]
 
 [tasks.build]
 desc = "Build the static site into dist/"
 run = ["npm run build"]
-sources = ["src/**/*", "public/**/*", "astro.config.mjs", "package-lock.json"]
+sources = ["src/**/*", "public/**/*", "scripts/**/*", "middleware.ts", "astro.config.mjs", "package.json", "package-lock.json"]
 outputs = ["dist"]
 
 [tasks.preview]

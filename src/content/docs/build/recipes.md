@@ -2,7 +2,7 @@
 title: Recipes - the eth_call you usually do not need
 description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node. When a read is not derivable, pinned calls are there.
 order: 6
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 The Foundation reports that **over 70% of subgraphs call `eth_call`**. But most of those reads aren't
@@ -40,6 +40,10 @@ just SQL over your tables.
 | `balances` | `balanceOf(addr)` per address | Σ(in) − Σ(out) per address |
 | `holder_count` | - | count of non-zero holders |
 | `reserves` | Uniswap-V2 `getReserves()` | the latest `Sync(uint112,uint112)` per pair |
+| `frozen` *(5.22.0)* | `isBlacklisted(addr)` over every address | each address whose latest blacklist event is `Blacklisted`, with its balance |
+| `outstanding` *(5.22.0)* | an attestation's supply in circulation | total supply less frozen balances and those of addresses labelled `treasury` |
+| `mint_burn_daily` *(5.22.0)* | - | per UTC day: minted and burned by Transfers, the `Mint` and `Burn` amounts beside them, and supply |
+| `fiat_threshold` *(5.22.0)* | - | transfers above a fiat amount at their UTC day's rate in an offchain table, to recipients in none of the given label sets |
 
 > **Requirements.** `total_supply` / `balances` / `holder_count` need a `Transfer` event whose fields
 > are named `from`, `to` and `value`, the ERC-20 convention the views are written against; `reserves`
@@ -47,6 +51,14 @@ just SQL over your tables.
 > quickstart's nest fails `nuthatch check` with `no column from` until you rename the columns in the
 > view. A nest with several contracts takes `--alias` to say which table. If your nest doesn't index
 > the source event yet, add it to `nuthatch.toml` first.
+>
+> The issuer recipes are for a FiatToken-style stablecoin. `frozen` and `outstanding` need
+> `Transfer`, `Blacklisted` and `UnBlacklisted`, and `mint_burn_daily` needs `Transfer`, `Mint` and
+> `Burn`; since 5.22.0 `recipe add` names a table the nest does not index and writes nothing.
+> `outstanding` also needs a label set (`nuthatch labels import`), and `fiat_threshold` needs
+> `--amount`, `--rates <offchain table>` and `--decimals`, with `--unless-label` for each label set
+> whose recipients are not flagged. [Compliance](/docs/build/compliance/#recipes-for-an-issuers-own-token)
+> has what each one is for.
 
 ## How `total_supply` works
 

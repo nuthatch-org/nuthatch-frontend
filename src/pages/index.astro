@@ -20,7 +20,7 @@ const rows = [
     <div class="scan" aria-hidden="true"></div>
     <div class="wrap hero-inner">
       <div class="hero-copy">
-      <p class="hero-eyebrow rise rise-1"><span class="tag">v5.19.0 · MIT OR Apache-2.0</span></p>
+      <p class="hero-eyebrow rise rise-1"><span class="tag">v5.22.0 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
         Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres,
@@ -28,7 +28,7 @@ const rows = [
       </p>
 
       <div class="hero-cta rise rise-3">
-        <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
+        <CopyBlock command={'curl -fsSL https://nuthatch-indexer.com/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"'} size="lg" />
         <p class="hero-alt">
           or: <a href="/install">build with cargo</a>
           &nbsp;·&nbsp;
@@ -85,7 +85,7 @@ const rows = [
       <p class="section-label">A real run</p>
       <Terminal />
       <p class="demo-caption">
-        A real run of 5.9.0, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
+        A real run of 5.21.0, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
         project; <code>dev</code> follows the tip, seals finalized ranges to Parquet, and serves it.
         <code>--backfill 300</code> starts 300 blocks behind the tip, so there are rows within
         seconds; without it <code>dev</code> backfills from deployment, which for a contract with a
@@ -247,7 +247,7 @@ const rows = [
     <div class="wrap narrow close-inner">
       <p class="section-label">Install</p>
       <h2>Under two minutes. One binary. No one to ask.</h2>
-      <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
+      <CopyBlock command={'curl -fsSL https://nuthatch-indexer.com/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"'} size="lg" />
       <p class="close-alt"><a href="/install">Full install options</a> · <a href="/hosting">Have us host it</a> · <a href="/manifesto">Read the manifesto</a></p>
     </div>
   </section>
@@ -281,11 +281,11 @@ const rows = [
     background: var(--bg); color: var(--text); color-scheme: dark;
   }
   .hero-inner { position: relative; }
-  .hero-copy { max-width: 40rem; }
+  .hero-copy { max-width: 56rem; }
   .hero-eyebrow { margin-bottom: 1.2rem; }
   .hero h1 { max-width: 13ch; font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.03; letter-spacing: -0.04em; }
   .hero-sub { margin-top: 1.4rem; font-size: 1rem; line-height: 1.6; max-width: 36ch; color: var(--text-muted); }
-  .hero-cta { margin-top: 2rem; max-width: 34rem; }
+  .hero-cta { margin-top: 2rem; max-width: 56rem; }
   .hero-alt { margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-muted); }
   .hero-alt code { font-size: 0.82em; }
   .hero-links { margin-top: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
@@ -360,7 +360,7 @@ const rows = [
 
   /* CLOSE */
   .close { padding-block: clamp(3.5rem, 7vw, 5.5rem); }
-  .close-inner { text-align: center; }
+  .close-inner { text-align: center; max-width: 56rem; }
   .close-inner h2 { margin-bottom: 1.8rem; }
   .close-inner :global(.copyblock) { text-align: left; }
   .close-alt { margin-top: 1rem; font-size: 0.8125rem; color: var(--text-muted); }

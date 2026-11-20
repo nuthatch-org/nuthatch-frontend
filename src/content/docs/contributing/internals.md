@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -103,9 +103,11 @@ Entities are keyed `{block:012}-{log_index:06}`, zero-padded so lexicographic it
 chain-ordered - which makes "everything above block N" a range scan rather than a filter, and that is
 exactly what a reorg needs.
 
-Three tasks write it: the ingest loop (entities, checkpoints, meta and the outbox enqueue), the
-alert-delivery worker draining the outbox, and the IPFS resolver storing fetched documents and their
-typed rows. The resolver shares the ingest loop's key range, so it writes only in a transaction that
+Four tasks write it: the ingest loop (entities, checkpoints, meta and the alerts' outbox enqueue),
+the webhook collector (one per nest since 5.21.0, queueing each webhook's rows onto the outbox in the
+same commit as the cursor that covers them, so a seal only wakes it and never waits on a delivery
+query), the alert-delivery worker draining the outbox, and the IPFS resolver storing fetched
+documents and their typed rows. The resolver shares the ingest loop's key range, so it writes only in a transaction that
 finds the row naming the document still there from the same block; if a reorg rollback or a seal's
 prune has removed that row, the late write is a no-op. redb serialises write transactions, so each
 check and its write are atomic. What is single is the cursor: one ingestion task per chain advances
@@ -133,6 +135,17 @@ design is wrong and we go back rather than add a mutation path.
 
 All tables in a nest seal together per finalized range, so `sealed_through` stays a single global
 watermark - which is what lets hot and cold be unioned without deduplication.
+
+Sealing does not read its output back; the hash is taken from the bytes in memory. Checking is a
+separate job, and since 5.21.0 it is off the start path: a start rereads only the segment files whose
+length, times, inode or expected hash moved since a pass last hashed them (`segments/verified.json`),
+and a `segment-verify` thread hashes every segment a minute after start, at up to 64 MiB/s across the
+process, and every 24 hours after. A segment that does not hash to its address is quarantined: moved
+to the dataset's `quarantine/`, or, in a runtime's shared store, to `quarantine/<hash>.parquet`
+beside the store, reducing every dataset that names it. Where `segments/` is a link onto another
+filesystem the segment is copied aside and removed, and one that cannot be moved is refused in place.
+Nothing retracts derived state built from a segment quarantined later, so `/ready` reports
+`derived_state_stale` until a restart rebuilds it from what remains.
 
 ## Reorgs - `core/src/cursor.rs`, `redb_store.rs::rollback_to`
 
@@ -191,7 +204,10 @@ overlap, even during the brief window between sealing and pruning.
 Results carry **provenance**: the `as_of` and `sealed_through` watermarks, the nest's `nid` and
 `registry_hash`, each referenced entity's watermark, and `source`, which is `hot+sealed` normally and
 `sealed` when the tip could not be scanned and the answer is cold-only. A number can be cited and
-re-derived. It names the dataset and the cut, not the individual segments.
+re-derived. It names the dataset and the cut, not the individual segments. Since 5.22.0 an answer
+asked at a block (`at_block` or `at_time`) adds `segments_sha256`, one hash over the sealed segments
+it could read (`seal::read_set_hash`, absent while one is a provisional tail), and an answer that read
+`labels` adds the label set's `labels_sha256`, since the NID no longer pins one.
 
 Answers are remembered by `sqlmemo.rs`, and the memo is not a TTL cache. Its key is every input the
 answer depends on: the statement and its row cap, the sealed segments it is served, a generation that
@@ -228,12 +244,14 @@ templates that cross 500 together all go wide.
 
 ## Packaging - `blob.rs`, `distribution.rs`
 
-A nest's *authored inputs* - config, ABIs, views, labels, skills - canonicalise into a **bundle**
+A nest's *authored inputs* - config, ABIs, views, skills, and since 5.22.0 never label sets - canonicalise into a **bundle**
 pinned by a Merkle root. `nest load` verifies the manifest, every file's bytes, and that the decode
 registry regenerated from those inputs matches the author's pinned hash. A nest that cannot reproduce
 its own registry is refused, and since 5.11.0 so is one whose installed files do not compute the NID
 its manifest claims. Every input must be a regular file: a symbolic link is refused by name, and since 5.18.0 so is a file
-that is not UTF-8. A `.gitignore` is not an input (5.18.0).
+that is not UTF-8. A `.gitignore` is not an input (5.18.0), and neither are `labels/` and
+`labels.manifest.json` (5.22.0): `identity::is_input` leaves them out of the NID and the data
+identity, and a manifest packed before 5.22.0 that lists them names the nest without them.
 
 That makes a bundle **tamper-evident**, which is not the same as safe - a valid bundle can still
 declare outbound endpoints you would rather it did not, so `load` warns about every non-loopback URL

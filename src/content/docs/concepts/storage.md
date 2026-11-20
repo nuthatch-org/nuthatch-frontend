@@ -2,7 +2,7 @@
 title: Storage & sealing
 description: A hot redb tip store, content-addressed Parquet sealed past finality, unified behind one SQL surface.
 order: 3
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 Nuthatch stores data in two tiers, split at the finality boundary - and glues them behind one SQL
@@ -32,6 +32,13 @@ the same segment, on any machine, on any run. The bytes include the Parquet writ
 release that moves the writer can hash identical rows differently; across versions, compare decoded
 rows rather than hashes. That's what makes segments *reusable* across nest versions (see
 [Upgrading a nest](/docs/operate/upgrades/)) and shareable as a verifiable cache.
+
+The hash is also how a segment is checked. A restart rereads only the segment files that changed
+since a pass last hashed them (`segments/verified.json` remembers the rest), so it serves at once;
+since 5.21.0 a background pass then hashes every segment a minute after start, at up to 64 MiB/s,
+and again every 24 hours. A segment that no longer hashes to its address is moved to `quarantine/`
+and its table answers reduced rather than from the bad bytes. In a runtime's shared store that holds
+for every dataset naming the segment, until the same rows are sealed again.
 
 > **Sealed is immutable, forever.** Segments are sealed strictly *past finality*, so the columnar layer
 > is append-only. If a change would require mutating a sealed segment, the design is wrong - go back. A

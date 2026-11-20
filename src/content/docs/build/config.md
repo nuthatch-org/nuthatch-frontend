@@ -2,7 +2,7 @@
 title: nuthatch.toml
 description: The one config file a nest has - the [nest] header and one or more [[contracts]].
 order: 1
-checked: 5.19.0 (2026-11-11)
+checked: 5.22.0 (2026-11-17)
 ---
 
 A nest starts with `nuthatch.toml`. `init` generates it from a contract address; you
@@ -11,7 +11,8 @@ edit it to add contracts, events, factories, and the optional compliance and web
 regenerate them with `nuthatch schema`. Views, semantic descriptions and the optional declaration
 files are yours to author, and `schema` leaves them alone.
 
-Since 5.18.0 `init` also writes a `.gitignore` naming the store (`data/`) and `.admin-token`. A
+Since 5.18.0 `init` also writes a `.gitignore` naming the store (`data/`) and `.admin-token`, and
+since 5.21.0 `nuthatch.redb` and `segments/` as well; an existing `.gitignore` is not rewritten. A
 `.gitignore`, at any depth, is not one of the nest's inputs, so adding or editing one never changes
 the nest's identity.
 
@@ -101,7 +102,10 @@ nuthatch dev --dir accounts --trace-rpc https://your-trace-rpc
 
 `--trace-rpc` (or `NUTHATCH_TRACE_RPC`) names the endpoint asked for `trace_filter`, which finds
 internal transactions; it defaults to the nest's RPC. An address-history nest runs only as a solo
-`nuthatch dev --dir`, never mounted in a runtime or under `serve`. Running it for rotki, with the
+`nuthatch dev --dir`, never mounted in a runtime or under `serve`. Since 5.21.0, on a loopback bind it
+answers only a loopback `Host` or one named with `--public-host` or `--local-host`, so behind a
+reverse proxy that passes the client's `Host` it answers 403 until started with `--public-host <name>`;
+see the [HTTP API reference](/docs/reference/http-api/). Running it for rotki, with the
 optional mirror and MEV settings, is on the [rotki page](/rotki/).
 
 ## Next
