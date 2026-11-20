@@ -5,14 +5,16 @@ import Terminal from '../components/Terminal.astro';
 
 const GH = 'https://github.com/nuthatch-org/nuthatch';
 
-// Comparison rows, kept identical to the README's table.
-const cols = ['Needs a subgraph', 'Needs handler code', 'Data comes from', 'What you run', 'Query with'];
-const rows = [
-  { p: 'The Graph', us: false, c: ['yes', 'yes (AssemblyScript)', 'indexers on the network', 'nothing, or graph-node + Postgres + IPFS', 'GraphQL'] },
-  { p: 'Ponder',    us: false, c: ['no', 'yes (TypeScript)', 'your RPC endpoint', 'Node.js, plus Postgres in production', 'SQL, GraphQL'] },
-  { p: 'Nuthatch',  us: true,  c: ['no', 'no: tables come from the ABI', 'your RPC endpoint', 'one binary', 'SQL, HTTP, MCP'] },
-];
----
+// Cells kept identical to the README's table; the per-event code row is the one /compare loses.
+const cols = ['The Graph', 'Ponder', 'Nuthatch'];
+const rows: { p: string; c: string[] }[] = [
+  { p: 'Needs a subgraph', c: ['yes', 'no', 'no'] },
+  { p: 'Needs handler code', c: ['yes (AssemblyScript)', 'yes (TypeScript)', 'no: tables come from the ABI'] },
+  { p: 'Arbitrary per-event code', c: ['yes', 'yes', 'no'] },
+  { p: 'Data comes from', c: ['indexers on the network', 'your RPC endpoint', 'your RPC endpoint'] },
+  { p: 'What you run', c: ['nothing, or graph-node + Postgres + IPFS', 'Node.js, plus Postgres in production', 'one binary'] },
+  { p: 'Query with', c: ['GraphQL', 'SQL, GraphQL', 'SQL, HTTP, MCP'] },
+];---
 <Layout path="/" ambient>
   <!-- 1. HERO -->
   <section class="hero">
@@ -170,14 +172,14 @@ const rows = [
           <thead>
             <tr>
               <th scope="col" class="ct-feature"></th>
-              {cols.map((c) => <th scope="col">{c}</th>)}
+              {cols.map((c, i) => <th scope="col" class={i === cols.length - 1 ? 'ct-us' : ''}>{c}</th>)}
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr>
-                <th scope="row" class={r.us ? 'ct-feature ct-us' : 'ct-feature'}>{r.p}</th>
-                {r.c.map((cell) => <td class={r.us ? 'ct-us' : ''}><span class="ct-text">{cell}</span></td>)}
+                <th scope="row" class="ct-feature">{r.p}</th>
+                {r.c.map((cell, i) => <td class={i === r.c.length - 1 ? 'ct-us' : ''}>{cell}</td>)}
               </tr>
             ))}
           </tbody>
@@ -323,15 +325,15 @@ const rows = [
   /* COMPARE */
   .compare h2 { margin-bottom: 2rem; }
   .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
-  .ctable { width: 100%; border-collapse: collapse; min-width: 48rem; font-size: 0.8125rem; }
-  .ctable th, .ctable td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ctable { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+  .ctable th, .ctable td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
   .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
   .ctable tbody tr:last-child th, .ctable tbody tr:last-child td { border-bottom: 0; }
-  .ct-feature { color: var(--text); font-weight: 500; width: 32%; }
+  .ctable .ct-feature { color: var(--text-muted); font-weight: 500; }
   .ct-us { background: var(--pale-blue-bg); }
   thead .ct-us { color: var(--accent-ink); font-weight: 600; }
-  .ct-text { color: var(--text); }
-  .compare-foot { margin-top: 1.2rem; font-size: 0.75rem; color: var(--text-muted); }
+  .compare-foot { margin-top: 1.2rem; font-size: 0.889rem; color: var(--text-muted); max-width: 72ch; }
+  @media (max-width: 540px) { .ctable th, .ctable td { padding: 0.7rem 0.6rem; } }
 
   /* TEASER */
   .teaser-inner {
