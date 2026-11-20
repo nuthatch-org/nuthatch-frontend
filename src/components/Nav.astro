@@ -168,11 +168,11 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
     min-height: 32px; padding: 0 12px 0 10px; border-radius: var(--radius-sm);
     background: var(--accent); color: var(--on-accent);
     font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.02em;
-    transition: transform 0.12s var(--ease), background 0.16s var(--ease);
+    transition: transform 0.12s var(--ease), filter 0.16s var(--ease);
   }
   /* Grows the tap target to 44px without growing the pill. */
   .nav-play::after { content: ''; position: absolute; inset: -7px -4px; }
-  .nav-play:hover { color: var(--bg); text-decoration: none; background: var(--accent-ink); }
+  .nav-play:hover { text-decoration: none; filter: brightness(1.08); }
   .nav-play:active { transform: scale(0.98); }
   .nav-play svg { width: 11px; height: 11px; }
 
