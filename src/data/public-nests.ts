@@ -92,4 +92,37 @@ export const publicNests: PublicNest[] = [
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/arc-usdc/sql' --data-urlencode 'q=SELECT count(*) FROM usdc__transfer'",
   },
+  {
+    id: 'gooddollar-xdc',
+    name: 'GoodDollar UBI on XDC',
+    chain: 'xdc',
+    for: { label: 'GoodDollar', href: '/showcase/?nest=gooddollar-xdc' },
+    summary:
+      'Every UBIScheme event on XDC from block 95,249,624, about 3.9 million UBIClaimed rows from 78,000 claimers, indexed from a public RPC with no HyperSync, following the tip. SQL at /sql and MCP over HTTP at /mcp. The history is still backfilling when this entry goes live.',
+    endpoint: 'https://nuthatch-indexer.com/nests/gooddollar-xdc',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/gooddollar-xdc/sql' --data-urlencode 'q=SELECT count(DISTINCT claimer) FROM ubi_scheme__u_b_i_claimed'",
+  },
+  {
+    id: 'sablier-xdc',
+    name: 'Sablier on XDC',
+    chain: 'xdc',
+    for: { label: 'Sablier', href: '/showcase/?nest=sablier-xdc' },
+    summary:
+      'Sablier Lockup, Flow and Airdrops on XDC from the first deployment at block 85,225,620 as event tables, about 500 events across 14 contracts and their airdrop campaigns, following the tip. Events only: the Stream, Action and Campaign entities are not built. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/sablier-xdc',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/sablier-xdc/sql' --data-urlencode 'q=SELECT count(*) FROM lockup_v2_0__create_lockup_linear_stream'",
+  },
+  {
+    id: 'pharos-eth',
+    name: 'LP token holders on Ethereum',
+    chain: 'ethereum',
+    for: { label: 'pharos-watch', href: '/showcase/?nest=pharos-eth' },
+    summary:
+      'Every Transfer of two liquidity-pool tokens, LUSD3CRV and the Uniswap V2 USDC/USDT pair, about 109,000 rows since launch, so holders and supply can be replayed in SQL. Block times are not stored. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/pharos-eth',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/pharos-eth/sql' --data-urlencode 'q=SELECT count(*) FROM lusd3crv__transfer'",
+  },
 ];
