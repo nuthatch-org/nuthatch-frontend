@@ -194,18 +194,18 @@ const rows: { p: string; c: string[] }[] = [
       <p class="section-label">Who runs it</p>
       <h2 class="narrow doors-h">Three front doors.</h2>
       <div class="doors-grid">
-        <div class="door">
-          <span class="door-k">App backends</span>
+        <a class="door" href="/docs/operate/serving/">
+          <span class="door-k">App backends →</span>
           <p>GET /sql, like a database that fills itself.</p>
-        </div>
-        <div class="door">
-          <span class="door-k">Analysts</span>
-          <p>run a published nest, write no indexing code.</p>
-        </div>
-        <div class="door">
-          <span class="door-k">Agents</span>
-          <p>built-in MCP, fully local.</p>
-        </div>
+        </a>
+        <a class="door" href="/nests">
+          <span class="door-k">Analysts →</span>
+          <p>Run a published nest, write no indexing code.</p>
+        </a>
+        <a class="door" href="/agents">
+          <span class="door-k">Agents →</span>
+          <p>Built-in MCP, fully local.</p>
+        </a>
       </div>
       <p class="doors-link"><a href="/stories">Who runs Nuthatch →</a></p>
     </div>
@@ -364,7 +364,8 @@ const rows: { p: string; c: string[] }[] = [
   /* DOORS */
   .doors-h { margin-bottom: 2rem; }
   .doors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .door { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
+  .door { display: block; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; transition: border-color 0.16s var(--ease); }
+  .door:hover { border-color: var(--border-hi); text-decoration: none; }
   .door-k {
     font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--accent);
