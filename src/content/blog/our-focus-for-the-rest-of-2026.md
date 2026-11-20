@@ -33,9 +33,9 @@ The people I want first are the ones with a real use for it. I will host their n
 
 It is for a team or a person with contracts on an EVM chain and a question about their data. If your current indexer is stuck, shut down or too expensive, that is the case I most want to see.
 
-You get `https://nuthatch-indexer.com/nests/<name>`, with SQL at `/sql` and an MCP endpoint at `/mcp`. There is no key and no account, and it is read-only, so anyone with the URL can read it. Two exist today, `arc-usdc` and `base-usdc`. The nests for the three runs above are not hosted yet.
+You get `https://nuthatch-indexer.com/nests/<name>`, with SQL at `/sql` and an MCP endpoint at `/mcp`. There is no key and no account, and it is read-only, so anyone with the URL can read it. Five exist today: `arc-usdc` and `base-usdc`, plus [`gooddollar-xdc`](https://nuthatch-indexer.com/nests/gooddollar-xdc/), [`sablier-xdc`](https://nuthatch-indexer.com/nests/sablier-xdc/) and [`pharos-eth`](https://nuthatch-indexer.com/nests/pharos-eth/) for the three runs above. The GoodDollar one is still backfilling its history.
 
-I am also building a showcase page for each nest. It has five questions someone at your company would ask, and copy-paste prompts for an agent that queries your nest. It is in review as [nuthatch#3058](https://github.com/nuthatch-org/nuthatch/pull/3058) and is not live yet.
+Each nest also gets a showcase page. It has five questions someone at your company would ask, and copy-paste prompts for an agent that queries your nest. Here is [the Sablier one](https://nuthatch-indexer.com/showcase/?nest=sablier-xdc).
 
 The limits are the public-nest ones. A query gets 5,000 rows and 10 seconds. Each address gets 30 queries a minute, and each nest has a 2 GB memory ceiling. Only read routes are open, and there is no admin. It is a showcase, not a service with an uptime promise.
 
