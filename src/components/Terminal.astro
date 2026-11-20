@@ -33,17 +33,18 @@ const pre = { cmd: 'pre-cmd', ok: 'pre-ok', serve: 'pre-serve' } as const;
   .term-dots { display: inline-flex; gap: 0.45rem; }
   .term-dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--border-hi); }
   .term-title {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; color: var(--text-faint);
     margin-inline: auto; padding-right: 3rem;
   }
   .term-body {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(0.64rem, 1.9vw, 0.818rem);
+    font-size: 0.75rem;
     line-height: 1.85;
     padding: 1.1rem 1.2rem 1.4rem;
     color: var(--text);
     overflow-x: auto;
   }
+  @media (max-width: 540px) { .term-body { font-size: 0.625rem; } }
   .tline {
     display: flex; gap: 0.6rem; white-space: pre; min-height: 1.85em;
     transition: opacity 0.15s var(--ease);

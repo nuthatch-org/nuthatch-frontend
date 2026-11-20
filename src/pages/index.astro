@@ -327,7 +327,7 @@ const rows: { p: string; c: string[] }[] = [
   .hero-inner { position: relative; }
   .hero-copy { max-width: 56rem; }
   .hero-eyebrow { margin-bottom: 1.2rem; }
-  .hero h1 { max-width: 13ch; font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.03; letter-spacing: -0.04em; }
+  .hero h1 { max-width: 13ch; font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1.03; letter-spacing: -0.04em; }
   .hero-sub { margin-top: 1.4rem; font-size: 1rem; line-height: 1.6; max-width: 36ch; color: var(--text-muted); }
   .hero-cta { margin-top: 2rem; max-width: 56rem; }
   .hero-alt { margin-top: 0.8rem; font-size: 0.889rem; color: var(--text-muted); }
@@ -336,7 +336,7 @@ const rows: { p: string; c: string[] }[] = [
   .hero .btn-ghost { background: rgba(23, 22, 20, 0.6); }
 
   /* A REAL RUN */
-  .demo-caption { margin-top: 1rem; font-size: 0.75rem; line-height: 1.6; color: var(--text-muted); max-width: 42rem; }
+  .demo-caption { margin-top: 1rem; font-size: 0.889rem; line-height: 1.6; color: var(--text-muted); max-width: 42rem; }
   /* PROOF BAND */
   .proof { padding-block: clamp(2.5rem, 5vw, 4rem); }
   .proof .fd-stat-s a { white-space: nowrap; }
@@ -354,9 +354,9 @@ const rows: { p: string; c: string[] }[] = [
   .pl-sub { fill: var(--text-muted); font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.04em; }
   .how-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem 2.5rem; }
   .how-cols h3 { margin-bottom: 0.6rem; }
-  .how-cols p { color: var(--text-muted); font-size: 0.875rem; }
+  .how-cols p { color: var(--text-muted); font-size: 0.889rem; }
   @media (max-width: 46rem) { .how-cols { grid-template-columns: 1fr; gap: 1.8rem; } }
-  .how-foot { margin-top: 2.4rem; color: var(--text-muted); font-size: 0.875rem; }
+  .how-foot { margin-top: 2.4rem; color: var(--text-muted); font-size: 0.889rem; }
 
   /* DOORS */
   .doors-h { margin-bottom: 2rem; }
@@ -364,11 +364,11 @@ const rows: { p: string; c: string[] }[] = [
   .door { display: block; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; transition: border-color 0.16s var(--ease); }
   .door:hover { border-color: var(--border-hi); text-decoration: none; }
   .door-k {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--accent);
   }
-  .door p { margin-top: 0.5rem; color: var(--text-muted); font-size: 0.875rem; }
-  .doors-link { margin-top: 1.4rem; font-size: 0.8125rem; }
+  .door p { margin-top: 0.5rem; color: var(--text-muted); font-size: 0.889rem; }
+  .doors-link { margin-top: 1.4rem; font-size: 0.75rem; }
   .doors-link a { font-family: 'JetBrains Mono', monospace; }
   @media (max-width: 44rem) { .doors-grid { grid-template-columns: 1fr; } }
 
@@ -377,7 +377,7 @@ const rows: { p: string; c: string[] }[] = [
   .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
   .ctable { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
   .ctable th, .ctable td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
-  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
+  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
   .ctable tbody tr:last-child th, .ctable tbody tr:last-child td { border-bottom: 0; }
   .ctable .ct-feature { color: var(--text-muted); font-weight: 500; }
   .ct-us { background: var(--pale-blue-bg); }
@@ -391,18 +391,18 @@ const rows: { p: string; c: string[] }[] = [
     border-radius: var(--radius); padding: clamp(1.6rem, 4vw, 2.6rem);
   }
   .teaser-h { margin-bottom: 0.9rem; max-width: 20ch; }
-  .teaser-copy { color: var(--text-muted); font-size: 0.875rem; max-width: 52ch; }
+  .teaser-copy { color: var(--text-muted); font-size: 0.889rem; max-width: 52ch; }
   .teaser-btn { margin-top: 1.4rem; }
 
   /* AI */
   .ai h2 { margin-bottom: 2rem; }
   .ai-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .ai-kicker {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--accent);
   }
   .ai-list { margin: 1rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
-  .ai-list li { color: var(--text-muted); font-size: 0.875rem; padding-left: 1.3rem; position: relative; }
+  .ai-list li { color: var(--text-muted); font-size: 0.889rem; padding-left: 1.3rem; position: relative; }
   .ai-list li::before { content: '↳'; position: absolute; left: 0; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
   @media (max-width: 44rem) { .ai-cols { grid-template-columns: 1fr; } }
 
@@ -411,6 +411,6 @@ const rows: { p: string; c: string[] }[] = [
   .close-inner { text-align: center; max-width: 56rem; }
   .close-inner h2 { margin-bottom: 1.8rem; }
   .close-inner :global(.copyblock) { text-align: left; }
-  .close-alt { margin-top: 1rem; font-size: 0.8125rem; color: var(--text-muted); }
+  .close-alt { margin-top: 1rem; font-size: 0.889rem; color: var(--text-muted); }
 </style>
 
