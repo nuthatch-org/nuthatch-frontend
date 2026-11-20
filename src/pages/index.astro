@@ -5,14 +5,16 @@ import Terminal from '../components/Terminal.astro';
 
 const GH = 'https://github.com/nuthatch-org/nuthatch';
 
-// Comparison rows, kept identical to the README's table.
-const cols = ['Needs a subgraph', 'Needs handler code', 'Data comes from', 'What you run', 'Query with'];
-const rows = [
-  { p: 'The Graph', us: false, c: ['yes', 'yes (AssemblyScript)', 'indexers on the network', 'nothing, or graph-node + Postgres + IPFS', 'GraphQL'] },
-  { p: 'Ponder',    us: false, c: ['no', 'yes (TypeScript)', 'your RPC endpoint', 'Node.js, plus Postgres in production', 'SQL, GraphQL'] },
-  { p: 'Nuthatch',  us: true,  c: ['no', 'no: tables come from the ABI', 'your RPC endpoint', 'one binary', 'SQL, HTTP, MCP'] },
-];
----
+// Cells kept identical to the README's table; the per-event code row is the one /compare loses.
+const cols = ['The Graph', 'Ponder', 'Nuthatch'];
+const rows: { p: string; c: string[] }[] = [
+  { p: 'Needs a subgraph', c: ['yes', 'no', 'no'] },
+  { p: 'Needs handler code', c: ['yes (AssemblyScript)', 'yes (TypeScript)', 'no: tables come from the ABI'] },
+  { p: 'Arbitrary per-event code', c: ['yes', 'yes', 'no'] },
+  { p: 'Data comes from', c: ['indexers on the network', 'your RPC endpoint', 'your RPC endpoint'] },
+  { p: 'What you run', c: ['nothing, or graph-node + Postgres + IPFS', 'Node.js, plus Postgres in production', 'one binary'] },
+  { p: 'Query with', c: ['GraphQL', 'SQL, GraphQL', 'SQL, HTTP, MCP'] },
+];---
 <Layout path="/" ambient>
   <!-- 1. HERO -->
   <section class="hero">
@@ -39,11 +41,9 @@ const rows = [
       </div>
 
       <div class="hero-links rise rise-3">
-        <a class="btn btn-primary" href="/install">Read the install guide</a>
         <a class="btn btn-ghost" href={GH} rel="noopener">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          Star on GitHub
-          <span class="stars"><!-- TODO: live badge post-launch -->-</span>
+          Star on GitHub ↗
         </a>
       </div>
       </div>
@@ -52,28 +52,23 @@ const rows = [
   </section>
 
   <!-- 2. PROOF BAND -->
-  <section class="proof" aria-label="Measured">
+  <section class="proof" aria-label="Measured figures">
     <div class="wrap">
       <div class="fd-stats">
         <div class="fd-stat">
-          <p class="fd-stat-l">Peak memory, measured</p>
-          <p class="fd-stat-n">&lt; 1.8 <span class="u">GiB peak</span></p>
-          <p class="fd-stat-s">The largest nest we run, answering the 74 statements its dashboard and jobs send, two at a time under its production limits on Linux: 1,595 to 1,788 MiB over four runs of 4.4.0, inside the 2 GB budget. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0" rel="noopener">Release notes</a>.</p>
+          <p class="fd-stat-l">Peak memory</p>
+          <p class="fd-stat-n">&lt; 1.8 <span class="u">GiB</span></p>
+          <p class="fd-stat-s">The largest nest we run, answering its 74 production statements two at a time: 1,595 to 1,788 MiB over four runs. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0" rel="noopener">4.4.0 release notes ↗</a></p>
         </div>
         <div class="fd-stat">
-          <p class="fd-stat-l">OBIB case 6, measured</p>
+          <p class="fd-stat-l">OBIB case 6</p>
           <p class="fd-stat-n">4.67 <span class="u">s</span></p>
-          <p class="fd-stat-s">Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a> case 6, the Uniswap V2 factory over 10,001 blocks with 232 pairs discovered as it ran: 35,271 events in 14 RPC requests and 229 MB, median of five runs of the published 4.7.0 binary against a keyless public gateway. Someone else's benchmark, not a ranking. <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The run's record</a>.</p>
+          <p class="fd-stat-s">Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">benchmark ↗</a>: Uniswap V2 over 10,001 blocks, 35,271 events, median of five runs. Not a ranking. <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The 4.7.0 record ↗</a></p>
         </div>
         <div class="fd-stat">
-          <p class="fd-stat-l">Address to API, measured</p>
+          <p class="fd-stat-l">Address to API</p>
           <p class="fd-stat-n">10 to 11 <span class="u">s</span></p>
-          <p class="fd-stat-s">Contract address to a live indexed API: the README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes</a>.</p>
-        </div>
-        <div class="fd-stat">
-          <p class="fd-stat-l">Phone-home</p>
-          <p class="fd-stat-n">Opt-in only</p>
-          <p class="fd-stat-s">No gateway, no tokens, no account. The one thing it can send is a <a href="/count">head count</a>, and only after you say yes. It reads from an RPC endpoint you choose, which can be your own node.</p>
+          <p class="fd-stat-s">The README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nuthatch-org/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes ↗</a></p>
         </div>
       </div>
     </div>
@@ -94,13 +89,73 @@ const rows = [
     </div>
   </section>
 
-  <hr class="divider" />
-
   <!-- 4. HOW IT WORKS -->
   <section class="how" id="how">
     <div class="wrap">
       <p class="section-label">How it works</p>
       <h2 class="how-h narrow">One process, from RPC to a query you can trust.</h2>
+      <figure class="how-diagram">
+        <svg class="pl pl-wide" viewBox="0 0 1080 88" role="img" aria-label="The pipeline: RPC, decode, redb, sealed Parquet, Burrmill, then SQL, HTTP and MCP.">
+          <rect class="pl-node" x="0.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="75.0" y="32" text-anchor="middle">RPC</text>
+          <text class="pl-sub" x="75.0" y="78" text-anchor="middle">your endpoint</text>
+          <path class="pl-edge" d="M154 26.5H181" />
+          <path class="pl-head" d="M176 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="186.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="261.0" y="32" text-anchor="middle">decode</text>
+          <text class="pl-sub" x="261.0" y="78" text-anchor="middle">from the ABI</text>
+          <path class="pl-edge" d="M340 26.5H367" />
+          <path class="pl-head" d="M362 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="372.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="447.0" y="32" text-anchor="middle">redb</text>
+          <text class="pl-sub" x="447.0" y="78" text-anchor="middle">hot store, at the tip</text>
+          <path class="pl-edge" d="M526 26.5H553" />
+          <path class="pl-head" d="M548 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="558.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="633.0" y="32" text-anchor="middle">sealed Parquet</text>
+          <text class="pl-sub" x="633.0" y="78" text-anchor="middle">past finality</text>
+          <path class="pl-edge" d="M712 26.5H739" />
+          <path class="pl-head" d="M734 22l5 4.5-5 4.5" />
+          <rect class="pl-node" x="744.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="819.0" y="32" text-anchor="middle">Burrmill</text>
+          <text class="pl-sub" x="819.0" y="78" text-anchor="middle">SQL on DataFusion</text>
+          <path class="pl-edge" d="M898 26.5H925" />
+          <path class="pl-head" d="M920 22l5 4.5-5 4.5" />
+          <rect class="pl-node pl-out" x="930.5" y="0.5" width="149" height="52" rx="6" />
+          <text class="pl-label" x="1005.0" y="32" text-anchor="middle">SQL · HTTP · MCP</text>
+          <text class="pl-sub" x="1005.0" y="78" text-anchor="middle">your app or agent</text>
+        </svg>
+        <svg class="pl pl-tall" viewBox="0 0 340 419" role="img" aria-label="The pipeline: RPC, decode, redb, sealed Parquet, Burrmill, then SQL, HTTP and MCP.">
+          <rect class="pl-node" x="0.5" y="0.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="29" text-anchor="middle">RPC</text>
+          <text class="pl-sub" x="186" y="29">your endpoint</text>
+          <path class="pl-edge" d="M85.5 51V70" />
+          <path class="pl-head" d="M81 65l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="74.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="103" text-anchor="middle">decode</text>
+          <text class="pl-sub" x="186" y="103">from the ABI</text>
+          <path class="pl-edge" d="M85.5 125V144" />
+          <path class="pl-head" d="M81 139l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="148.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="177" text-anchor="middle">redb</text>
+          <text class="pl-sub" x="186" y="177">hot store, at the tip</text>
+          <path class="pl-edge" d="M85.5 199V218" />
+          <path class="pl-head" d="M81 213l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="222.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="251" text-anchor="middle">sealed Parquet</text>
+          <text class="pl-sub" x="186" y="251">past finality</text>
+          <path class="pl-edge" d="M85.5 273V292" />
+          <path class="pl-head" d="M81 287l4.5 5 4.5-5" />
+          <rect class="pl-node" x="0.5" y="296.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="325" text-anchor="middle">Burrmill</text>
+          <text class="pl-sub" x="186" y="325">SQL on DataFusion</text>
+          <path class="pl-edge" d="M85.5 347V366" />
+          <path class="pl-head" d="M81 361l4.5 5 4.5-5" />
+          <rect class="pl-node pl-out" x="0.5" y="370.5" width="170" height="47" rx="6" />
+          <text class="pl-label" x="85" y="399" text-anchor="middle">SQL · HTTP · MCP</text>
+          <text class="pl-sub" x="186" y="399">your app or agent</text>
+        </svg>
+      </figure>
       <div class="how-cols">
         <div>
           <h3>Two engines, one binary</h3>
@@ -133,32 +188,28 @@ const rows = [
     </div>
   </section>
 
-  <hr class="divider" />
-
   <!-- 4b. THREE FRONT DOORS -->
   <section class="doors">
     <div class="wrap">
       <p class="section-label">Who runs it</p>
       <h2 class="narrow doors-h">Three front doors.</h2>
       <div class="doors-grid">
-        <div class="door">
-          <span class="door-k">App backends</span>
+        <a class="door" href="/docs/operate/serving/">
+          <span class="door-k">App backends →</span>
           <p>GET /sql, like a database that fills itself.</p>
-        </div>
-        <div class="door">
-          <span class="door-k">Analysts</span>
-          <p>run a published nest, write no indexing code.</p>
-        </div>
-        <div class="door">
-          <span class="door-k">Agents</span>
-          <p>built-in MCP, fully local.</p>
-        </div>
+        </a>
+        <a class="door" href="/nests">
+          <span class="door-k">Analysts →</span>
+          <p>Run a published nest, write no indexing code.</p>
+        </a>
+        <a class="door" href="/agents">
+          <span class="door-k">Agents →</span>
+          <p>Built-in MCP, fully local.</p>
+        </a>
       </div>
       <p class="doors-link"><a href="/stories">Who runs Nuthatch →</a></p>
     </div>
   </section>
-
-  <hr class="divider" />
 
   <!-- 5. COMPARISON -->
   <section class="compare" id="compare">
@@ -170,14 +221,14 @@ const rows = [
           <thead>
             <tr>
               <th scope="col" class="ct-feature"></th>
-              {cols.map((c) => <th scope="col">{c}</th>)}
+              {cols.map((c, i) => <th scope="col" class={i === cols.length - 1 ? 'ct-us' : ''}>{c}</th>)}
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr>
-                <th scope="row" class={r.us ? 'ct-feature ct-us' : 'ct-feature'}>{r.p}</th>
-                {r.c.map((cell) => <td class={r.us ? 'ct-us' : ''}><span class="ct-text">{cell}</span></td>)}
+                <th scope="row" class="ct-feature">{r.p}</th>
+                {r.c.map((cell, i) => <td class={i === r.c.length - 1 ? 'ct-us' : ''}>{cell}</td>)}
               </tr>
             ))}
           </tbody>
@@ -192,8 +243,6 @@ const rows = [
     </div>
   </section>
 
-  <hr class="divider" />
-
   <!-- 5b. REAL EXAMPLE TEASER -->
   <section class="teaser" id="example">
     <div class="wrap">
@@ -204,38 +253,33 @@ const rows = [
           <p class="teaser-copy">
             USDC on Ethereum mainnet, indexed from its contract address: raw event tables queryable
             over read-only SQL, then an authored view or a maintained entity on top. It runs today.
-            GraphQL for subgraph-shaped clients shipped in 3.7.0 only as a partial read surface, is
-            parked, and is served only by the separate <code>nuthatch-graph</code> download attached
-            to every release since 4.11.0.
           </p>
+          <a class="btn btn-ghost teaser-btn" href="/example">See the example →</a>
         </div>
-        <a class="btn btn-ghost teaser-btn" href="/example">See the example →</a>
       </div>
     </div>
   </section>
 
-  <hr class="divider" />
-
   <!-- 6. AI-NATIVE -->
   <section class="ai" id="ai">
     <div class="wrap">
-      <p class="section-label">AI-native, sovereignty-respecting</p>
+      <p class="section-label">Agents</p>
       <h2 class="narrow">The AI writes the code. It never sits in the data path.</h2>
       <div class="ai-cols">
         <div class="card ai-card">
           <span class="ai-kicker">For agents</span>
           <ul class="ai-list">
             <li>A built-in MCP server: eight tools on every nest, covering schema discovery, SQL, entity lookup and <code>diff</code>, plus <code>balance</code> and <code>top_balances</code> on a token nest; three resources and two prompts. Flags, exposure and a third prompt appear when the compliance pack is configured.</li>
-            <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and a failed query comes back as a fix hint (<code>explain</code> checks a query before it runs) - so the agent gets it right first try.</li>
-            <li>Ships <code>llms.txt</code> and a Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
-            <li>Works fully offline against your local instance.</li>
+            <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and <code>explain</code> checks a query without running it, returning <code>{'{valid: true}'}</code> or the error with a fix hint.</li>
+            <li>A Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
           </ul>
         </div>
         <div class="card ai-card">
           <span class="ai-kicker">For you</span>
           <ul class="ai-list">
-            <li><code>init</code> resolves the ABI and scaffolds the project: config, <code>llms.txt</code>, and a Claude Code skill.</li>
+            <li><code>init</code> resolves the ABI and scaffolds the project: config, <code>llms.txt</code>, and that skill.</li>
             <li>The skill hands the tool the real query surface, so it uses actual endpoints, not guesses.</li>
+            <li>Works fully offline against your local instance.</li>
           </ul>
         </div>
       </div>
@@ -283,78 +327,89 @@ const rows = [
   .hero-inner { position: relative; }
   .hero-copy { max-width: 56rem; }
   .hero-eyebrow { margin-bottom: 1.2rem; }
-  .hero h1 { max-width: 13ch; font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.03; letter-spacing: -0.04em; }
+  .hero h1 { max-width: 13ch; font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1.03; letter-spacing: -0.04em; }
   .hero-sub { margin-top: 1.4rem; font-size: 1rem; line-height: 1.6; max-width: 36ch; color: var(--text-muted); }
   .hero-cta { margin-top: 2rem; max-width: 56rem; }
-  .hero-alt { margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-muted); }
+  .hero-alt { margin-top: 0.8rem; font-size: 0.889rem; color: var(--text-muted); }
   .hero-alt code { font-size: 0.82em; }
   .hero-links { margin-top: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
   .hero .btn-ghost { background: rgba(23, 22, 20, 0.6); }
-  .stars { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-faint); margin-left: 0.15rem; }
 
   /* A REAL RUN */
-  .demo-caption { margin-top: 1rem; font-size: 0.75rem; line-height: 1.6; color: var(--text-muted); max-width: 42rem; }
+  .demo-caption { margin-top: 1rem; font-size: 0.889rem; line-height: 1.6; color: var(--text-muted); max-width: 42rem; }
   /* PROOF BAND */
   .proof { padding-block: clamp(2.5rem, 5vw, 4rem); }
   .proof .fd-stat-s a { white-space: nowrap; }
 
   /* HOW */
   .how-h { margin-bottom: 2.2rem; }
-  .how-diagram { margin-bottom: 2.8rem; }
+  .how-diagram { margin: 0 0 2.8rem; }
+  .pl { display: block; width: 100%; height: auto; overflow: visible; }
+  .pl-tall { display: none; max-width: 22rem; }
+  @media (max-width: 60rem) { .pl-wide { display: none; } .pl-tall { display: block; } }
+  .pl-node { fill: var(--bg-code); stroke: var(--border-hi); stroke-width: 1; }
+  .pl-out { stroke: var(--accent); }
+  .pl-edge, .pl-head { fill: none; stroke: var(--accent); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
+  .pl-label { fill: var(--text); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em; }
+  .pl-sub { fill: var(--text-muted); font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.04em; }
   .how-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem 2.5rem; }
   .how-cols h3 { margin-bottom: 0.6rem; }
-  .how-cols p { color: var(--text-muted); font-size: 0.875rem; }
+  .how-cols p { color: var(--text-muted); font-size: 0.889rem; }
   @media (max-width: 46rem) { .how-cols { grid-template-columns: 1fr; gap: 1.8rem; } }
-  .how-foot { margin-top: 2.4rem; color: var(--text-muted); font-size: 0.875rem; }
+  .how-foot { margin-top: 2.4rem; color: var(--text-muted); font-size: 0.889rem; }
 
   /* DOORS */
   .doors-h { margin-bottom: 2rem; }
   .doors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .door { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
+  .door { display: block; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; transition: border-color 0.16s var(--ease); }
+  .door:hover { border-color: var(--border-hi); text-decoration: none; }
   .door-k {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--accent);
   }
-  .door p { margin-top: 0.5rem; color: var(--text-muted); font-size: 0.875rem; }
-  .doors-link { margin-top: 1.4rem; font-size: 0.8125rem; }
+  .door p { margin-top: 0.5rem; color: var(--text-muted); font-size: 0.889rem; }
+  .doors-link { margin-top: 1.4rem; font-size: 0.75rem; }
   .doors-link a { font-family: 'JetBrains Mono', monospace; }
   @media (max-width: 44rem) { .doors-grid { grid-template-columns: 1fr; } }
 
   /* COMPARE */
   .compare h2 { margin-bottom: 2rem; }
   .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
-  .ctable { width: 100%; border-collapse: collapse; min-width: 48rem; font-size: 0.8125rem; }
-  .ctable th, .ctable td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
+  .ctable { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+  .ctable th, .ctable td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
+  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
   .ctable tbody tr:last-child th, .ctable tbody tr:last-child td { border-bottom: 0; }
-  .ct-feature { color: var(--text); font-weight: 500; width: 32%; }
+  .ctable .ct-feature { color: var(--text-muted); font-weight: 500; }
   .ct-us { background: var(--pale-blue-bg); }
   thead .ct-us { color: var(--accent-ink); font-weight: 600; }
-  .ct-text { color: var(--text); }
-  .compare-foot { margin-top: 1.2rem; font-size: 0.75rem; color: var(--text-muted); }
+  .compare-foot { margin-top: 1.2rem; font-size: 0.889rem; color: var(--text-muted); max-width: 72ch; }
+  /* Phones: the feature name becomes a label row, so all three products stay in view. */
+  @media (max-width: 540px) {
+    .ctable tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--border); }
+    .ctable tbody tr:last-child { border-bottom: 0; }
+    .ctable th, .ctable td { padding: 0.6rem; border-bottom: 0; hyphens: auto; }
+    .ctable thead th:first-child { display: none; }
+    .ctable tbody th { grid-column: 1 / -1; padding-bottom: 0; }
+  }
 
   /* TEASER */
   .teaser-inner {
-    display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem;
     background: var(--bg-elev); border: 1px solid var(--border);
     border-radius: var(--radius); padding: clamp(1.6rem, 4vw, 2.6rem);
   }
   .teaser-h { margin-bottom: 0.9rem; max-width: 20ch; }
-  .teaser-copy { color: var(--text-muted); font-size: 0.875rem; max-width: 52ch; }
-  .teaser-btn { flex-shrink: 0; white-space: nowrap; }
-  @media (max-width: 44rem) {
-    .teaser-inner { flex-direction: column; align-items: flex-start; }
-  }
+  .teaser-copy { color: var(--text-muted); font-size: 0.889rem; max-width: 52ch; }
+  .teaser-btn { margin-top: 1.4rem; }
 
   /* AI */
   .ai h2 { margin-bottom: 2rem; }
   .ai-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .ai-kicker {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--accent);
   }
   .ai-list { margin: 1rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
-  .ai-list li { color: var(--text-muted); font-size: 0.875rem; padding-left: 1.3rem; position: relative; }
+  .ai-list li { color: var(--text-muted); font-size: 0.889rem; padding-left: 1.3rem; position: relative; }
   .ai-list li::before { content: '↳'; position: absolute; left: 0; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
   @media (max-width: 44rem) { .ai-cols { grid-template-columns: 1fr; } }
 
@@ -363,6 +418,6 @@ const rows = [
   .close-inner { text-align: center; max-width: 56rem; }
   .close-inner h2 { margin-bottom: 1.8rem; }
   .close-inner :global(.copyblock) { text-align: left; }
-  .close-alt { margin-top: 1rem; font-size: 0.8125rem; color: var(--text-muted); }
+  .close-alt { margin-top: 1rem; font-size: 0.889rem; color: var(--text-muted); }
 </style>
 

@@ -11,8 +11,9 @@ interface Props {
   slug: string;
   headings?: Array<{ depth: number; slug: string; text: string }>;
   checked?: string;
+  kicker?: string;
 }
-const { title, description, slug, headings = [], checked } = Astro.props;
+const { title, description, slug, headings = [], checked, kicker } = Astro.props;
 // A page stamps the release it was checked against (frontmatter `checked`, #81). Until every
 // operate/ and reference/ page carries one, those sections keep the older section-wide line.
 
@@ -56,6 +57,7 @@ const groups = DOCS_GROUPS.map((g) => ({
       </details>
 
       <article class="prose docs-content">
+        {kicker && <p class="section-label">{kicker}</p>}
         <h1>{title}</h1>
         <slot />
         {checked && <p class="docs-verified">Checked against Nuthatch {checked}. Verify a release-specific command with the <a href="/docs/reference/cli/">CLI reference</a> before running it in production.</p>}
@@ -104,6 +106,7 @@ const groups = DOCS_GROUPS.map((g) => ({
   }
 
   .docs-content { min-width: 0; }
+  .docs-content .section-label { color: var(--accent); font-size: 0.625rem; line-height: 1.4; margin-bottom: 0.6rem; }
   .docs-verified { margin-top: 3rem !important; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-muted) !important; font-size: 0.75rem !important; }
   .docs-content :global(h1) { font-size: clamp(1.689rem, 4vw, 2.311rem); line-height: 1.12; letter-spacing: -0.025em; margin-bottom: 1.4rem; }
 

@@ -21,17 +21,14 @@ const items: (Link | Group)[] = [
   { href: '/nests', text: 'Nests' },
   { href: '/analytics/', text: 'Analytics' },
   {
-    label: 'Project',
+    label: 'Learn',
     links: [
-      { href: '/blog', text: 'Blog' },
-      { href: '/stories', text: 'Stories' },
-      { href: '/roadmap', text: 'Roadmap' },
-      { href: '/manifesto', text: 'Manifesto' },
       { href: '/compare', text: 'Compare' },
       { href: '/the-graph', text: 'Nuthatch & The Graph' },
-      { href: '/hosting', text: 'Hosting' },
-      { href: '/mirror', text: 'Mirror' },
-      { href: '/rotki', text: 'rotki' },
+      { href: '/manifesto', text: 'Manifesto' },
+      { href: '/roadmap', text: 'Roadmap' },
+      { href: '/blog', text: 'Blog' },
+      { href: '/stories', text: 'Stories' },
     ],
   },
   { href: 'https://github.com/nuthatch-org/nuthatch', text: 'GitHub' },
@@ -160,7 +157,7 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
     .nav-search { padding: 0.4rem; }
     .nav-search-label, .nav-search kbd { display: none; }
   }
-  .nav-links a { color: var(--text-muted); font-size: 0.8125rem; }
+  .nav-links a { color: var(--text-muted); font-size: 0.889rem; }
   .nav-links a:hover { color: var(--accent); text-decoration: none; }
 
   /* The one primary action in the header: solid brick with on-accent text, as a Foundry button. */
@@ -170,12 +167,12 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
     margin-left: clamp(0.6rem, 1.6vw, 1.1rem);
     min-height: 32px; padding: 0 12px 0 10px; border-radius: var(--radius-sm);
     background: var(--accent); color: var(--on-accent);
-    font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.02em;
-    transition: transform 0.12s var(--ease), background 0.16s var(--ease);
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em;
+    transition: transform 0.12s var(--ease), filter 0.16s var(--ease);
   }
   /* Grows the tap target to 44px without growing the pill. */
   .nav-play::after { content: ''; position: absolute; inset: -7px -4px; }
-  .nav-play:hover { color: var(--bg); text-decoration: none; background: var(--accent-ink); }
+  .nav-play:hover { text-decoration: none; filter: brightness(1.08); }
   .nav-play:active { transform: scale(0.98); }
   .nav-play svg { width: 11px; height: 11px; }
 
@@ -184,7 +181,7 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
   .nav-group { position: relative; }
   .nav-group-btn {
     display: inline-flex; align-items: center; gap: 0.3rem;
-    font: inherit; font-size: 0.8125rem; color: var(--text-muted);
+    font: inherit; font-size: 0.889rem; color: var(--text-muted);
     background: none; border: 0; padding: 0; cursor: pointer;
   }
   .nav-chevron { width: 10px; height: 10px; transition: transform 0.18s var(--ease); }
@@ -218,7 +215,7 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
   .theme-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
   .theme-toggle {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
     color: var(--text-muted); cursor: pointer; user-select: none;
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 0.22rem 0.6rem 0.22rem 0.5rem;
@@ -254,13 +251,13 @@ const isGroup = (item: Link | Group): item is Group => 'links' in item;
     :root:has(#nav-toggle:checked) .nav-links { display: flex; }
     .nav-links a {
       display: flex; align-items: center; min-height: 44px;
-      padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--text);
+      padding: 0.5rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.889rem; color: var(--text);
     }
     .nav-links a:hover { background: var(--bg-inset); }
     .nav-group { display: flex; flex-direction: column; }
     .nav-group-btn {
       pointer-events: none; padding: 0.9rem 0.8rem 0.3rem; cursor: default;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.12em;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--rust);
     }
     .nav-chevron { display: none; }

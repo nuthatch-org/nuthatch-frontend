@@ -39,12 +39,16 @@ const { command, prompt = true, size = 'md', label = 'Copy command' } = Astro.pr
   }
   :not(pre) > .copyblock-code { padding: 0; background: none; border-radius: 0; overflow-wrap: normal; }
   .copyblock--lg { padding: 8px 8px 8px 16px; }
-  .copyblock--lg .copyblock-code { font-size: clamp(0.6875rem, 2.1vw, 0.8125rem); }
+  .copyblock--lg .copyblock-code { font-size: 0.889rem; }
+  @media (max-width: 540px) {
+    :not(pre) > .copyblock-code { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: visible; }
+    .copyblock--lg .copyblock-code { font-size: 0.75rem; }
+  }
   .copyblock-prompt { color: var(--accent); user-select: none; }
   .copyblock-text { color: var(--text); }
   .copyblock-btn {
     flex-shrink: 0;
-    font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.02em;
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.02em;
     color: var(--text-muted);
     background: none; border: 0; border-left: 1px solid var(--border);
     padding: 0.35rem 0.5rem 0.35rem 10px; cursor: pointer;
