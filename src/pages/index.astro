@@ -383,7 +383,14 @@ const rows: { p: string; c: string[] }[] = [
   .ct-us { background: var(--pale-blue-bg); }
   thead .ct-us { color: var(--accent-ink); font-weight: 600; }
   .compare-foot { margin-top: 1.2rem; font-size: 0.889rem; color: var(--text-muted); max-width: 72ch; }
-  @media (max-width: 540px) { .ctable th, .ctable td { padding: 0.7rem 0.6rem; } }
+  /* Phones: the feature name becomes a label row, so all three products stay in view. */
+  @media (max-width: 540px) {
+    .ctable tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--border); }
+    .ctable tbody tr:last-child { border-bottom: 0; }
+    .ctable th, .ctable td { padding: 0.6rem; border-bottom: 0; hyphens: auto; }
+    .ctable thead th:first-child { display: none; }
+    .ctable tbody th { grid-column: 1 / -1; padding-bottom: 0; }
+  }
 
   /* TEASER */
   .teaser-inner {
