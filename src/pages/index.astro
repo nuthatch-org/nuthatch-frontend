@@ -266,23 +266,23 @@ const rows: { p: string; c: string[] }[] = [
   <!-- 6. AI-NATIVE -->
   <section class="ai" id="ai">
     <div class="wrap">
-      <p class="section-label">AI-native, sovereignty-respecting</p>
+      <p class="section-label">Agents</p>
       <h2 class="narrow">The AI writes the code. It never sits in the data path.</h2>
       <div class="ai-cols">
         <div class="card ai-card">
           <span class="ai-kicker">For agents</span>
           <ul class="ai-list">
             <li>A built-in MCP server: eight tools on every nest, covering schema discovery, SQL, entity lookup and <code>diff</code>, plus <code>balance</code> and <code>top_balances</code> on a token nest; three resources and two prompts. Flags, exposure and a third prompt appear when the compliance pack is configured.</li>
-            <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and a failed query comes back as a fix hint (<code>explain</code> checks a query before it runs) - so the agent gets it right first try.</li>
-            <li>Ships <code>llms.txt</code> and a Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
-            <li>Works fully offline against your local instance.</li>
+            <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and <code>explain</code> checks a query without running it, returning <code>{'{valid: true}'}</code> or the error with a fix hint.</li>
+            <li>A Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
           </ul>
         </div>
         <div class="card ai-card">
           <span class="ai-kicker">For you</span>
           <ul class="ai-list">
-            <li><code>init</code> resolves the ABI and scaffolds the project: config, <code>llms.txt</code>, and a Claude Code skill.</li>
+            <li><code>init</code> resolves the ABI and scaffolds the project: config, <code>llms.txt</code>, and that skill.</li>
             <li>The skill hands the tool the real query surface, so it uses actual endpoints, not guesses.</li>
+            <li>Works fully offline against your local instance.</li>
           </ul>
         </div>
       </div>
