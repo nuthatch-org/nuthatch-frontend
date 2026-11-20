@@ -13,6 +13,7 @@
     "check:deployed": "node scripts/deploy-drift.mjs"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "astro": "^5.13.0"
   },
   "devDependencies": {

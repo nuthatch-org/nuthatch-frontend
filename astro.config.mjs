@@ -1,7 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-// Static output only. No islands, no adapters, no telemetry, no external scripts.
+// Static output only. No islands, no adapters, no external scripts. Page views go to
+// Vercel Web Analytics, same-origin and cookieless (see Layout.astro).
 // The site's pitch is "nothing phones home" - the build practises it.
 export default defineConfig({
   site: 'https://nuthatch-indexer.com',
