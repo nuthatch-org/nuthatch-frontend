@@ -71,6 +71,18 @@
       "destination": "https://base-usdc.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/gooddollar-xdc/:path*",
+      "destination": "https://gooddollar-xdc.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/sablier-xdc/:path*",
+      "destination": "https://sablier-xdc.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/pharos-eth/:path*",
+      "destination": "https://pharos-eth.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/analytics/api/:path*",
       "destination": "https://analytics.89.167.109.4.sslip.io/:path*"
     },
