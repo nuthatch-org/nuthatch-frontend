@@ -83,6 +83,14 @@
       "destination": "https://pharos-eth.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/beefy-hyperevm/:path*",
+      "destination": "https://beefy-hyperevm.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/mpamm-monad/:path*",
+      "destination": "https://mpamm-monad.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/analytics/api/:path*",
       "destination": "https://analytics.89.167.109.4.sslip.io/:path*"
     },

@@ -125,4 +125,26 @@ export const publicNests: PublicNest[] = [
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/pharos-eth/sql' --data-urlencode 'q=SELECT count(*) FROM lusd3crv__transfer'",
   },
+  {
+    id: 'beefy-hyperevm',
+    name: 'Beefy vaults on HyperEVM',
+    chain: 'hyperevm',
+    for: { label: 'Beefy', href: '/showcase/?nest=beefy-hyperevm' },
+    summary:
+      'Every vault, reward pool and CLM manager the three Beefy factories on HyperEVM have created, discovered from the factories and indexed from the block each was made, about 40,000 events with their transfers, deposits, withdrawals and stakes, following the tip. Block times are not stored. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/beefy-hyperevm',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/beefy-hyperevm/sql' --data-urlencode 'q=SELECT count(*) FROM clm_manager__deposit'",
+  },
+  {
+    id: 'mpamm-monad',
+    name: 'Capricorn and Metric pools on Monad',
+    chain: 'monad',
+    for: { label: 'mpamm', href: '/showcase/?nest=mpamm-monad' },
+    summary:
+      'Every pool the Capricorn and Metric v1 factories have created on Monad and every swap in them since the Capricorn factory was deployed, about 25,000 events, following the tip. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/mpamm-monad',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/mpamm-monad/sql' --data-urlencode 'q=SELECT count(*) FROM capricorn_pool__swap'",
+  },
 ];
