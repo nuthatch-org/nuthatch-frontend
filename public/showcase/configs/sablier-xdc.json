@@ -15,6 +15,6 @@
     "How many Flow streams were created on XDC, how many were paused, voided or refunded, and what are the first and last block_timestamp of any Flow event? Tables are flow_v1_1__*, flow_v2_0__*, flow_v3_0__*.",
     "List every Sablier Airdrops campaign created on XDC (tables factory_merkle_*__create_* and merkle_factory_v1_3__create_*): campaign address, creation block and factory version. Which have emitted events in the merkle_* child tables?",
     "What is the highest block this nest has indexed, and when was the newest Sablier event on XDC?",
-    "List every non-empty table in this nest with its row count and say in two sentences what the data is good for."
+    "List every non-empty table in this nest with its row count and say in two sentences what the data is good for. The nest has about 190 tables and /sql refuses a query of more than 16 KB or 64 UNION ALL branches, so get the table names from the tables tool and count them in batches of 40."
   ]
 }
