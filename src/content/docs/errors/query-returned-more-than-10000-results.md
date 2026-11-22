@@ -2,7 +2,7 @@
 title: "query returned more than 10000 results"
 description: "Why eth_getLogs answers -32005 query returned more than 10000 results, how to page around it by hand, and what a nest does instead."
 order: 1
-checked: 5.22.0 (2026-11-17)
+checked: 5.24.0 (2026-11-22)
 ---
 
 ```json
