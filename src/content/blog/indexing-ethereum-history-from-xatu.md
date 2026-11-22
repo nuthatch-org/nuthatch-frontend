@@ -4,10 +4,9 @@ date: "2026-11-22"
 description: "Where the RPC calls of a backfill actually go, a null-timestamp mode that removes the biggest line, and an opt-in Ethereum history source that reads old logs from ethPandaOps' public Parquet. With measured numbers for USDC."
 author: "cargopete"
 tags: ["nuthatch", "xatu", "parquet", "rpc", "backfill", "ethereum", "timestamps"]
-draft: true
 ---
 
-*Draft: the nuthatch PR this post describes is open and unmerged. Nothing here is released yet.*
+*The Xatu source described here is in review in [#3086](https://github.com/nuthatch-org/nuthatch/pull/3086) and not in a release yet. The null-timestamp mode ships in v5.24.0.*
 
 We went looking for a way to stop hammering RPC providers during backfills, expecting the answer to
 be about `eth_getLogs`. It mostly wasn't.
