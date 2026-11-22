@@ -6,7 +6,7 @@ author: "cargopete"
 tags: ["nuthatch", "xatu", "parquet", "rpc", "backfill", "ethereum", "timestamps"]
 ---
 
-*The Xatu source described here is in review in [#3086](https://github.com/nuthatch-org/nuthatch/pull/3086) and not in a release yet. The null-timestamp mode ships in v5.24.0.*
+*The Xatu source described here is in review in [#3087](https://github.com/nuthatch-org/nuthatch/pull/3087) and not in a release yet. The null-timestamp mode ships in v5.24.0.*
 
 We went looking for a way to stop hammering RPC providers during backfills, expecting the answer to
 be about `eth_getLogs`. It mostly wasn't.
@@ -103,5 +103,5 @@ times as "no slower".
 XDC, HyperEVM, Monad and Arc have no public dataset we could find, so on those chains null timestamps
 is the only lever today.
 
-The PR is [nuthatch-org/nuthatch#3086](https://github.com/nuthatch-org/nuthatch/pull/3086) and the code is at
+The PR is [nuthatch-org/nuthatch#3087](https://github.com/nuthatch-org/nuthatch/pull/3087) and the code is at
 [github.com/nuthatch-org/nuthatch](https://github.com/nuthatch-org/nuthatch).
