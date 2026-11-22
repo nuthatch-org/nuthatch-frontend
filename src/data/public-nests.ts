@@ -147,4 +147,15 @@ export const publicNests: PublicNest[] = [
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/mpamm-monad/sql' --data-urlencode 'q=SELECT count(*) FROM capricorn_pool__swap'",
   },
+  {
+    id: 'spendshield-aevum',
+    name: 'SpendShield on Aevum testnet',
+    chain: 'aevum-testnet',
+    for: { label: 'SpendShield', href: '/showcase/?nest=spendshield-aevum' },
+    summary:
+      'Every event the SpendShield contract has emitted on Aevum testnet since block 3581556: agent payments, owner policy changes, deposits, withdrawals and approval requests, 92 events so far, following the tip. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/spendshield-aevum',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/spendshield-aevum/sql' --data-urlencode 'q=SELECT count(*) FROM spend_shield__agent_paid'",
+  },
 ];

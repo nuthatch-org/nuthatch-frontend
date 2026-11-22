@@ -87,6 +87,10 @@
       "destination": "https://beefy-hyperevm.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/spendshield-aevum/:path*",
+      "destination": "https://spendshield-aevum.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/nests/mpamm-monad/:path*",
       "destination": "https://mpamm-monad.89.167.109.4.sslip.io/:path*"
     },
