@@ -27,6 +27,7 @@ const PAGES: Omit<PaletteItem, 'kind'>[] = [
   { title: 'Stories', url: '/stories', note: 'Who runs Nuthatch: app backends, analysts and agents', also: 'use cases personas' },
   { title: 'Roadmap', url: '/roadmap', note: 'What is shipped, in progress and planned', also: 'rfcs plans' },
   { title: 'Manifesto', url: '/manifesto', note: 'Why Nuthatch is deterministic, free and permissively licensed' },
+  { title: 'Burrmill', url: '/burrmill', note: 'The SQL engine inside Nuthatch: DuckDB’s dialect, exact integers that refuse on overflow', also: 'sql engine datafusion duckdb parquet' },
   { title: 'Nuthatch & The Graph', url: '/the-graph', note: 'A network for indexed data and a binary that produces it', also: 'horizon subgraph' },
   { title: 'Compare', url: '/compare', note: 'Nuthatch beside Ponder, rindexer, Envio and The Graph, losses included', also: 'comparison alternatives ponder rindexer envio hyperindex' },
   { title: 'Move a subgraph', url: '/migrate', note: 'What carries over from a subgraph to a nest, and what does not', also: 'migrate migration port graphql subgraph' },
