@@ -2,7 +2,7 @@
 title: nuthatch.toml
 description: The one config file a nest has - the [nest] header and one or more [[contracts]].
 order: 1
-checked: 5.22.0 (2026-11-17)
+checked: 5.24.0 (2026-11-22)
 ---
 
 A nest starts with `nuthatch.toml`. `init` generates it from a contract address; you

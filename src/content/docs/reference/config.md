@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml, the optional nest files and mounts.toml, field by field."
 order: 2
-checked: 5.22.0 (2026-11-17)
+checked: 5.24.0 (2026-11-22)
 ---
 
 All TOML. `nuthatch.toml` is written by `init` and yours to edit; it is the only one a nest needs. The
