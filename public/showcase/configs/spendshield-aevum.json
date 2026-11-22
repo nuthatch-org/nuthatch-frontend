@@ -1,0 +1,20 @@
+{
+  "title": "SpendShield on Aevum testnet",
+  "tagline": "Every event the SpendShield contract has emitted on Aevum testnet since it was deployed at block 3581556: payments agents made, the limits and merchants owners set, deposits, withdrawals and approval requests. Amounts are tUSD8 with 6 decimals.",
+  "chain": "Aevum testnet (44005)",
+  "events": { "table": "spend_shield__agent_paid", "from": "agent", "to": "merchant", "amount": "amount", "decimals": 6, "symbol": "tUSD8" },
+  "queries": [
+    { "title": "Latest agent payments", "sql": "SELECT block_number, block_timestamp, owner, agent, merchant, CAST(amount_dec AS DOUBLE) / 1e6 AS amount_usd FROM spend_shield__agent_paid ORDER BY block_number DESC, log_index DESC LIMIT 20" },
+    { "title": "Payments per day", "sql": "SELECT * FROM payments_by_day ORDER BY day DESC LIMIT 14" },
+    { "title": "Recent policy changes", "sql": "SELECT block_number, owner, agent, kind, detail FROM policy_changes ORDER BY block_number DESC LIMIT 20" },
+    { "title": "Approval requests and their outcome", "sql": "SELECT id, owner, agent, merchant, amount_usd, outcome FROM approval_requests ORDER BY id DESC LIMIT 20" },
+    { "title": "Spend per owner and merchant", "sql": "SELECT owner, merchant, count(*) AS payments, sum(CAST(amount_dec AS DOUBLE)) / 1e6 AS amount_usd FROM spend_shield__agent_paid WHERE NOT amount_overflow GROUP BY 1, 2 ORDER BY amount_usd DESC LIMIT 20" }
+  ],
+  "prompts": [
+    "What changes have owners made to their agents' permissions recently? Use the policy_changes view, newest first, and summarise how many of each kind there are.",
+    "For each owner wallet, how many approval requests did their agents raise, and how many were approved, rejected or still pending? Use the approval_requests view.",
+    "How much did agents pay per day, in tUSD8 (6 decimals)? Use the payments_by_day view for the last 14 days and name the busiest day.",
+    "Which merchants received the most from agents, and from which owners? Use table spend_shield__agent_paid, amount_dec divided by 1e6.",
+    "List every table and view in this nest with its row count, then say in two sentences what the data is good for."
+  ]
+}
