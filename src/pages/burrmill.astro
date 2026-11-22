@@ -1,0 +1,393 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CodeCard from '../components/CodeCard.astro';
+import CopyBlock from '../components/CopyBlock.astro';
+
+// Every figure on this page is copied from the Burrmill repositories, and each row says where. If a
+// number cannot be pointed at, it is not here. Update the date when the figures are re-read.
+const BM = 'https://github.com/nuthatch-org/burrmill';
+const BMB = BM + '/blob/main/';
+const WASM = 'https://github.com/nuthatch-org/burrmill-wasm';
+const READ_ON = '22 November 2026';
+
+const does = [
+  {
+    k: '01 · Dialect',
+    h: 'DuckDB’s SQL, kept as it is',
+    p: 'Authored views are DuckDB SQL and stay that way. Integer literals are fitted as DuckDB fits them, casts round as DuckDB’s do, and identifiers resolve without case. The forms it does not admit are refused by name, with what to write instead.',
+    href: BMB + 'docs/sql.md', text: 'docs/sql.md',
+  },
+  {
+    k: '02 · Arithmetic',
+    h: 'Sums, products and casts refuse on overflow',
+    p: 'Every sum, product and cast in a plan is rewritten to refuse instead of wrap, through CTEs, joins and windows. Every wide column comes with _dec and _overflow beside it, and a value wider than HUGEINT can be written DECIMAL(p, s) up to 76 digits.',
+    href: BM + '#what-it-is', text: 'README, what it is',
+  },
+  {
+    k: '03 · Plans',
+    h: 'The shapes an indexer’s views are made of',
+    p: 'A range join for x >= start AND x <= until, top-per-group, a distinct split, decorrelated subqueries, and an owned operator for the signed-union GROUP BY that balance rebuilds use. It shows in EXPLAIN.',
+    href: BM + '#what-it-is', text: 'README, the engine',
+  },
+  {
+    k: '04 · Closed',
+    h: 'SQL a host did not write can be run',
+    p: 'A catalogue that knows the nest and nothing else: no file functions, no table factories, SELECT only. An unconfigured DataFusion session will read /etc/hosts; this one has nowhere in the grammar to ask. The threat model and the corpus of refused attempts are in the repo.',
+    href: BMB + 'docs/sandbox.md', text: 'docs/sandbox.md',
+  },
+  {
+    k: '05 · CLI',
+    h: 'Strict, deterministic, receipted queries',
+    p: 'The burrmill binary queries a directory of Parquet files with --strict decimals, --deterministic answers and a --receipt that anyone holding the same files can re-check with burrmill verify.',
+    href: BM + '#try-it', text: 'README, try it',
+  },
+  {
+    k: '06 · Browser',
+    h: 'The same engine in a tab',
+    p: 'burrmill-wasm compiles the engine to wasm32. The demo page reads a CSV, JSON or Parquet file and queries it inside the tab; pressing Run here sends nothing anywhere.',
+    href: 'https://burrmill-demo.vercel.app', text: 'burrmill-demo.vercel.app', ext: true,
+  },
+];
+
+// One row per figure: what was measured, the two numbers, and the file in the repo it comes from.
+const bench = [
+  {
+    what: 'Authored views of the Lodestar allocations nest, byte-identical to DuckDB',
+    duck: '22 of 22 compared',
+    bm: '22 of 22 identical',
+    note: 'Whole output compared as a multiset of nuthatch-encoded rows before any timing. 32-core ThinkPad, 1,925 segments, 27 September 2026.',
+    src: BMB + 'docs/bench/engine-views-thinkpad-2026-09-27.txt',
+  },
+  {
+    what: 'Time over those 22 views, warm',
+    duck: '41,380 ms',
+    bm: '26,194 ms (0.63x)',
+    note: 'All 22 within 1.5x of DuckDB. The worst view, lodestar_disputes at 8 rows, is 0.80x.',
+    src: BMB + 'docs/progress-log.md',
+  },
+  {
+    what: 'Queries per second serving 12 views, 1 client',
+    duck: '7.2 qps',
+    bm: '14.7 qps',
+    note: 'At 32 clients, 15.1 against 32.9 qps, with 3.9 GB of process memory against 15.4 GB. Run with ulimit -n raised, since DuckDB fails outright at the default. Not re-run over the 22.',
+    src: BMB + 'docs/bench/serve-views-thinkpad.txt',
+  },
+  {
+    what: 'Peak RSS of the balance-rebuild fold, 989,690 groups',
+    duck: '572 to 598 MB',
+    bm: '241 to 245 MB',
+    note: 'Against the 256 MB gate nuthatch’s swap had to meet.',
+    src: BMB + 'docs/bench/memory-gate-thinkpad-2026-09-25.txt',
+  },
+  {
+    what: 'Median of 75 allocations-dashboard statements, in process',
+    duck: '1,616 ms',
+    bm: '555 ms',
+    note: 'Burrmill the faster on 65 of the 75. One client, warm medians of five, 11 November 2026, box under a load average of 60 to 110.',
+    src: BMB + 'docs/bench/host-scan-statements-thinkpad-2026-11-11.txt',
+  },
+  {
+    what: 'Same 22 views in a browser engine, cold, from local disk',
+    duck: '158.8 s (DuckDB-Wasm)',
+    bm: '43.6 s (burrmill-wasm)',
+    note: 'DuckDB-Wasm is quicker on five of the small views, by 200 ms at most. lodestar_indexer_ledger ran for an hour under DuckDB-Wasm with no answer; burrmill-wasm returns its 1.7 M rows in 4.9 s.',
+    src: WASM + '#where-it-stands',
+  },
+];
+
+// The README's own list, shortened. Said first on this page's table because the README says it first.
+const loses = [
+  {
+    h: 'Slower per statement in production.',
+    p: 'Through nuthatch’s /sql on the allocations nest’s real dashboard statements, about 2.5x DuckDB’s time a statement (1 October 2026). The in-process re-measure above is the newer figure, and DuckDB is no longer in nuthatch to serve beside it, so the production comparison cannot be repeated.',
+    src: BM + '#what-it-does-not-do-and-where-it-loses',
+  },
+  {
+    h: 'A bigger binary.',
+    p: 'On a nuthatch-shaped consumer, the release binary is 112 MB against DuckDB’s 41. A clean test build is 84 s against 77. The footprint was accepted as the price of taking DuckDB’s C++ out of nuthatch.',
+    src: BM + '#what-it-does-not-do-and-where-it-loses',
+  },
+  {
+    h: 'More memory per session, and refusals at a small budget.',
+    p: 'At the QoS nest’s own 704 MB with no spill directory, Burrmill refuses four of nine day statements that DuckDB answers. Given 2 GB it answers all nine.',
+    src: BM + '#what-it-does-not-do-and-where-it-loses',
+  },
+  {
+    h: 'Small queries and deep views.',
+    p: 'An eight-row view runs eighteen DataFusion operators. A query that plans through about thirty views took 42 to 47 s to plan in a release build when the README was written.',
+    src: BM + '#what-it-does-not-do-and-where-it-loses',
+  },
+  {
+    h: 'HUGEINT stops at 38 digits.',
+    p: 'DECIMAL(38,0) reaches 10^38 - 1 where DuckDB’s reaches 2^127 - 1. A value between refuses rather than answer wrongly, and no real nest has produced one.',
+    src: BM + '#what-it-does-not-do-and-where-it-loses',
+  },
+];
+
+const sql = `-- stock DataFusion: wraps, silently
+SELECT 10000000000 * 10000000000;
+-- 7766279631452241920
+
+-- burrmill: the same statement is an error, never a wrapped number`;
+
+const roadmap = [
+  { tag: 'shipped', h: 'Replaced DuckDB inside nuthatch', p: 'Nuthatch 4.1.0 ships with Burrmill as its only engine and all six production nests ran on it by 2 October 2026. The 0.1.0 of the crate landed in nuthatch on 20 November.', src: BMB + 'ROADMAP.md', t: 'ROADMAP, stage 6' },
+  { tag: 'built', h: 'The engine in a browser tab', p: 'The engine, untrusted CSV ingest and the demo page are built. The reader plus engine is 7.47 MB gzipped, gated in CI at 8 MiB.', src: BMB + 'ROADMAP.md', t: 'ROADMAP, stage 7' },
+  { tag: 'in progress', h: 'Make the page safe to hand a stranger', p: 'The roadmap says plainly that the page is not yet safe to hand a stranger. Closing the audit’s leaks (7.4) and making the page usable (7.5) are what is open, and until then no privacy mode is a privacy claim.', src: BMB + 'ROADMAP.md', t: 'ROADMAP, stage 7' },
+  { tag: 'next', h: 'Where it loses: small statements and build time', p: 'The author’s stated next work is small statements and build time, the two places the README says it loses.', src: '/blog/our-focus-for-the-rest-of-2026', t: 'our focus for the rest of 2026' },
+  { tag: 'draft rfc', h: 'Keep what sealed history has already answered', p: 'Today every view is a fold over all of its history, recomputed on every request. RFC-0046 proposes keeping partial state per sealed segment. It is a draft dated 16 October 2026, and nothing in it is started.', src: BMB + 'docs/rfc/RFC-0046-segment-partials.md', t: 'RFC-0046' },
+  { tag: 'non-goal', h: 'What it will not become', p: 'A JIT, an on-disk format change and a custom Parquet decoder are non-goals in the RFC and stay non-goals. For anything that is not strict, deterministic or receipted, the README says DuckDB or datafusion-cli is the better tool.', src: BMB + 'ROADMAP.md', t: 'ROADMAP, not on this roadmap' },
+];
+---
+<Layout
+  ambient
+  path="/burrmill"
+  title="Burrmill - Nuthatch"
+  description="Burrmill is the SQL engine inside Nuthatch: DuckDB's dialect over sealed Parquet segments, with exact integer arithmetic that refuses on overflow instead of wrapping. What it does, what it measured, and where it loses."
+>
+  <section class="page">
+    <div class="wrap">
+      <header class="head narrow">
+        <p class="section-label">Burrmill</p>
+        <h1>SQL over sealed Parquet, where a sum that would overflow is an error.</h1>
+        <p class="lede">
+          Burrmill is the analytical engine inside Nuthatch. It answers SQL over a nest’s sealed Parquet
+          segments plus the live tip, in DuckDB’s dialect, with exact integer arithmetic that refuses rather
+          than wraps. It is one Rust library, MIT OR Apache-2.0, with no C++ in it. Since Nuthatch 4.1.0 it is
+          the only engine Nuthatch has.
+        </p>
+        <p class="cta">
+          <a class="btn btn-primary" href="https://burrmill-demo.vercel.app" rel="noopener">Try it in a tab</a>
+          <a class="btn btn-ghost" href={BM} rel="noopener">GitHub</a>
+        </p>
+        <p class="asof">Figures read from the repositories on {READ_ON}. Each one links to its source.</p>
+      </header>
+
+      <section class="block" id="what">
+        <p class="section-label">What it does</p>
+        <h2>The parts of a query engine an indexer leans on.</h2>
+        <div class="grid">
+          {does.map((d) => (
+            <div class="card item">
+              <span class="k">{d.k}</span>
+              <h3>{d.h}</h3>
+              <p>{d.p}</p>
+              <p class="more"><a href={d.href} rel={d.ext ? 'noopener' : undefined}>{d.text} →</a></p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="block" id="exact">
+        <p class="section-label">Why exact</p>
+        <h2>A wrapped sum is a wrong answer that looks right.</h2>
+        <div class="split">
+          <div class="prose">
+            <p>
+              Token amounts are big integers and an indexer adds a great many of them. An engine that
+              wraps on overflow does not fail; it returns a number of the right shape that is wrong. Burrmill’s promise is that integer overflow returns an error, never a
+              wrapped number, in both of its layers.
+            </p>
+            <p>
+              Stock DataFusion wraps, and as of August 2026 the README says there is no core flag to stop it.
+              DuckDB errors on HUGEINT overflow but not watertight: in its 1.5 line a SUM over two files on two
+              threads returns the minimum i128 for a true maximum plus one
+              (<a href="https://github.com/duckdb/duckdb/issues/24081" rel="noopener">duckdb#24081</a>, fixed on main
+              after 1.5.5). Burrmill reproduces it with <code>burrmill-bench duckdb-gaps</code>.
+            </p>
+            <p>
+              Refusing has a price, and it is stated: a SUM over a TRY_CAST that DuckDB answers by dropping what
+              did not fit, Burrmill refuses, by design. The README’s source for all of this is
+              <a href={BM + '#the-three-claims'} rel="noopener">the three claims</a>.
+            </p>
+          </div>
+          <CodeCard label="the README's example" lang="sql" code={sql} />
+        </div>
+      </section>
+
+      <section class="block" id="numbers">
+        <p class="section-label">Numbers</p>
+        <h2>What it measured, against DuckDB.</h2>
+        <p class="sub">
+          Every figure below is from a transcript or the README in the repo, linked in its row. They are one
+          machine, one nest and one date each, and they say so. We have measured nothing else.
+        </p>
+        <div class="table-scroll">
+          <table class="ctable">
+            <thead>
+              <tr>
+                <th scope="col">Measured</th>
+                <th scope="col">DuckDB</th>
+                <th scope="col" class="ct-us">Burrmill</th>
+                <th scope="col">Notes and source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bench.map((b) => (
+                <tr>
+                  <th scope="row" class="ct-feature">{b.what}</th>
+                  <td class="num">{b.duck}</td>
+                  <td class="num ct-us">{b.bm}</td>
+                  <td>{b.note} <a href={b.src} rel="noopener">source →</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-h">Where it loses</h3>
+        <p class="sub">
+          The README says these plainly, and so does this page.
+        </p>
+        <div class="losses">
+          {loses.map((l) => (
+            <div class="card loss">
+              <h3>{l.h}</h3>
+              <p>{l.p} <a href={l.src} rel="noopener">source →</a></p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="block" id="fit">
+        <p class="section-label">With Nuthatch</p>
+        <h2>It is what answers nuthatch sql.</h2>
+        <div class="prose wide">
+          <p>
+            A nest’s tables are sealed, content-addressed Parquet segments past finality, plus a hot tip.
+            Burrmill reads the segments read-only and opens a nest through its seal manifest, so the same query
+            sees hot and sealed rows together. The authored views in a nest’s <code>views/*.sql</code>, the
+            queries that <code>nuthatch sql</code> and the HTTP <code>/sql</code> route run all go through it.
+          </p>
+          <p>
+            Nuthatch pins a revision of the Burrmill repository in its <code>Cargo.toml</code>, so a change
+            in Burrmill reaches a nest only when that pin moves. Burrmill was checked on the real thing before
+            the swap: every authored view of a production nest byte-identical to DuckDB, which is what the first
+            two rows above are. The <a href="/blog/one-engine">one engine</a> post and
+            <a href="/blog/replacing-duckdb-after-all">replacing DuckDB after all</a> tell how the swap went.
+          </p>
+        </div>
+      </section>
+
+      <section class="block" id="start">
+        <p class="section-label">Getting started</p>
+        <h2>Three ways in.</h2>
+        <div class="starts">
+          <div class="start">
+            <h3>Over chain data</h3>
+            <p>Run a nest and ask it. Burrmill is what answers.</p>
+            <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" />
+            <p class="small"><a href="/install">install</a>, then <code>nuthatch sql "SELECT count(*) FROM &lt;table&gt;"</code> as in the <a href="/example">worked example</a>.</p>
+          </div>
+          <div class="start">
+            <h3>Over Parquet files</h3>
+            <p>Strict decimals, deterministic answers, and a receipt that another machine can verify.</p>
+            <CodeCard lang="bash" code={`git clone https://github.com/nuthatch-org/burrmill
+cargo install --path burrmill/crates/burrmill-cli
+burrmill q "SELECT who, SUM(amount) FROM trades GROUP BY who" data/ --receipt r.json
+burrmill verify r.json data/`} />
+          </div>
+          <div class="start">
+            <h3>As a library</h3>
+            <p>Version 0.x, so a minor bump may break the API.</p>
+            <CodeCard lang="bash" code={`cargo add burrmill --features datafusion`} />
+            <CodeCard lang="js" code={`// Rust
+let engine = burrmill::Engine::builder().parquet(Path::new("data/"), "t").open()?;
+engine.set_strict_decimals(true);
+let batches = engine.sql("SELECT sum(amount) FROM t")?;`} />
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="vision">
+        <p class="section-label">Vision</p>
+        <h2>Where it is going, from its own roadmap.</h2>
+        <p class="sub">
+          Burrmill’s ROADMAP says it is rewritten after every stage rather than defended. This is the same
+          list, with what is shipped, what is open and what it has ruled out.
+        </p>
+        <div class="road">
+          {roadmap.map((r) => (
+            <div class="card step">
+              <span class="tag">{r.tag}</span>
+              <h3>{r.h}</h3>
+              <p>{r.p} <a href={r.src} rel={r.src.startsWith('http') ? 'noopener' : undefined}>{r.t} →</a></p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="block" id="links">
+        <p class="section-label">Links</p>
+        <h2>Read it, run it, check it.</h2>
+        <ul class="links">
+          <li><a href={BM} rel="noopener">nuthatch-org/burrmill</a>: the engine, its README, RFCs and every benchmark transcript</li>
+          <li><a href={WASM} rel="noopener">nuthatch-org/burrmill-wasm</a>: the engine compiled to a browser tab</li>
+          <li><a href="https://burrmill-demo.vercel.app" rel="noopener">burrmill-demo.vercel.app</a>: drop a file and query it, nothing leaves the tab</li>
+          <li><a href={BMB + 'ROADMAP.md'} rel="noopener">ROADMAP.md</a> and <a href={BMB + 'docs/progress-log.md'} rel="noopener">docs/progress-log.md</a>: every measurement, newest first</li>
+          <li><a href="/roadmap">The Nuthatch roadmap</a></li>
+        </ul>
+      </section>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  .page section { padding-block: 0; }
+  .head h1 { margin-bottom: 1.4rem; }
+  .lede { color: var(--text); font-size: 1rem; line-height: 1.7; margin-bottom: 1.6rem; }
+  .cta { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 1rem; }
+  .asof { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--text-muted); }
+
+  .block { margin-top: clamp(3.5rem, 7vw, 5rem); }
+  .block > .section-label { color: var(--rust); }
+  .block h2 { font-size: clamp(1.244rem, 3vw, 1.689rem); margin-bottom: 1.4rem; max-width: 40ch; }
+  .sub { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.65; max-width: 66ch; margin-bottom: 1.4rem; }
+  .sub-h { font-size: 1.125rem; margin: 3rem 0 0.5rem; }
+
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); }
+  .item, .loss, .step { padding: 1.2rem 1.35rem; transition: border-color 0.18s var(--ease), transform 0.18s var(--ease); }
+  .item:hover, .loss:hover, .step:hover { border-color: var(--border-hi); transform: translateY(-3px); }
+  .k {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 0.55rem;
+  }
+  .item h3, .loss h3, .step h3 { font-size: 1rem; margin-bottom: 0.45rem; }
+  .item p, .loss p, .step p { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.62; }
+  .more { margin-top: 0.7rem; }
+  .more a { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  .tag { background: var(--pale-rust-bg); color: var(--accent-ink); margin-bottom: 0.6rem; display: inline-block; }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 3.5rem); align-items: start; }
+  .prose p { color: var(--text-muted); font-size: 1rem; line-height: 1.72; margin-bottom: 1.1rem; }
+  .prose.wide { max-width: 70ch; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+  .ctable { width: 100%; border-collapse: collapse; min-width: 52rem; font-size: 0.75rem; }
+  .ctable th, .ctable td { text-align: left; padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); line-height: 1.5; }
+  .ctable thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; letter-spacing: 0.02em; color: var(--text-muted); font-weight: 500; }
+  .ctable tbody tr:last-child th, .ctable tbody tr:last-child td { border-bottom: 0; }
+  .ct-feature { font-weight: 500; width: 24%; color: var(--text-muted) !important; }
+  .num { font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+  .ct-us { background: var(--pale-blue-bg); }
+  thead .ct-us { color: var(--accent-ink); font-weight: 600; }
+  td:last-child { color: var(--text-muted); }
+
+  .losses, .road { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); }
+
+  .starts { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); }
+  .start { min-width: 0; display: grid; gap: 0.7rem; align-content: start; }
+  .start h3 { font-size: 1rem; }
+  .start p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; }
+  .small { font-size: 0.8125rem !important; }
+
+  .links { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.55rem; }
+  .links li { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; }
+  .links li::marker { color: var(--rust); }
+
+  @media (max-width: 56rem) { .split { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) {
+    .item, .item:hover, .loss, .loss:hover, .step, .step:hover { transition: none; transform: none; }
+  }
+</style>
