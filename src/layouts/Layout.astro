@@ -99,7 +99,7 @@ const ogImage = new URL('/og.png', site).href;
     <!-- The scenery: three.js scenes, self-hosted, imported only after first paint. Without WebGL,
          or if the import fails, the page is simply the dark ground it already is. -->
     <script>
-      const hero = document.querySelector<HTMLCanvasElement>('canvas[data-scene="machine-room"]');
+      const hero = document.querySelector<HTMLCanvasElement>('canvas[data-scene]');
       const ambient = document.querySelector<HTMLCanvasElement>('#ambient');
       const webgl = () => {
         try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); }
@@ -110,7 +110,7 @@ const ogImage = new URL('/og.png', site).href;
           try {
             const url = '/foundry/scenes.js';
             const m = await import(/* @vite-ignore */ url);
-            if (hero) m.createMachineRoom(hero);
+            if (hero) (hero.dataset.scene === 'workbench' ? m.createWorkbench : m.createMachineRoom)(hero);
             if (ambient) m.createAmbient(ambient, { kit: 'machine', contentWidth: 1296 });
           } catch { /* the page stands without it */ }
         };
