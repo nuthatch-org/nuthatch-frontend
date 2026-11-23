@@ -6,7 +6,7 @@ author: "cargopete"
 tags: ["nuthatch", "xatu", "parquet", "rpc", "backfill", "ethereum", "timestamps"]
 ---
 
-*The Xatu source described here is in review in [#3087](https://github.com/nuthatch-org/nuthatch/pull/3087) and not in a release yet. The null-timestamp mode ships in v5.24.0.*
+*The Xatu source described here is merged to main ([#3087](https://github.com/nuthatch-org/nuthatch/pull/3087)) and ships in the next release. The null-timestamp mode ships in v5.24.0.*
 
 We went looking for a way to stop hammering RPC providers during backfills, expecting the answer to
 be about `eth_getLogs`. It mostly wasn't.
