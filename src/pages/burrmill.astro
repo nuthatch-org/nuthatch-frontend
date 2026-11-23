@@ -145,7 +145,9 @@ const roadmap = [
   title="Burrmill - Nuthatch"
   description="Burrmill is the SQL engine inside Nuthatch: DuckDB's dialect over sealed Parquet segments, with exact integer arithmetic that refuses on overflow instead of wrapping. What it does, what it measured, and where it loses."
 >
-  <section class="page">
+  <section class="hero">
+    <canvas class="hero-scene" data-scene="workbench" aria-hidden="true"></canvas>
+    <div class="scan" aria-hidden="true"></div>
     <div class="wrap">
       <header class="head narrow">
         <p class="section-label">Burrmill</p>
@@ -162,6 +164,11 @@ const roadmap = [
         </p>
         <p class="asof">Figures read from the repositories on {READ_ON}. Each one links to its source.</p>
       </header>
+    </div>
+  </section>
+
+  <section class="page rest">
+    <div class="wrap">
 
       <section class="block" id="what">
         <p class="section-label">What it does</p>
@@ -333,6 +340,35 @@ let batches = engine.sql("SELECT sum(amount) FROM t")?;`} />
 </Layout>
 
 <style>
+  /* HERO: the copy over a full-bleed scene, the same treatment as the home page's hero (here the
+     workbench kit rather than the machine room: a mill is a bench of instruments). */
+  .hero {
+    position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center;
+    min-height: min(34rem, calc(100svh - 58px)); padding-block: clamp(3rem, 6vw, 4.5rem);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; display: block; }
+  .hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(23,22,20,0.94) 0%, rgba(23,22,20,0.6) 40%, rgba(23,22,20,0) 68%),
+                linear-gradient(180deg, rgba(23,22,20,0.5) 0%, rgba(23,22,20,0) 20%, rgba(23,22,20,0) 78%, var(--bg) 100%);
+  }
+  .scan {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.2;
+    background: repeating-linear-gradient(180deg, transparent 0, transparent 2px, rgba(0,0,0,0.35) 3px, transparent 4px);
+  }
+  @media (max-width: 1100px) {
+    .hero::after { background: linear-gradient(180deg, rgba(23,22,20,0.82) 0%, rgba(23,22,20,0.72) 55%, rgba(23,22,20,0.88) 78%, var(--bg) 100%); }
+  }
+  /* The scene is drawn for dark, so in the light theme the hero stays a dark band. */
+  :root[data-theme='light'] .hero {
+    --bg: #171614; --bg-code: #1b1a17; --bg-inset: #262420; --border: rgba(255, 255, 255, 0.09); --border-hi: rgba(255, 255, 255, 0.16);
+    --text: #ece9e3; --text-muted: #9c978c; --text-faint: #6e6a61; --accent: #d0704f; --accent-ink: #f2cbbb;
+    --on-accent: #171614; --pale-accent-bg: rgba(208, 112, 79, 0.12);
+    background: var(--bg); color: var(--text); color-scheme: dark;
+  }
+  .hero .btn-ghost { background: rgba(23, 22, 20, 0.6); }
+  .rest { padding-top: clamp(1rem, 3vw, 2rem); }
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
   .page section { padding-block: 0; }
   .head h1 { margin-bottom: 1.4rem; }
