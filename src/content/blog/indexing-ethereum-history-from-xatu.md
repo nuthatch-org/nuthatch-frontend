@@ -11,6 +11,8 @@ tags: ["nuthatch", "xatu", "parquet", "rpc", "backfill", "ethereum", "timestamps
 We went looking for a way to stop hammering RPC providers during backfills, expecting the answer to
 be about `eth_getLogs`. It mostly wasn't.
 
+The Xatu idea isn't ours. [leani](https://leani.dev), a lean Ethereum indexing node by [materkel](https://x.com/materkel) ([repo](https://github.com/smart-byte/leani)), showed that Xatu's public Parquet history can replace most of the RPC calls in a backfill. We rebuilt the same idea on Nuthatch's existing source trait. Thanks to Chris at GraphOps for pointing us at it.
+
 ## The bill is headers
 
 The numbers below are from a GoodDollar nest on XDC: 14.3 million blocks, 3.88 million events,
