@@ -1,0 +1,44 @@
+{
+  "title": "ENS name registrations on Ethereum",
+  "tagline": "Every .eth registration and renewal, from the ENS v1 controller's launch in March 2023 to the ENSv2 ETHRegistrar today: about 1.5 million events you can query with plain SQL or from your AI agent, without paging eth_getLogs.",
+  "chain": "Ethereum mainnet (1)",
+  "events": {
+    "table": "ethregistrar__name_registered",
+    "from": "owner",
+    "to": "owner",
+    "amount": "base",
+    "decimals": 6,
+    "symbol": "USDC"
+  },
+  "queries": [
+    {
+      "title": "Latest registrations",
+      "sql": "SELECT to_timestamp(block_timestamp) AS at, name, owner, ens_version FROM registrations ORDER BY block_number DESC, tx_hash DESC LIMIT 20"
+    },
+    {
+      "title": "Longest names registered this week",
+      "sql": "SELECT substr(name, 1, 40) AS name, length(name) AS len, to_timestamp(block_timestamp) AS at FROM registrations WHERE block_timestamp > epoch(now()) - 7*86400 ORDER BY len DESC LIMIT 10"
+    },
+    {
+      "title": "Names containing 'ai' registered in the last 24 hours",
+      "sql": "SELECT name, to_timestamp(block_timestamp) AS at, owner FROM registrations WHERE name LIKE '%ai%' AND block_timestamp > epoch(now()) - 86400 ORDER BY block_number DESC LIMIT 20"
+    },
+    {
+      "title": "Top registrants by names registered, all time",
+      "sql": "SELECT owner, count(*) AS names FROM registrations GROUP BY owner ORDER BY names DESC LIMIT 10"
+    },
+    {
+      "title": "Registrations per day, last 14 days",
+      "sql": "SELECT CAST(to_timestamp(block_timestamp) AS DATE) AS day, count(*) AS registrations FROM registrations WHERE block_timestamp > epoch(now()) - 14*86400 GROUP BY 1 ORDER BY 1 DESC"
+    },
+    {
+      "title": "Registrations per year, v1 and v2 together",
+      "sql": "SELECT extract(year FROM to_timestamp(block_timestamp)) AS year, count(*) AS registrations FROM registrations GROUP BY 1 ORDER BY 1"
+    }
+  ],
+  "prompts": [
+    "Using the registrations view, which 5 names containing 'ai' were registered most recently, and who registered each? Show the registration time in UTC.",
+    "Which 10 addresses have registered the most .eth names ever (view registrations), and how many does each hold?",
+    "How many .eth names were registered per day over the last 14 days (view registrations)? Which day was busiest, and how does the ENS v2 era compare to the last days of v1?"
+  ]
+}

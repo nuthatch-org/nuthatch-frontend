@@ -158,4 +158,15 @@ export const publicNests: PublicNest[] = [
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/spendshield-aevum/sql' --data-urlencode 'q=SELECT count(*) FROM spend_shield__agent_paid'",
   },
+  {
+    id: 'ens-registrar',
+    name: 'ENS registrations on Ethereum',
+    chain: 'ethereum',
+    for: { label: 'the launch demo', href: '/showcase/?nest=ens-registrar' },
+    summary:
+      'Every .eth registration and renewal on Ethereum mainnet: the ENS v1 ETHRegistrarController from block 16,925,618 (March 2023) and the ENSv2 ETHRegistrar from block 26,183,999, about 1.5 million events with a registrations view over both, following the tip. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/ens-registrar',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/ens-registrar/sql' --data-urlencode 'q=SELECT count(*) FROM registrations'",
+  },
 ];
