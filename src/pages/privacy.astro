@@ -1,0 +1,82 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout
+  path="/privacy"
+  title="Privacy - Nuthatch"
+  description="What Nuthatch keeps when you use the site, the hosted demo MCP endpoint, or Nuthatch on your own machine."
+>
+  <section class="page">
+    <article class="wrap narrow prose">
+      <p class="section-label">Privacy</p>
+      <h1>What we keep</h1>
+
+      <p>
+        This page is a record of what Nuthatch keeps, not a legal policy. It covers the website,
+        the hosted demo the Claude plugin directory edition talks to, and Nuthatch running on
+        your own machine.
+      </p>
+
+      <h2>The website</h2>
+      <p>
+        This site loads no third-party scripts or fonts, and sets no cookies. Page views are
+        counted by Vercel Web Analytics, from this origin. Vercel hosts the site and keeps its
+        own request logs; we do not control those.
+      </p>
+
+      <h2>The hosted demo MCP endpoint</h2>
+      <p>
+        The Claude plugin directory edition talks to a public, read-only demo nest at
+        <a href="https://arc.nuthatch-indexer.com/mcp">https://arc.nuthatch-indexer.com/mcp</a>
+        (USDC on Arc testnet). A request there sends the MCP call — the tool name and its
+        arguments, including any SQL — over HTTPS, together with ordinary HTTP headers. The nest
+        has to receive that call in order to answer it. The data on the nest is public demo data,
+        not yours.
+      </p>
+      <p>
+        The reverse proxy in front of the nest writes an access log in nginx's combined format,
+        tagged <code>nuthatch_public</code>, to the host's journal. That log holds the caller's IP
+        address, the request line (method, path, and any query string), the status code, and the
+        <code>Referer</code> and <code>User-Agent</code> headers. It does not include the POST
+        body, so the JSON of a <code>POST /mcp</code> tool call is not in the access log. A GET
+        with a query string can include a SQL statement (for example
+        <code>GET /sql?q=...</code>).
+      </p>
+      <p>
+        Caddy, which terminates TLS for this name, is configured without an access log for the
+        site. The nest process is not started with <code>--audit-log</code>, so it does not keep
+        a call audit log of statements or MCP arguments.
+      </p>
+      <p>
+        The journal is capped at 1&nbsp;GB on that host, with no fixed time retention configured.
+        The same records are also forwarded to the host syslog, which is rotated weekly and kept
+        for four rotations.
+      </p>
+
+      <h2>Local Nuthatch</h2>
+      <p>
+        <code>nuthatch mcp</code> on your machine talks to a nest you run, and sends nothing to
+        us. The Claude Code marketplace edition of the plugin starts that local server, and does
+        not use the hosted demo.
+      </p>
+      <p>
+        The only thing the Nuthatch binary will send to us is the optional
+        <a href="/count">head count</a>, off until you say yes.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or requests: open an issue at
+        <a href="https://github.com/nuthatch-org/nuthatch/issues" rel="noopener">github.com/nuthatch-org/nuthatch/issues</a>.
+      </p>
+    </article>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  .prose h1 { margin-bottom: 1.8rem; }
+  .prose h2 { margin: 2rem 0 0.8rem; font-size: 1.15rem; }
+  .prose p { color: var(--text-muted); font-size: 1rem; line-height: 1.75; margin-bottom: 1.4rem; }
+  .prose p:first-of-type { color: var(--text); }
+</style>

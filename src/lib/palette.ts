@@ -36,6 +36,7 @@ const PAGES: Omit<PaletteItem, 'kind'>[] = [
   { title: 'rotki', url: '/rotki', note: 'Account history for rotki from your own machine', also: 'address history etherscan' },
   { title: 'Changelog', url: '/changelog', note: 'Every published release, newest first', also: 'releases versions' },
   { title: 'Head count', url: '/count', note: 'How many people said yes to being counted', also: 'telemetry count' },
+  { title: 'Privacy', url: '/privacy', note: 'What we keep on the site, the hosted demo MCP endpoint, and local Nuthatch', also: 'privacy policy logs telemetry' },
 ];
 
 /** Everything the palette matches by name. The full text is a separate, larger file. */
