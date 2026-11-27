@@ -2,7 +2,7 @@
 title: Authored incremental entities
 description: A bounded keyed relation that Nuthatch maintains as blocks arrive rather than recomputing per query.
 order: 4
-checked: 5.24.0 (2026-11-22)
+checked: 5.24.1 (2026-11-26)
 ---
 
 An entity is a relation a nest elects to maintain while it indexes. Its source facts are still the

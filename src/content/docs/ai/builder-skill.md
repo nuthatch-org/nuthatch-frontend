@@ -2,7 +2,7 @@
 title: "The builder skill"
 description: "The Claude Code skill that teaches an agent to drive nuthatch (RFC-0017)."
 order: 3
-checked: 5.24.0 (2026-11-22)
+checked: 5.24.1 (2026-11-26)
 ---
 
 The builder skill teaches a coding agent to *build with* nuthatch - scaffold nests, edit configs,

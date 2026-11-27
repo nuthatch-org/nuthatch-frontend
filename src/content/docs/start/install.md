@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 5.24.0 (2026-11-22)
+checked: 5.24.1 (2026-11-26)
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -80,7 +80,7 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 
 From 5.17.0 every release also carries `nuthatch-flight-<target>.tar.gz` for `aarch64-apple-darwin`,
 `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, built with `--features flight` and attested
-like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.24.0-flight`, never tagged `latest`.
+like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.24.1-flight`, never tagged `latest`.
 It serves Arrow Flight SQL beside the HTTP API with `nuthatch dev --flight 127.0.0.1:8815`. The default
 binary needs none of it to answer [in Arrow over HTTP](/docs/reference/http-api/#answers-in-arrow).
 

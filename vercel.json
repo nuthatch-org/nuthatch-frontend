@@ -63,8 +63,16 @@
       "destination": "https://gnosis-history.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/maverick-v1-bsc/:path*",
+      "destination": "https://maverick-v1-bsc.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/nests/ens-registrar/:path*",
       "destination": "https://ens-registrar.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/poh-registry/:path*",
+      "destination": "https://poh-registry.89.167.109.4.sslip.io/:path*"
     },
     {
       "source": "/nests/arc-usdc/:path*",
@@ -93,6 +101,10 @@
     {
       "source": "/nests/spendshield-aevum/:path*",
       "destination": "https://spendshield-aevum.89.167.109.4.sslip.io/:path*"
+    },
+    {
+      "source": "/nests/gmechain-exchange/:path*",
+      "destination": "https://gmechain-exchange.89.167.109.4.sslip.io/:path*"
     },
     {
       "source": "/nests/mpamm-monad/:path*",
