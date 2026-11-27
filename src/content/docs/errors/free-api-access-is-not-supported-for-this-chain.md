@@ -2,7 +2,7 @@
 title: "Free API access is not supported for this chain"
 description: "Etherscan's free tier stopped covering BNB Chain, Base, OP Mainnet, Avalanche and Gnosis. What still works, how to replace the rest from an RPC, and what a nest serves."
 order: 6
-checked: 5.24.0 (2026-11-22)
+checked: 5.24.1 (2026-11-26)
 ---
 
 ```text
