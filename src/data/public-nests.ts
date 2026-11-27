@@ -159,6 +159,17 @@ export const publicNests: PublicNest[] = [
       "curl -sG 'https://nuthatch-indexer.com/nests/spendshield-aevum/sql' --data-urlencode 'q=SELECT count(*) FROM spend_shield__agent_paid'",
   },
   {
+    id: 'gmechain-exchange',
+    name: 'GME Chain exchange (WGME, USDG, GME/USDG pool)',
+    chain: 'gme-chain',
+    for: { label: 'GME Chain', href: '/showcase/?nest=gmechain-exchange' },
+    summary:
+      'The documented exchange contracts on GME Chain mainnet (chain id 12821), from block 0: Wrapped GME, bridged USDG, the Uniswap V2 factory and router, the GME/USDG pair and the token bridge router and gateway. Read through GME\'s own public RPC and following its tip; the chain\'s tip was block 37 when this was added, so a short history is the chain, not the nest. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/gmechain-exchange',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/gmechain-exchange/sql' --data-urlencode 'q=SELECT count(*) FROM pair__sync'",
+  },
+  {
     id: 'ens-registrar',
     name: 'ENS registrations on Ethereum',
     chain: 'ethereum',
