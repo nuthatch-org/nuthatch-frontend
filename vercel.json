@@ -63,6 +63,10 @@
       "destination": "https://gnosis-history.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/maverick-v1-bsc/:path*",
+      "destination": "https://maverick-v1-bsc.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/nests/ens-registrar/:path*",
       "destination": "https://ens-registrar.89.167.109.4.sslip.io/:path*"
     },
