@@ -1,0 +1,38 @@
+{
+  "title": "PonsFamily v3 launch factory on Robinhood Chain",
+  "tagline": "Every event of the PonsFamily v3 launch factory proxy since its deployment at block 121,605,721: token launches, launch configs and pair-token economics. Only this one contract is indexed.",
+  "chain": "Robinhood Chain (4663)",
+  "events": {
+    "table": "pons_v2launch_factory__token_launched_instant",
+    "from": "deployer"
+  },
+  "queries": [
+    {
+      "title": "Latest launches",
+      "sql": "SELECT block_number, block_timestamp, token, deployer, \"pairToken\", \"launchConfigId\", \"startTick\" FROM pons_v2launch_factory__token_launched_instant ORDER BY block_number DESC, log_index DESC LIMIT 20"
+    },
+    {
+      "title": "Launches per deployer",
+      "sql": "SELECT deployer, count(*) AS launches, min(block_number) AS first_block, max(block_number) AS last_block FROM pons_v2launch_factory__token_launched_instant GROUP BY 1 ORDER BY launches DESC LIMIT 10"
+    },
+    {
+      "title": "Launch configs added",
+      "sql": "SELECT * FROM pons_v2launch_factory__launch_config_added ORDER BY block_number DESC, log_index DESC LIMIT 20"
+    },
+    {
+      "title": "Pair-token economics updates",
+      "sql": "SELECT * FROM pons_v2launch_factory__pair_token_economics_updated ORDER BY block_number DESC, log_index DESC LIMIT 20"
+    },
+    {
+      "title": "Ownership and upgrade events",
+      "sql": "SELECT 'ownership_transferred' AS event, count(*) AS n FROM pons_v2launch_factory__ownership_transferred UNION ALL SELECT 'upgraded', count(*) FROM pons_v2launch_factory__upgraded UNION ALL SELECT 'upgrade_proposed', count(*) FROM pons_v2launch_factory__upgrade_proposed"
+    }
+  ],
+  "prompts": [
+    "How many tokens has the factory launched, and what are the first and last launch blocks?",
+    "Show the latest 10 launches with token, deployer and pair token.",
+    "Which deployers launched more than one token?",
+    "List the launch configs that were added or updated, with their block numbers.",
+    "List every table in this nest with its row count, then say in two sentences what the data is good for."
+  ]
+}

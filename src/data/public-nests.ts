@@ -202,4 +202,15 @@ export const publicNests: PublicNest[] = [
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/maverick-v1-bsc/sql' --data-urlencode 'q=SELECT count(*) FROM maverick_factory__pool_created'",
   },
+  {
+    id: 'ponsfamily-v3',
+    name: 'PonsFamily v3 launch factory on Robinhood Chain',
+    chain: 'robinhood',
+    for: { label: 'PonsFamily/PonsFamily#9', href: 'https://github.com/PonsFamily/PonsFamily/issues/9' },
+    summary:
+      'Every event of the PonsFamily v3 launch factory proxy (0xD1b8998dCf75641dC61651DF7956F30B8c5F2176, PonsV2LaunchFactory) on Robinhood Chain from its deployment at block 121,605,721: 22 event tables, including TokenLaunchedInstant, launch configs and pair-token economics, following the tip. Only this one contract is indexed. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/ponsfamily-v3',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/ponsfamily-v3/sql' --data-urlencode 'q=SELECT block_number, token, deployer FROM pons_v2launch_factory__token_launched_instant ORDER BY block_number DESC LIMIT 20'",
+  },
 ];
