@@ -190,6 +190,8 @@ export const publicNests: PublicNest[] = [
     endpoint: 'https://nuthatch-indexer.com/nests/poh-registry',
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/poh-registry/sql' --data-urlencode 'q=SELECT count(*) FROM proof_of_humanity__add_submission'",
+  },
+  {
     id: 'maverick-v1-bsc',
     name: 'Maverick v1 on BNB Chain',
     chain: 'bsc',
