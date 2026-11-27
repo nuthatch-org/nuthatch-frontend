@@ -8,7 +8,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
   ambient
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v5.24.1: a one-line installer or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
+  description="Install Nuthatch v5.24.2: a one-line installer, npx or prebuilt binaries for macOS (Apple Silicon), Linux x86_64 and Linux arm64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -35,6 +35,10 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         or download it, read it, then run it.
       </p>
 
+      <h2 class="ih">npx</h2>
+      <p>With Node installed, this downloads the release binary and runs it: no compiler, no install step. Put it in front of any <code>nuthatch</code> command.</p>
+      <CopyBlock command="npx -y nuthatch-indexer --version" />
+
       <h2 class="ih">Cargo</h2>
       <p>Build from source straight from the repo, with Rust 1.95.0. This is the only route on a platform without a published binary. The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
       <CopyBlock command="rustup toolchain install 1.95.0" />
@@ -55,7 +59,7 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         From 5.17.0 every release also carries <code>nuthatch-flight-&lt;target&gt;.tar.gz</code> for
         <code>aarch64-apple-darwin</code>, <code>x86_64-unknown-linux-gnu</code> and
         <code>aarch64-unknown-linux-gnu</code>, built with <code>--features flight</code> and attested like the
-        others, and the image <code>ghcr.io/nuthatch-org/nuthatch:5.24.1-flight</code>, never tagged
+        others, and the image <code>ghcr.io/nuthatch-org/nuthatch:5.24.2-flight</code>, never tagged
         <code>latest</code>. It serves Arrow Flight SQL beside the HTTP API with
         <code>nuthatch dev --flight 127.0.0.1:8815</code>. The default binary already answers
         <a href="/docs/reference/http-api/#answers-in-arrow">in Arrow over HTTP</a> without it.
@@ -89,12 +93,12 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.22.0' prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.24.2' prompt={true} />
       <p class="note">
         The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
         <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
-        <code>:5.22.0</code> and <code>:latest</code> are the embedded build; pin the version for anything
-        you care about. <code>:5.22.0-scaled</code> carries the Postgres driver and the <code>worker</code>,
+        <code>:5.24.2</code> and <code>:latest</code> are the embedded build; pin the version for anything
+        you care about. <code>:5.24.2-scaled</code> carries the Postgres driver and the <code>worker</code>,
         <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only, and no
         image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a binary.
         The compose files live in the
@@ -102,7 +106,8 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       </p>
 
       <h2 class="ih">First run</h2>
-      <p>Point it at a contract and go. Public RPC defaults; no key required. Those endpoints are for trying it out, not for keeping it running: for that, point <code>--rpc</code> at your own node or a provider, which may charge for it.</p>
+      <p>Point it at a contract and go. Public RPC defaults; no key required. Those endpoints are for trying it out, not for keeping it running: for that, set <code>NUTHATCH_RPC</code> to your own node or a provider, which may charge for it. From 5.24.2 both <code>init</code> and <code>dev</code> read it, so the URL stays out of argv, <code>ps</code> and shell history; <code>--rpc</code> is the explicit-flag fallback.</p>
+      <CopyBlock command="export NUTHATCH_RPC=https://your-endpoint.example" />
       <CopyBlock command="nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet" />
       <CopyBlock command="nuthatch dev --backfill 300" />
       <p class="note">

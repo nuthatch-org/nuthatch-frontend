@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.24.1 (2026-11-26)
+checked: 5.24.2
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -68,15 +68,20 @@ reports `eth_getLogs` windows of 160 blocks (Tenderly) and 80 (mevblocker), and 
 A 300-block window of USDC went over Tenderly's 20,000-log cap, so the same `--backfill 300` that
 finishes for WETH can stall on a busier contract.
 
-Use your own node or a paid endpoint. `--rpc` replaces the bundled pool. The first command keeps the
+Use your own node or a paid endpoint. `NUTHATCH_RPC` replaces the bundled pool. The first `dev` command keeps the
 recent window. The second backfills from the deployment block:
 
 ```sh
-nuthatch dev --backfill 300 --rpc https://your-endpoint.example
-nuthatch dev --rpc https://your-endpoint.example
+export NUTHATCH_RPC=https://your-endpoint.example
+nuthatch dev --backfill 300
+nuthatch dev
 ```
 
-The same URL can live in `nuthatch.toml` as `rpc_urls` instead of `--rpc`.
+From 5.24.2 both `init` and `dev` read `NUTHATCH_RPC`, so the URL stays out of argv, `ps` and shell
+history. `--rpc https://your-endpoint.example` does the same job as an explicit flag, but it puts the
+URL on the command line.
+
+The same URL can live in `nuthatch.toml` as `rpc_urls` instead.
 
 `--backfill` only chooses where a first run starts. Since 5.21.0, on a nest that has already indexed
 blocks, `dev` says the flag does not apply, resumes from its last block, and names what to remove to
@@ -90,7 +95,7 @@ it costs more traffic.
 > zero setup, and they are fine for trying it out or following a low-traffic contract. They are shared
 > and rate-limited, and under load they often return *nothing* rather than an error - so a deep backfill
 > will crawl or stall. For anything you care about, point at your own node or a paid provider with
-> `--rpc`. See [free public RPCs](/docs/operate/troubleshooting/#free-public-rpcs-stalls-and-empty-results).
+> `NUTHATCH_RPC` (or `--rpc`). See [free public RPCs](/docs/operate/troubleshooting/#free-public-rpcs-stalls-and-empty-results).
 
 ## 4. Query it
 
@@ -159,11 +164,13 @@ They are **not** fine for real work, and it's better to hear that here than at 3
 Use your own endpoint for anything you care about - your own node, or a paid provider:
 
 ```sh
-nuthatch init 0xADDR --chain arbitrum-one --rpc https://your-endpoint.example/arbitrum
-nuthatch dev --rpc https://your-endpoint.example/arbitrum
+export NUTHATCH_RPC=https://your-endpoint.example/arbitrum   # read by init and dev from 5.24.2
+nuthatch init 0xADDR --chain arbitrum-one
+nuthatch dev
 ```
 
-Instead of `--rpc` on `dev`, you can set `rpc_urls` in `nuthatch.toml`. `--rpc` is repeatable and
+The explicit flag still works, and puts the URL in `ps` and shell history:
+`nuthatch dev --rpc https://your-endpoint.example/arbitrum`. Instead of the environment variable, you can set `rpc_urls` in `nuthatch.toml`. `--rpc` is repeatable and
 nuthatch round-robins across the pool with per-endpoint health tracking, so listing two or three gets you failover as well as throughput. To keep a paid key behind the free
 endpoints instead, give it to `dev --rpc-fallback`: it is asked only while every other endpoint is
 failing, so it bills only for what they could not answer. Every endpoint in a pool must be on the

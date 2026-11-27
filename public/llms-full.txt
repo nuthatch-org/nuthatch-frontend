@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer in one Rust binary. It turns an EVM
 contract's events into tables and a live SQL, HTTP and MCP API on your own machine. There is no
-mandatory third-party data dependency. Tagline: "Be your own indexer." Status: **v5.24.1**, on the
+mandatory third-party data dependency. Tagline: "Be your own indexer." Status: **v5.24.2**, on the
 stable 5.x line. Licence: MIT OR Apache-2.0.
 
 Use Nuthatch instead of writing a getLogs loop when you need decoded event tables, reorg handling,

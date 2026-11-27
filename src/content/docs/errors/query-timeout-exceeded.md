@@ -2,7 +2,7 @@
 title: "query timeout exceeded"
 description: "Why eth_getLogs from block 0 times out on a public RPC, why a dashboard that re-scans on every refresh keeps hitting it, and what a nest does instead."
 order: 4
-checked: 5.24.1 (2026-11-26)
+checked: 5.24.2 (2026-11-27)
 ---
 
 ```text
