@@ -180,4 +180,15 @@ export const publicNests: PublicNest[] = [
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/ens-registrar/sql' --data-urlencode 'q=SELECT count(*) FROM registrations'",
   },
+  {
+    id: 'poh-registry',
+    name: 'Proof of Humanity v1 registry on Ethereum',
+    chain: 'ethereum',
+    for: { label: 'pohi-protocol/pohi#66', href: 'https://github.com/pohi-protocol/pohi/issues/66' },
+    summary:
+      'Every event of the Proof of Humanity v1 registry (0xC5E9dDebb09Cd64DfaCab4011A0D5cEDaf7c9BDb) on Ethereum mainnet from its deployment at block 12,011,577: 14 event tables, submissions, vouches, challenges, disputes and rulings, following the tip. Events only: whether an address is registered today is the contract\'s isRegistered view, an eth_call, not a table. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/poh-registry',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/poh-registry/sql' --data-urlencode 'q=SELECT count(*) FROM proof_of_humanity__add_submission'",
+  },
 ];
