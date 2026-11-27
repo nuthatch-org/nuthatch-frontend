@@ -1,0 +1,20 @@
+{
+  "title": "GME Chain exchange",
+  "tagline": "The documented exchange contracts on GME Chain mainnet (12821) from block 0: Wrapped GME, bridged USDG, the Uniswap V2 factory and router, the GME/USDG pair and the token bridge. The chain is young, so the history is short. USDG has 6 decimals.",
+  "chain": "GME Chain (12821)",
+  "events": { "table": "usdg__transfer", "from": "from", "to": "to", "amount": "value", "decimals": 6, "symbol": "USDG" },
+  "queries": [
+    { "title": "Latest USDG transfers", "sql": "SELECT block_number, block_timestamp, \"from\", \"to\", CAST(value_dec AS DOUBLE) / 1e6 AS usdg FROM usdg__transfer ORDER BY block_number DESC, log_index DESC LIMIT 20" },
+    { "title": "Pairs the factory has created", "sql": "SELECT block_number, block_timestamp, token0, token1, pair FROM factory__pair_created ORDER BY block_number" },
+    { "title": "Swaps on the GME/USDG pair", "sql": "SELECT block_number, block_timestamp, sender, \"to\", amount0In_dec, amount1In_dec, amount0Out_dec, amount1Out_dec FROM pair__swap ORDER BY block_number DESC LIMIT 20" },
+    { "title": "Pool reserves over time", "sql": "SELECT block_number, block_timestamp, reserve0_dec, reserve1_dec FROM pair__sync ORDER BY block_number DESC LIMIT 20" },
+    { "title": "Wrapped GME deposits", "sql": "SELECT block_number, block_timestamp, dst, wad_dec FROM wgme__deposit ORDER BY block_number DESC LIMIT 20" }
+  ],
+  "prompts": [
+    "List every table in this nest with its row count and say which have data.",
+    "Which pairs has the Uniswap V2 factory created, and what are their two tokens? Use factory__pair_created.",
+    "What are the latest reserves of the GME/USDG pair, from pair__sync? USDG has 6 decimals, WGME has 18.",
+    "Who has deposited GME into Wrapped GME, and how much? Use wgme__deposit, wad_dec divided by 1e18.",
+    "How many USDG transfers are there and who received the most? Use usdg__transfer, value_dec divided by 1e6."
+  ]
+}
