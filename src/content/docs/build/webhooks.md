@@ -2,7 +2,7 @@
 title: Webhooks
 description: POST sealed rows to a URL - an optional delivery stage, past finality, at-least-once. The deposit sweep's webhook is separate, and carries retractions.
 order: 8
-checked: 5.24.1 (2026-11-26)
+checked: 5.24.2 (2026-11-27)
 ---
 
 A webhook pushes rows out to a URL as they're indexed - feed a downstream service, a queue, a Slack
