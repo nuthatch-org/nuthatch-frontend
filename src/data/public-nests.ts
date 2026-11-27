@@ -190,5 +190,14 @@ export const publicNests: PublicNest[] = [
     endpoint: 'https://nuthatch-indexer.com/nests/poh-registry',
     example:
       "curl -sG 'https://nuthatch-indexer.com/nests/poh-registry/sql' --data-urlencode 'q=SELECT count(*) FROM proof_of_humanity__add_submission'",
+    id: 'maverick-v1-bsc',
+    name: 'Maverick v1 on BNB Chain',
+    chain: 'bsc',
+    for: { label: 'a DefiLlama adapter question', href: 'https://github.com/DefiLlama/defillama-sdk/issues/302' },
+    summary:
+      'Every PoolCreated event from the Maverick v1 factory on BNB Chain since block 29,245,261, and every Swap on the USDT/USDC pool 0x16b59C90561d93AFFfc2e489937ED4Da7668D9fF since its creation at block 30,154,162, read from an archive RPC and following the tip. SQL at /sql and MCP over HTTP at /mcp.',
+    endpoint: 'https://nuthatch-indexer.com/nests/maverick-v1-bsc',
+    example:
+      "curl -sG 'https://nuthatch-indexer.com/nests/maverick-v1-bsc/sql' --data-urlencode 'q=SELECT count(*) FROM maverick_factory__pool_created'",
   },
 ];
