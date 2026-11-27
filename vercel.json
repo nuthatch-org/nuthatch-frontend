@@ -75,6 +75,10 @@
       "destination": "https://poh-registry.89.167.109.4.sslip.io/:path*"
     },
     {
+      "source": "/nests/ponsfamily-v3/:path*",
+      "destination": "https://ponsfamily-v3.89.167.109.4.sslip.io/:path*"
+    },
+    {
       "source": "/nests/arc-usdc/:path*",
       "destination": "https://arc-usdc.89.167.109.4.sslip.io/:path*"
     },
