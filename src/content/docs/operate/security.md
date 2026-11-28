@@ -2,7 +2,7 @@
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
 order: 4
-checked: 5.24.2 (2026-11-27)
+checked: 5.24.3 (2026-11-28)
 ---
 
 ## Upgrade first

@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 5.24.2
+checked: 5.24.3 (2026-11-28)
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -12,7 +12,10 @@ you're done.
 
 ```sh
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
+
+The `export` applies to the current terminal only. If `~/.local/bin` is not already on your `PATH`, add the same line to `~/.bashrc` or `~/.zshrc` so a new terminal finds `nuthatch`.
 
 The script detects your platform, downloads the matching release binary, verifies its checksum, and
 installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It's short and
@@ -49,7 +52,7 @@ repository and workflow rather than merely the integrity of bytes in transit:
 
 ```sh
 gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nuthatch-org/nuthatch \
-  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.24.2
+  --signer-workflow nuthatch-org/nuthatch/.github/workflows/release.yml --source-ref refs/tags/v5.24.3
 ```
 
 All three flags matter. `--repo` alone accepts an attestation from any workflow on any ref of the
@@ -85,14 +88,14 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 
 From 5.17.0 every release also carries `nuthatch-flight-<target>.tar.gz` for `aarch64-apple-darwin`,
 `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, built with `--features flight` and attested
-like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.24.2-flight`, never tagged `latest`.
+like the others, and the image `ghcr.io/nuthatch-org/nuthatch:5.24.3-flight`, never tagged `latest`.
 It serves Arrow Flight SQL beside the HTTP API with `nuthatch dev --flight 127.0.0.1:8815`. The default
 binary needs none of it to answer [in Arrow over HTTP](/docs/reference/http-api/#answers-in-arrow).
 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nuthatch-org/nuthatch:5.24.2 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.24.3 --version
 ```
 
 `:latest` is the newest stable release, and from 5.18.0 a pre-release or a patch on an older line
@@ -100,7 +103,7 @@ never moves it; pin the version for anything you care about. From 5.18.0 the ima
 after the release has passed its gates, and each carries a build-provenance attestation too. `linux/amd64`
 only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
 binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`5.24.2-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`5.24.3-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source

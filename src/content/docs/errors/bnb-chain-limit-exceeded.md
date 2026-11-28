@@ -2,7 +2,7 @@
 title: "limit exceeded on BNB Chain's public RPC"
 description: "Why BNB Chain's public endpoints answer eth_getLogs with -32005 limit exceeded, header not found or an empty array for old blocks, and what to use instead."
 order: 5
-checked: 5.24.2 (2026-11-27)
+checked: 5.24.3 (2026-11-28)
 ---
 
 ```json

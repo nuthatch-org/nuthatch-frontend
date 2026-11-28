@@ -2,7 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
-checked: 5.24.2
+checked: 5.24.3 (2026-11-28)
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -12,7 +12,10 @@ your own machine, with no external data service.
 
 ```sh
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
+
+The installer puts `nuthatch` in `~/.local/bin`, which a stock shell often does not have on its `PATH`. The `export` fixes the current terminal only; add the same line to `~/.bashrc` or `~/.zshrc` so a new terminal finds `nuthatch` too.
 
 Or build it with cargo, which needs the pinned toolchain - `rust-toolchain.toml` does **not** apply
 to `cargo install --git`, so without `+1.95.0` you hit a `dbsp` compiler ICE on rustc 1.97 and get
