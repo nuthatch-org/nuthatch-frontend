@@ -135,9 +135,12 @@ Then take the two-minute path: [Quickstart](/docs/start/quickstart/) - from a co
 live, queryable API. The contract here is WETH, and `init` detects its chain:
 
 ```sh
+mkdir weth-nest && cd weth-nest
 nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth
 nuthatch dev --backfill 300
 ```
+
+`init` writes into the current directory, so start in an empty one rather than `$HOME`. To query from a second terminal, add `--dir weth-nest` to `nuthatch sql`.
 
 `--backfill 300` starts 300 blocks behind the tip, so there are rows within seconds. Without it `dev`
 backfills from the contract's deployment block, which for a contract with a long history wants your
