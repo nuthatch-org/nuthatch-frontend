@@ -1,4 +1,5 @@
 [
+  {"version":"5.24.3","date":"2026-11-27","headline":"Nuthatch 5.24.3 is a patch cut from main so curl and npx users on 5.24.2 pick up the SQL admission change in #3224.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.24.3"},
   {"version":"5.24.2","date":"2026-11-27","headline":"Nuthatch 5.24.2 is a patch cut from main so curl and npx users still on 5.24.1 pick up the onboarding fixes those builds missed, together with the rest of what has landed on main since 5.24.0.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.24.2"},
   {"version":"5.24.1","date":"2026-11-26","headline":"Nuthatch 5.24.1 is an LTS, security-fixes-only patch.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.24.1"},
   {"version":"5.24.0","date":"2026-11-22","headline":"Nuthatch 5.24.0 makes address-history nests easier to drive from an agent, speeds up cold starts on public RPCs, and ships the Claude plugin in a directory edition.","url":"https://github.com/nuthatch-org/nuthatch/releases/tag/v5.24.0"},

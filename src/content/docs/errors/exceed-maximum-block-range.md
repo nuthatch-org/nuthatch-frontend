@@ -2,7 +2,7 @@
 title: "exceed maximum block range: 10000"
 description: "Block-range limits on eth_getLogs from public RPCs, with the exact messages measured, the manual chunking fix, and what a nest does."
 order: 3
-checked: 5.24.2 (2026-11-27)
+checked: 5.24.3 (2026-11-28)
 ---
 
 ```json

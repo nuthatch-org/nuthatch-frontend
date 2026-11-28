@@ -2,7 +2,7 @@
 title: "Log response size exceeded"
 description: "Alchemy's eth_getLogs refusal, -32602 Log response size exceeded: what its limits are, how to page around it, and what a nest does with the range it suggests."
 order: 2
-checked: 5.24.2 (2026-11-27)
+checked: 5.24.3 (2026-11-28)
 ---
 
 ```text
