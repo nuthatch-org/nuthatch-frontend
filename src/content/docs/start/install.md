@@ -12,7 +12,10 @@ you're done.
 
 ```sh
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
+
+The `export` applies to the current terminal only. If `~/.local/bin` is not already on your `PATH`, add the same line to `~/.bashrc` or `~/.zshrc` so a new terminal finds `nuthatch`.
 
 The script detects your platform, downloads the matching release binary, verifies its checksum, and
 installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It's short and
