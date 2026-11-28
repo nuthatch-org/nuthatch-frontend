@@ -112,10 +112,11 @@ const GH = 'https://github.com/nuthatch-org/nuthatch';
       <h2 class="ih">First run</h2>
       <p>Point it at a contract and go. Public RPC defaults; no key required. Those endpoints are for trying it out, not for keeping it running: for that, set <code>NUTHATCH_RPC</code> to your own node or a provider, which may charge for it. From 5.24.2 both <code>init</code> and <code>dev</code> read it, so the URL stays out of argv, <code>ps</code> and shell history; <code>--rpc</code> is the explicit-flag fallback.</p>
       <CopyBlock command="export NUTHATCH_RPC=https://your-endpoint.example" />
-      <CopyBlock command="nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet" />
+      <CopyBlock command="mkdir weth-nest && cd weth-nest" />
+      <CopyBlock command="nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth" />
       <CopyBlock command="nuthatch dev --backfill 300" />
       <p class="note">
-        <code>init</code> resolves each contract's ABI (proxies included), scaffolds a nest, and
+        <code>init</code> writes into the current directory, which is why the first line makes an empty one. A second terminal needs <code>nuthatch sql … --dir weth-nest</code>. <code>init</code> resolves each contract's ABI (proxies included), scaffolds a nest, and
         writes a <code>schema.json</code>, an <code>llms.txt</code>, and a Claude Code skill. Pass
         several addresses to index a multi-contract nest. Omit <code>--chain</code> and <code>init</code>
         probes all nine built-in chains for the contract's bytecode. <code>--backfill 300</code> starts

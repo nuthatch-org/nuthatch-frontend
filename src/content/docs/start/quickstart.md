@@ -36,7 +36,7 @@ no API key required for a verified contract.
 
 ```sh
 mkdir weth-nest && cd weth-nest
-nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet
+nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth
 ```
 
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `semantic.toml`, `views/`,
@@ -105,8 +105,10 @@ it costs more traffic.
 Point-read an entity, run analytical SQL over the hot tip ∪ sealed history, or read a derived view.
 
 ```sh
-nuthatch sql 'SELECT dst, wad FROM weth__transfer ORDER BY block_number DESC LIMIT 5'
+nuthatch sql 'SELECT dst, wad FROM weth__transfer ORDER BY block_number DESC LIMIT 5' --dir weth-nest
 ```
+
+`--dir weth-nest` points `sql` at the nest you created in step 2. Run from inside `weth-nest` you can drop it, but a second terminal usually starts somewhere else, and there `sql` needs the flag (or a `cd weth-nest` first).
 
 WETH names its `Transfer` fields `src`, `dst` and `wad`, and every decoded column keeps its ABI name.
 Most ERC-20s name them `from`, `to` and `value`; `from` is a SQL reserved word, so double-quote it
